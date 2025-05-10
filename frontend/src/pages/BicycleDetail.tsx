@@ -82,6 +82,7 @@ const BicycleDetail = () => {
               category={bicycle.category}
               price={bicycle.price}
               location={bicycle.location}
+              bicycle={bicycle}
             />
 
             {/* Make Offer Button */}

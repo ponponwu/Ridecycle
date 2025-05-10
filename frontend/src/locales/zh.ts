@@ -1,0 +1,113 @@
+
+export const zh = {
+  translation: {
+    // 導航
+    "home": "首頁",
+    "login": "登入",
+    "register": "註冊",
+    "logout": "登出",
+    "profile": "個人資料",
+    
+    // 個人資料
+    "personalCenter": "個人中心",
+    "personalInfo": "個人資訊",
+    "myBicycles": "我的自行車",
+    "messages": "消息中心",
+    "accountSettings": "帳戶設置",
+    "youHaveNoMessages": "您沒有任何消息",
+    "messagesWillAppearHere": "當您有新的消息時會顯示在這裡",
+    "browseBicycles": "瀏覽自行車",
+    "publishNewBike": "發佈新車",
+    "youHaveNotPublishedAnyBikes": "您還沒有發佈任何自行車",
+    "startPublishingYourFirstBike": "開始發佈您的第一輛自行車吧",
+    "publishNow": "立即發佈",
+    
+    // 訂單相關
+    "orderHistory": "訂單記錄",
+    "myOrders": "我的訂單",
+    "mySales": "我的銷售",
+    "orderDetails": "訂單詳情",
+    "orderDate": "訂單日期",
+    "orderStatus": "訂單狀態",
+    "orderTotal": "訂單總額",
+    "orderNumber": "訂單編號",
+    "viewDetails": "查看詳情",
+    "youHaveNoOrders": "您沒有任何訂單",
+    "youHaveNoSales": "您沒有任何銷售記錄",
+    "orderProcessing": "處理中",
+    "orderShipped": "已出貨",
+    "orderDelivered": "已送達",
+    "orderCancelled": "已取消",
+    "trackOrder": "追蹤訂單",
+    "buyerInformation": "買家資訊",
+    "sellerInformation": "賣家資訊",
+    "paymentMethod": "付款方式",
+    "shippingAddress": "配送地址",
+    
+    // 自行車詳情
+    "location": "地點",
+    "condition": "狀況",
+    "brand": "品牌",
+    "model": "型號",
+    "year": "年份",
+    "frameSize": "車架尺寸",
+    "wheelSize": "輪胎尺寸",
+    "yearsOfUse": "使用年限",
+    "contactSeller": "聯絡賣家",
+    "askQuestion": "詢問關於這輛自行車的問題...",
+    "sendMessage": "發送訊息",
+    "description": "描述",
+    "makeOffer": "出價",
+    "yourOffer": "您的出價",
+    "submit": "提交",
+    
+    // 結帳
+    "buyNow": "立即購買",
+    "checkoutProcess": "結帳流程",
+    "shipping": "配送",
+    "payment": "付款",
+    "confirmation": "確認",
+    "shippingInformation": "配送資訊",
+    "paymentInformation": "付款資訊",
+    "confirmOrder": "確認訂單",
+    "placeOrder": "下單",
+    "returnToShopping": "返回購物",
+    "continueToPayment": "繼續到付款",
+    "backToShipping": "返回配送",
+    "reviewYourOrder": "檢查您的訂單",
+    "orderSummary": "訂單摘要",
+    "subtotal": "小計",
+    "tax": "稅金",
+    "total": "總計",
+    
+    // 搜尋
+    "findPerfectBike": "找到適合您的完美自行車",
+    "searchPlaceholder": "搜尋品牌、型號或關鍵字...",
+    "search": "搜尋",
+    "priceRange": "價格範圍",
+    "anyPrice": "任何價格",
+    "bikeType": "自行車類型",
+    "allTypes": "所有類型",
+    "allBrands": "所有品牌",
+    "allLocations": "所有地點",
+    "advancedSearchOptions": "進階搜尋選項",
+    
+    // 搜尋結果
+    "searchResults": "搜尋結果",
+    "hideFilters": "隱藏篩選條件",
+    "showFilters": "顯示篩選條件",
+    "categories": "分類",
+    "resetFilters": "重置篩選條件",
+    "grid": "網格",
+    "list": "列表",
+    "resultsFound": "個結果",
+    "noBicyclesFound": "沒有符合您搜尋條件的自行車",
+    "loading": "載入中",
+    
+    // 首頁橫幅
+    "ride": "騎行",
+    "heroBannerDescription": "與我們的自行車愛好者社區一起買賣二手自行車。找到您心儀的自行車，或為您的自行車找到新家。",
+    "browseBikes": "瀏覽自行車",
+    "sellYourBike": "出售您的自行車"
+  }
+};

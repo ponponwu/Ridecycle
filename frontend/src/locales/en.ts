@@ -1,0 +1,113 @@
+
+export const en = {
+  translation: {
+    // Navigation
+    "home": "Home",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    
+    // Profile
+    "personalCenter": "Personal Center",
+    "personalInfo": "Personal Info",
+    "myBicycles": "My Bicycles",
+    "messages": "Messages",
+    "accountSettings": "Account Settings",
+    "youHaveNoMessages": "You don't have any messages",
+    "messagesWillAppearHere": "New messages will appear here",
+    "browseBicycles": "Browse Bicycles",
+    "publishNewBike": "Publish New Bike",
+    "youHaveNotPublishedAnyBikes": "You haven't published any bicycles",
+    "startPublishingYourFirstBike": "Start publishing your first bicycle",
+    "publishNow": "Publish Now",
+    
+    // Order related
+    "orderHistory": "Order History",
+    "myOrders": "My Orders",
+    "mySales": "My Sales",
+    "orderDetails": "Order Details",
+    "orderDate": "Order Date",
+    "orderStatus": "Order Status",
+    "orderTotal": "Order Total",
+    "orderNumber": "Order Number",
+    "viewDetails": "View Details",
+    "youHaveNoOrders": "You don't have any orders",
+    "youHaveNoSales": "You don't have any sales",
+    "orderProcessing": "Processing",
+    "orderShipped": "Shipped",
+    "orderDelivered": "Delivered",
+    "orderCancelled": "Cancelled",
+    "trackOrder": "Track Order",
+    "buyerInformation": "Buyer Information",
+    "sellerInformation": "Seller Information",
+    "paymentMethod": "Payment Method",
+    "shippingAddress": "Shipping Address",
+
+    // Bicycle Details
+    "location": "Location",
+    "condition": "Condition",
+    "brand": "Brand",
+    "model": "Model",
+    "year": "Year",
+    "frameSize": "Frame Size",
+    "wheelSize": "Wheel Size",
+    "yearsOfUse": "Years of Use",
+    "contactSeller": "Contact Seller",
+    "askQuestion": "Ask a question about this bicycle...",
+    "sendMessage": "Send Message",
+    "description": "Description",
+    "makeOffer": "Make Offer",
+    "yourOffer": "Your Offer",
+    "submit": "Submit",
+    
+    // Checkout
+    "buyNow": "Buy Now",
+    "checkoutProcess": "Checkout Process",
+    "shipping": "Shipping",
+    "payment": "Payment",
+    "confirmation": "Confirmation",
+    "shippingInformation": "Shipping Information",
+    "paymentInformation": "Payment Information",
+    "confirmOrder": "Confirm Order",
+    "placeOrder": "Place Order",
+    "returnToShopping": "Return to Shopping",
+    "continueToPayment": "Continue to Payment",
+    "backToShipping": "Back to Shipping",
+    "reviewYourOrder": "Review Your Order",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "total": "Total",
+    
+    // Search
+    "findPerfectBike": "Find the perfect bike for your needs",
+    "searchPlaceholder": "Search for brands, models, or keywords...",
+    "search": "Search",
+    "priceRange": "Price Range",
+    "anyPrice": "Any Price",
+    "bikeType": "Bike Type",
+    "allTypes": "All Types",
+    "allBrands": "All Brands",
+    "allLocations": "All Locations",
+    "advancedSearchOptions": "Advanced Search Options",
+    
+    // Search Results
+    "searchResults": "Search Results",
+    "hideFilters": "Hide Filters",
+    "showFilters": "Show Filters",
+    "categories": "Categories",
+    "resetFilters": "Reset Filters",
+    "grid": "Grid",
+    "list": "List",
+    "resultsFound": "results found",
+    "noBicyclesFound": "No bicycles match your search criteria",
+    "loading": "Loading",
+    
+    // Hero Banner
+    "ride": "Ride",
+    "heroBannerDescription": "Buy and sell second-hand bicycles with our cycling enthusiast community. Find the perfect ride or give your bike a new home.",
+    "browseBikes": "Browse Bikes",
+    "sellYourBike": "Sell Your Bike"
+  }
+};

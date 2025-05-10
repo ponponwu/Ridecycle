@@ -31,9 +31,20 @@ const SearchPage = () => {
     setSearchParams(params);
   }, [searchQuery, filters, setSearchParams]);
 
+  // Update local state when URL search parameters change
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+    setFilters({
+      priceRange: searchParams.get('price') || '',
+      type: searchParams.get('type') || '',
+      brand: searchParams.get('brand') || '',
+      location: searchParams.get('location') || ''
+    });
+  }, [searchParams]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Already handled by the effect above
+    // URL params are already updated by the effect above
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -50,7 +61,7 @@ const SearchPage = () => {
             <Link to="/messages">
               <Button variant="outline" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                {t('myMessages')}
+                {t('messages')}
               </Button>
             </Link>
           </div>

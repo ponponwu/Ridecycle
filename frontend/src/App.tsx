@@ -16,6 +16,8 @@ import UploadBike from "./pages/UploadBike";
 import Profile from "./pages/Profile";
 import Search from "./pages/Search";
 import Messages from "./pages/Messages";
+import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -38,6 +40,8 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/search" element={<Search />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
