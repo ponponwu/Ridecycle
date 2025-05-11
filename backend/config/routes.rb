@@ -10,11 +10,21 @@ Rails.application.routes.draw do
       
       # 自行車路由
       resources :bicycles do
+        collection do
+          get :me # Route for /api/v1/bicycles/me
+        end
         resources :images, only: [:create, :destroy]
       end
       
       # 訊息路由
       resources :messages, only: [:index, :show, :create]
+
+      # Order routes
+      resources :orders, only: [:create] do # Assuming create for now, add others if needed
+        collection do
+          get :me # Route for /api/v1/orders/me
+        end
+      end
     end
   end
 end

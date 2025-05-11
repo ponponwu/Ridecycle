@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_11_122453) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_11_172506) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -77,10 +77,36 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_11_122453) do
     t.integer "recipient_id"
     t.text "content"
     t.bigint "bicycle_id", null: false
-    t.boolean "is_read"
+    t.boolean "is_read", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "read_at"
     t.index ["bicycle_id"], name: "index_messages_on_bicycle_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "bicycle_id", null: false
+    t.string "order_number", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "subtotal", precision: 10, scale: 2
+    t.decimal "shipping_cost", precision: 10, scale: 2
+    t.decimal "tax", precision: 10, scale: 2
+    t.decimal "total_price", precision: 10, scale: 2, null: false
+    t.jsonb "shipping_address"
+    t.jsonb "payment_details"
+    t.string "tracking_number"
+    t.string "carrier"
+    t.text "notes"
+    t.text "cancel_reason"
+    t.integer "payment_status", default: 0, null: false
+    t.string "payment_id"
+    t.datetime "estimated_delivery_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bicycle_id"], name: "index_orders_on_bicycle_id"
+    t.index ["order_number"], name: "index_orders_on_order_number", unique: true
+    t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -97,4 +123,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_11_122453) do
   add_foreign_key "bicycle_images", "bicycles"
   add_foreign_key "bicycles", "users"
   add_foreign_key "messages", "bicycles"
+  add_foreign_key "orders", "bicycles"
+  add_foreign_key "orders", "users"
 end
