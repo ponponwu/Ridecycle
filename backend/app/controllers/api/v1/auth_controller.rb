@@ -2,7 +2,7 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user, only: [:login, :register]
+      skip_before_action :authenticate_user!, only: [:login, :register]
       
       def register
         user = User.new(user_params)
@@ -28,6 +28,14 @@ module Api
       
       def me
         render json: { user: @current_user }
+      end
+
+      def logout
+        # For JWT, logout is primarily handled client-side by deleting the token.
+        # If you have a token blacklist, you would add the token to it here.
+        # For now, just return a success response.
+        # This action should be protected by authenticate_user! to ensure a user is logged in to log out.
+        head :no_content
       end
       
       private

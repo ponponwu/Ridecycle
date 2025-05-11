@@ -1,6 +1,6 @@
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
-  before_action :authenticate_user
+  before_action :authenticate_user!
   
   def encode_token(payload)
     JWT.encode(payload, Rails.application.credentials.jwt_secret)
@@ -32,7 +32,7 @@ class ApplicationController < ActionController::API
     !!current_user
   end
   
-  def authenticate_user
+  def authenticate_user!
     render json: { error: 'Please log in' }, status: :unauthorized unless logged_in?
   end
 end

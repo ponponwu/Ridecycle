@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'
       get '/me', to: 'auth#me'
+      post '/logout', to: 'auth#logout' # Changed to POST to match frontend call
       
       # 自行車路由
       resources :bicycles do
