@@ -9,6 +9,9 @@ import {
     BicycleStatus,
 } from '@/types/bicycle.types'
 
+// Helper function to convert camelCase to snake_case
+const camelToSnakeCase = (str: string) => str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+
 /**
  * 自行車相關 API 服務
  */
@@ -41,24 +44,34 @@ export class BicycleService {
 
         // 添加基本信息
         Object.entries(data).forEach(([key, value]) => {
-            if (key !== 'photos' && key !== 'specifications') {
-                formData.append(key, String(value))
+            if (key === 'photos') {
+                // Handle photos separately
+                if (value && Array.isArray(value)) {
+                    value.forEach((photoFile: File) => {
+                        formData.append(`bicycle[photos][]`, photoFile)
+                    })
+                }
+            } else if (key === 'specifications') {
+                // Handle specifications separately
+                if (value) {
+                    // value here is the specifications object
+                    formData.append(`bicycle[specifications]`, JSON.stringify(value))
+                }
+            } else if (value !== undefined && value !== null) {
+                // For other fields, ensure they are nested under 'bicycle'
+                // and convert key to snake_case
+                const snakeCaseKey = camelToSnakeCase(key)
+                formData.append(`bicycle[${snakeCaseKey}]`, String(value))
             }
         })
 
-        // 添加規格信息
-        if (data.specifications) {
-            formData.append('specifications', JSON.stringify(data.specifications))
-        }
+        // Note: The photos and specifications are now handled inside the loop.
+        // The original separate blocks for photos and specifications can be removed if all data keys are iterated.
+        // However, IBicycleCreateRequest might have optional fields, so ensuring all relevant keys from 'data' are processed is key.
+        // The current loop iterates over `data`'s own enumerable properties.
 
-        // 添加照片
-        if (data.photos && data.photos.length > 0) {
-            data.photos.forEach((photo, index) => {
-                formData.append(`photos`, photo)
-            })
-        }
-
-        return apiClient.post<IBicycle>('/bicycles', formData, {
+        return apiClient.post<IBicycle>('bicycles', formData, {
+            // apiClient prepends /api/v1
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

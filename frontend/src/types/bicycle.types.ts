@@ -40,6 +40,15 @@ export enum BicycleType {
 }
 
 /**
+ * 自行車賣家/使用者簡要資訊介面
+ */
+export interface IBicycleUser {
+    id: number // Assuming user ID is a number from backend
+    name: string
+    email?: string // Email might only be present in detailed views
+}
+
+/**
  * 自行車詳情介面
  */
 export interface IBicycle {
@@ -47,19 +56,18 @@ export interface IBicycle {
     title: string
     brand: string
     model: string
-    year: string
-    bikeType: BicycleType
+    year: string // Consider changing to number if backend sends number
+    bikeType: string // Was BicycleType enum, backend sends string like "Road Bike"
     frameSize: string
     description: string
-    condition: BicycleCondition
-    price: number
+    condition: string // Was BicycleCondition enum, backend sends string
+    price: number // Ensure backend sends number, or parse string if needed
     location: string
     contactMethod: string
-    photos: string[]
-    userId: string
-    sellerName: string
-    sellerRating?: number
-    status: BicycleStatus
+    photos_urls: string[] // Changed from photos to match backend key
+    user: IBicycleUser // Replaced userId and sellerName
+    sellerRating?: number // This might come from user object or separate calculation
+    status: string // Was BicycleStatus enum, backend sends string
     createdAt: string
     updatedAt: string
     isFavorite?: boolean
@@ -70,6 +78,7 @@ export interface IBicycle {
     suspension?: string
     gears?: number
     weight?: number
+    yearsOfUse?: number // Added optional yearsOfUse
     specifications?: Record<string, string>
     conversationCount?: number
 }
@@ -82,11 +91,11 @@ export interface IBicycleCreateRequest {
     brand: string
     model: string
     year: string
-    bikeType: BicycleType
+    bikeType: string // Assuming form sends string, consistent with IBicycle
     frameSize: string
     description: string
-    condition: BicycleCondition
-    price: number
+    condition: string // Assuming form sends string
+    price: number // Or string if form input is string, then parse in service/backend
     location: string
     contactMethod: string
     photos: File[]
@@ -107,15 +116,15 @@ export interface IBicycleUpdateRequest {
     brand?: string
     model?: string
     year?: string
-    bikeType?: BicycleType
+    bikeType?: string
     frameSize?: string
     description?: string
-    condition?: BicycleCondition
-    price?: number
+    condition?: string
+    price?: number // Or string
     location?: string
     contactMethod?: string
     photos?: (File | string)[]
-    status?: BicycleStatus
+    status?: string
     wheelSize?: string
     color?: string
     material?: string
@@ -132,13 +141,13 @@ export interface IBicycleListParams {
     page?: number
     limit?: number
     search?: string
-    bikeType?: BicycleType[]
-    condition?: BicycleCondition[]
+    bikeType?: string[] // Assuming filters will use string values
+    condition?: string[] // Assuming filters will use string values
     priceMin?: number
     priceMax?: number
     location?: string
     brand?: string[]
-    status?: BicycleStatus[]
+    status?: string[] // Assuming filters will use string values
     sort?: 'newest' | 'price_low' | 'price_high' | 'popular'
 }
 

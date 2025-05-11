@@ -24,8 +24,8 @@ export class AuthService {
      * @returns {Promise<ILoginResponse>} 登錄響應
      */
     public async login(data: ILoginRequest): Promise<ILoginResponse> {
-        const response = await apiClient.post<ILoginResponse>('/auth/login', data)
-
+        const response = await apiClient.post<ILoginResponse>('login', data)
+        console.log('response', response)
         if (response.token) {
             this.setToken(response.token)
         }
@@ -39,7 +39,7 @@ export class AuthService {
      * @returns {Promise<IRegisterResponse>} 註冊響應
      */
     public async register(data: IRegisterRequest): Promise<IRegisterResponse> {
-        const response = await apiClient.post<IRegisterResponse>('/auth/register', data)
+        const response = await apiClient.post<IRegisterResponse>('register', data)
 
         if (response.token) {
             this.setToken(response.token)
@@ -54,7 +54,7 @@ export class AuthService {
      * @returns {Promise<ILoginResponse>} 登錄響應
      */
     public async socialLogin(data: ISocialLoginRequest): Promise<ILoginResponse> {
-        const response = await apiClient.post<ILoginResponse>(`/auth/${data.provider}`, data)
+        const response = await apiClient.post<ILoginResponse>(`${data.provider}`, data)
 
         if (response.token) {
             this.setToken(response.token)
@@ -68,7 +68,7 @@ export class AuthService {
      * @returns {Promise<void>}
      */
     public async logout(): Promise<void> {
-        await apiClient.post('/auth/logout')
+        await apiClient.post('logout')
         this.clearToken()
     }
 
@@ -77,7 +77,20 @@ export class AuthService {
      * @returns {Promise<IUser>} 用戶信息
      */
     public async getCurrentUser(): Promise<IUser> {
-        return apiClient.get<IUser>('/auth/me')
+        // The backend /api/v1/me returns { user: IUser_data_or_null }
+        // We need to extract the 'user' property from the response.
+        // The apiClient's baseURL is 'http://localhost:3000', and it prepends '/api/v1' if not present in path.
+        // So, 'me' becomes 'http://localhost:3000/api/v1/me' or similar.
+        const response = await apiClient.get<{ user: IUser | null }>('me')
+
+        if (response && response.user) {
+            return response.user
+        }
+        // If response.user is null (e.g., user deleted but token still valid until checked by DB),
+        // or if the response structure is not as expected,
+        // it's better to throw an error. This will be caught by AuthContext's useEffect
+        // and lead to token removal and setting currentUser to null.
+        throw new Error('Failed to retrieve valid user data from /me endpoint.')
     }
 
     /**
@@ -93,7 +106,7 @@ export class AuthService {
         if (data.address) formData.append('address', data.address)
         if (data.avatar) formData.append('avatar', data.avatar)
 
-        return apiClient.patch<IUser>('/auth/profile', formData, {
+        return apiClient.patch<IUser>('profile', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -106,7 +119,7 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async changePassword(data: IChangePasswordRequest): Promise<{ message: string }> {
-        return apiClient.patch<{ message: string }>('/auth/change-password', data)
+        return apiClient.patch<{ message: string }>('change-password', data)
     }
 
     /**
@@ -115,7 +128,7 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async forgotPassword(data: IForgotPasswordRequest): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('/auth/forgot-password', data)
+        return apiClient.post<{ message: string }>('forgot-password', data)
     }
 
     /**
@@ -124,7 +137,7 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async resetPassword(data: IResetPasswordRequest): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('/auth/reset-password', data)
+        return apiClient.post<{ message: string }>('reset-password', data)
     }
 
     /**
@@ -133,7 +146,7 @@ export class AuthService {
      * @returns {Promise<IVerificationResponse>} 驗證結果
      */
     public async verifyEmail(token: string): Promise<IVerificationResponse> {
-        return apiClient.get<IVerificationResponse>(`/auth/verify-email?token=${token}`)
+        return apiClient.get<IVerificationResponse>(`verify-email?token=${token}`)
     }
 
     /**
@@ -141,7 +154,7 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async resendVerificationEmail(): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('/auth/resend-verification')
+        return apiClient.post<{ message: string }>('resend-verification')
     }
 
     /**
@@ -158,7 +171,13 @@ export class AuthService {
      * @private
      */
     private setToken(token: string): void {
-        localStorage.setItem('auth_token', token)
+        // Assuming 'token' from response is the access token
+        localStorage.setItem('access_token', token)
+        // If your API also returns a refresh_token in the login/register response,
+        // you should store it here as well, e.g.:
+        // if (response.refreshToken) {
+        //   localStorage.setItem('refresh_token', response.refreshToken);
+        // }
     }
 
     /**
@@ -167,7 +186,7 @@ export class AuthService {
      * @private
      */
     private getToken(): string | null {
-        return localStorage.getItem('auth_token')
+        return localStorage.getItem('access_token')
     }
 
     /**
@@ -175,7 +194,26 @@ export class AuthService {
      * @private
      */
     private clearToken(): void {
-        localStorage.removeItem('auth_token')
+        localStorage.removeItem('access_token')
+        // Also clear refresh_token if you are using it
+        localStorage.removeItem('refresh_token')
+        // It's also good practice to remove user info if stored separately
+        localStorage.removeItem('user')
+    }
+
+    /**
+     * 處理 OAuth 回調
+     * @param {string} code - 授權碼
+     * @returns {Promise<ILoginResponse>} 登錄響應
+     */
+    public async handleOAuthCallback(code: string): Promise<ILoginResponse> {
+        const response = await apiClient.post<ILoginResponse>('/api/v1/oauth/callback', { code })
+
+        if (response.token) {
+            this.setToken(response.token)
+        }
+
+        return response
     }
 }
 

@@ -35,15 +35,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                if (localStorage.getItem('auth_token')) {
+                // Use 'access_token' consistent with ApiClient and AuthService
+                if (localStorage.getItem('access_token')) {
                     const user = await authService.getCurrentUser()
                     setCurrentUser(user)
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error('身份驗證檢查失敗:', err)
-                setError(err.message || '身份驗證檢查失敗')
-                // 清除可能無效的 token
-                localStorage.removeItem('auth_token')
+                if (err instanceof Error) {
+                    setError(err.message || '身份驗證檢查失敗')
+                } else {
+                    setError('發生未知錯誤導致身份驗證檢查失敗')
+                }
+                // 清除可能無效的 token (access_token and refresh_token if used)
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('refresh_token') // Ensure refresh token is also cleared
+                localStorage.removeItem('user') // if user info is stored separately
             } finally {
                 setIsLoading(false)
             }
@@ -59,8 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await authService.login(data)
             setCurrentUser(response.user)
-        } catch (err: any) {
-            setError(err.message || '登錄失敗')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || '登錄失敗')
+            } else {
+                setError('發生未知錯誤導致登錄失敗')
+            }
             throw err
         } finally {
             setIsLoading(false)
@@ -74,8 +85,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await authService.register(data)
             setCurrentUser(response.user)
-        } catch (err: any) {
-            setError(err.message || '註冊失敗')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || '註冊失敗')
+            } else {
+                setError('發生未知錯誤導致註冊失敗')
+            }
             throw err
         } finally {
             setIsLoading(false)
@@ -89,8 +104,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await authService.socialLogin(data)
             setCurrentUser(response.user)
-        } catch (err: any) {
-            setError(err.message || '社交登錄失敗')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || '社交登錄失敗')
+            } else {
+                setError('發生未知錯誤導致社交登錄失敗')
+            }
             throw err
         } finally {
             setIsLoading(false)
@@ -104,8 +123,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             await authService.logout()
             setCurrentUser(null)
-        } catch (err: any) {
-            setError(err.message || '登出失敗')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || '登出失敗')
+            } else {
+                setError('發生未知錯誤導致登出失敗')
+            }
             throw err
         } finally {
             setIsLoading(false)
@@ -119,8 +142,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const updatedUser = await authService.updateProfile(data)
             setCurrentUser(updatedUser)
-        } catch (err: any) {
-            setError(err.message || '更新資料失敗')
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message || '更新資料失敗')
+            } else {
+                setError('發生未知錯誤導致更新資料失敗')
+            }
             throw err
         } finally {
             setIsLoading(false)
