@@ -22,7 +22,32 @@ export class BicycleService {
      * @returns {Promise<IBicycleListResponse>} 自行車列表響應
      */
     public async getBicycles(params?: IBicycleListParams): Promise<IBicycleListResponse> {
-        return apiClient.get<IBicycleListResponse>('/bicycles', { params })
+        let snakeCaseParams: Record<string, string | number | boolean | string[]> | undefined
+        if (params) {
+            snakeCaseParams = {}
+            // Iterate over the keys of IBicycleListParams to ensure type safety
+            for (const key of Object.keys(params) as Array<keyof IBicycleListParams>) {
+                const value = params[key] // Access value directly with typed key
+
+                // Ensure value is not undefined, null, or an empty string before including.
+                // For arrays, ensure they are not empty.
+                if (value !== undefined && value !== null) {
+                    if (Array.isArray(value) && value.length === 0) {
+                        continue // Skip empty arrays
+                    }
+                    if (typeof value === 'string' && value.trim() === '') {
+                        continue // Skip empty strings
+                    }
+                    // Assert value type for assignment, though TypeScript should infer it from params[key]
+                    snakeCaseParams[camelToSnakeCase(key)] = value as string | number | boolean | string[]
+                }
+            }
+            // If after processing, snakeCaseParams is empty, set it to undefined so Axios doesn't send empty params object
+            if (Object.keys(snakeCaseParams).length === 0) {
+                snakeCaseParams = undefined
+            }
+        }
+        return apiClient.get<IBicycleListResponse>('bicycles', { params: snakeCaseParams })
     }
 
     /**

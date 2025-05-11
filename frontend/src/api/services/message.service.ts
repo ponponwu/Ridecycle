@@ -2,13 +2,11 @@
 import apiClient from '../client'
 import {
     IMessage,
-    IConversation,
-    ICreateMessageRequest,
-    IConversationListParams,
-    IConversationListResponse,
-    ICreateConversationRequest,
+    ICreateMessageRequest, // This is the one for sending a message
     IMarkAsReadRequest,
     IAcceptOfferRequest,
+    IConversationPreview,
+    IUserSimple,
 } from '@/types/message.types'
 
 /**
@@ -18,85 +16,43 @@ export class MessageService {
     /**
      * 獲取對話列表
      * @param {IConversationListParams} params - 列表參數
-     * @returns {Promise<IConversationListResponse>} 對話列表響應
+     * @returns {Promise<IConversationPreview[]>} 對話預覽列表響應
      */
-    public async getConversations(params?: IConversationListParams): Promise<IConversationListResponse> {
-        return apiClient.get<IConversationListResponse>('/conversations', { params })
+    public async getConversationPreviews(params?: { page?: number; limit?: number }): Promise<IConversationPreview[]> {
+        // Backend currently returns an array directly, not an IConversationListResponse object.
+        // If pagination is added to backend for this endpoint, this will need to change.
+        return apiClient.get<IConversationPreview[]>('messages', { params })
     }
 
     /**
-     * 獲取對話詳情
-     * @param {string} id - 對話 ID
-     * @returns {Promise<IConversation>} 對話詳情
-     */
-    public async getConversationById(id: string): Promise<IConversation> {
-        return apiClient.get<IConversation>(`/conversations/${id}`)
-    }
-
-    /**
-     * 創建新對話
-     * @param {ICreateConversationRequest} data - 對話創建數據
-     * @returns {Promise<IConversation>} 創建的對話
-     */
-    public async createConversation(data: ICreateConversationRequest): Promise<IConversation> {
-        return apiClient.post<IConversation>('/conversations', data)
-    }
-
-    /**
-     * 獲取對話的消息列表
-     * @param {string} conversationId - 對話 ID
+     * 獲取與特定用戶的消息列表
+     * @param {string} otherUserId - 對方用戶 ID
      * @param {number} page - 頁碼
      * @param {number} limit - 每頁數量
-     * @returns {Promise<{ messages: IMessage[], totalCount: number, page: number, limit: number, totalPages: number }>} 消息列表響應
+     * @returns {Promise<IMessage[]>} 消息列表 (no pagination object from backend yet for this)
      */
-    public async getMessages(
-        conversationId: string,
-        page: number = 1,
-        limit: number = 20
-    ): Promise<{
-        messages: IMessage[]
-        totalCount: number
-        page: number
-        limit: number
-        totalPages: number
-    }> {
-        return apiClient.get<{
-            messages: IMessage[]
-            totalCount: number
-            page: number
-            limit: number
-            totalPages: number
-        }>(`/conversations/${conversationId}/messages`, { params: { page, limit } })
+    public async getMessagesWithUser(
+        otherUserId: string,
+        params?: { page?: number; limit?: number }
+    ): Promise<IMessage[]> {
+        // Backend currently returns an array of messages directly.
+        return apiClient.get<IMessage[]>(`messages/${otherUserId}`, { params })
     }
 
     /**
      * 發送消息
-     * @param {ICreateMessageRequest} data - 消息創建數據
+     * @param {ICreateMessageRequest} data - 消息創建數據 (receiver_id, content, bicycle_id?)
      * @returns {Promise<IMessage>} 創建的消息
      */
     public async sendMessage(data: ICreateMessageRequest): Promise<IMessage> {
-        // 如果有附件，使用 FormData
-        if (data.attachments && data.attachments.length > 0) {
-            const formData = new FormData()
-            formData.append('conversationId', data.conversationId)
-            formData.append('content', data.content)
+        // Backend expects params nested under 'message' key
+        const payload: { message: ICreateMessageRequest } = { message: data }
 
-            if (data.isOffer !== undefined) formData.append('isOffer', String(data.isOffer))
-            if (data.offerAmount !== undefined) formData.append('offerAmount', String(data.offerAmount))
-
-            data.attachments.forEach((file, index) => {
-                formData.append('attachments', file)
-            })
-
-            return apiClient.post<IMessage>('/messages', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-        }
-
-        // 無附件，使用 JSON
-        return apiClient.post<IMessage>('/messages', data)
+        // Attachments are not handled in the current ICreateMessageRequest or backend message_params
+        // If attachments are needed, ICreateMessageRequest and backend need to support it,
+        // and FormData would be required here.
+        // For now, assuming no attachments and sending JSON.
+        return apiClient.post<IMessage>('messages', payload)
     }
 
     /**
@@ -126,23 +82,8 @@ export class MessageService {
         return apiClient.post<IMessage>(`/messages/${data.messageId}/reject-offer`)
     }
 
-    /**
-     * 歸檔對話
-     * @param {string} conversationId - 對話 ID
-     * @returns {Promise<IConversation>} 更新後的對話
-     */
-    public async archiveConversation(conversationId: string): Promise<IConversation> {
-        return apiClient.post<IConversation>(`/conversations/${conversationId}/archive`)
-    }
-
-    /**
-     * 取消歸檔對話
-     * @param {string} conversationId - 對話 ID
-     * @returns {Promise<IConversation>} 更新後的對話
-     */
-    public async unarchiveConversation(conversationId: string): Promise<IConversation> {
-        return apiClient.post<IConversation>(`/conversations/${conversationId}/unarchive`)
-    }
+    // Removed archiveConversation and unarchiveConversation as backend doesn't support them yet,
+    // and IConversation type was removed/simplified.
 
     /**
      * 獲取未讀消息計數

@@ -1,5 +1,6 @@
 // src/api/client.ts
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import applyCaseMiddleware from 'axios-case-converter' // Import the case converter
 import { toast } from '@/hooks/use-toast'
 
 // API 基本配置
@@ -24,7 +25,8 @@ class ApiClient {
 
     constructor() {
         // 創建 axios 實例
-        this.instance = axios.create({
+        const baseInstance = axios.create({
+            // Create a base instance first
             baseURL: API_URL,
             timeout: API_TIMEOUT,
             headers: {
@@ -32,6 +34,10 @@ class ApiClient {
                 Accept: 'application/json',
             },
         })
+
+        // Apply case converter middleware to the base instance
+        // This will handle converting request data to snake_case and response data to camelCase
+        this.instance = applyCaseMiddleware(baseInstance)
 
         // 添加請求攔截器
         this.setupRequestInterceptor()

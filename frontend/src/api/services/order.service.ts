@@ -70,8 +70,9 @@ export class OrderService {
      * @param {IOrderListParams} params - 列表參數
      * @returns {Promise<IOrderListResponse>} 訂單列表響應
      */
-    public async getBuyerOrders(params?: IOrderListParams): Promise<IOrderListResponse> {
-        return apiClient.get<IOrderListResponse>('/orders/buyer', { params })
+    public async getMyOrders(params?: IOrderListParams): Promise<IOrderListResponse> {
+        // Renamed from getBuyerOrders
+        return apiClient.get<IOrderListResponse>('orders/me', { params }) // Changed path to 'orders/me'
     }
 
     /**

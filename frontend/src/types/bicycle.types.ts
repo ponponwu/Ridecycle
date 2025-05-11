@@ -64,7 +64,7 @@ export interface IBicycle {
     price: number // Ensure backend sends number, or parse string if needed
     location: string
     contactMethod: string
-    photos_urls: string[] // Changed from photos to match backend key
+    photosUrls: string[] // Changed from photos_urls to camelCase
     user: IBicycleUser // Replaced userId and sellerName
     sellerRating?: number // This might come from user object or separate calculation
     status: string // Was BicycleStatus enum, backend sends string

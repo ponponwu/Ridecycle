@@ -65,7 +65,15 @@ function App() {
                                             }
                                         />
                                         <Route
-                                            path="/messages"
+                                            path="/messages" // General messages overview
+                                            element={
+                                                <PrivateRoute>
+                                                    <Messages />
+                                                </PrivateRoute>
+                                            }
+                                        />
+                                        <Route
+                                            path="/messages/:conversationId" // Specific conversation view
                                             element={
                                                 <PrivateRoute>
                                                     <Messages />

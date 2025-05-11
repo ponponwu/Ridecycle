@@ -1,5 +1,5 @@
 // src/types/order.types.ts
-import { IBicycleCartItem } from './bicycle.types'
+import { IBicycle } from './bicycle.types' // Changed from IBicycleCartItem
 
 /**
  * 訂單狀態枚舉
@@ -18,12 +18,12 @@ export enum OrderStatus {
  * 訂單詳情介面
  */
 export interface IOrder {
-    id: string
-    userId: string
-    sellerId: string
-    orderNumber: string
-    items: IBicycleCartItem[]
-    status: OrderStatus
+    id: string // Order ID
+    orderNumber: string // Human-readable order number
+    userId: string // Buyer ID
+    // sellerId is part of bicycle.user.id
+    bicycle: IBicycle // The bicycle that was ordered
+    status: string // Was OrderStatus enum, backend likely sends string
     shippingAddress: IShippingAddress
     paymentMethod: IPaymentMethod
     shippingMethod: IShippingMethod
@@ -35,7 +35,7 @@ export interface IOrder {
     carrier?: string
     notes?: string
     cancelReason?: string
-    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
+    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' // Keep as string union
     paymentId?: string
     rating?: number
     review?: string
@@ -112,7 +112,7 @@ export interface IOrderCreateData {
  * 訂單狀態更新介面
  */
 export interface IOrderStatusUpdate {
-    status: OrderStatus
+    status: string // Was OrderStatus
     notes?: string
 }
 
@@ -122,7 +122,7 @@ export interface IOrderStatusUpdate {
 export interface IOrderListParams {
     page?: number
     limit?: number
-    status?: OrderStatus[]
+    status?: string[] // Was OrderStatus[]
     startDate?: string
     endDate?: string
     sort?: 'newest' | 'oldest' | 'price_high' | 'price_low'

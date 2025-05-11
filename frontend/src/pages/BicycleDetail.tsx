@@ -102,7 +102,7 @@ const BicycleDetail = () => {
                     {/* Image Gallery */}
                     <div>
                         <BicycleImageGallery
-                            images={bicycle.photos_urls || []} // Use photos_urls
+                            images={bicycle.photosUrls || []} // Changed to photosUrls
                             title={bicycle.title}
                         />
                     </div>
@@ -142,7 +142,12 @@ const BicycleDetail = () => {
                         />
 
                         {/* Contact Form */}
-                        <ContactSellerForm />
+                        {bicycle.user && bicycle.id && (
+                            <ContactSellerForm
+                                sellerId={bicycle.user.id.toString()} // Convert number to string
+                                bicycleId={bicycle.id}
+                            />
+                        )}
                     </div>
                 </div>
 

@@ -48,11 +48,10 @@ const Index = () => {
         title: bike.title,
         price: bike.price,
         location: bike.location,
-        condition: bike.condition, // Assuming bike.condition is already a string
+        condition: bike.condition,
         brand: bike.brand,
-        imageUrl: bike.photos_urls && bike.photos_urls.length > 0 ? bike.photos_urls[0] : '/placeholder.svg', // Use first photo or a placeholder
+        photosUrls: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls : ['/placeholder.svg'], // Use photosUrls and ensure it's an array
         isFavorite: bike.isFavorite,
-        // sellerName: bike.user.name, // If BicycleCardProps needs sellerName
     }))
 
     return (

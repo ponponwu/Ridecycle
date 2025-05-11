@@ -1,18 +1,30 @@
 // src/types/message.types.ts
+export interface IUserSimple {
+    // Added export
+    // Simple user info for messages/conversations
+    id: string
+    name: string
+    avatar?: string
+}
+
 /**
  * 消息介面
  */
 export interface IMessage {
     id: string
-    conversationId: string
-    senderId: string
+    // conversationId might not be directly available if messages are fetched per user pair
+    sender: IUserSimple // Changed from senderId to match backend's likely output from .as_json(include: :sender)
+    receiver?: IUserSimple // Optional, if backend includes it
+    senderId?: string // Can keep if backend also provides flat senderId
+    receiverId?: string // Can keep if backend also provides flat receiverId
     content: string
     isOffer?: boolean
     offerAmount?: number
     offerAccepted?: boolean
-    createdAt: string
-    isRead: boolean
+    createdAt: string // Reverted to camelCase
+    isRead?: boolean
     attachments?: IMessageAttachment[]
+    bicycleId?: string // Reverted to camelCase
 }
 
 /**
@@ -28,75 +40,42 @@ export interface IMessageAttachment {
 }
 
 /**
- * 對話介面
+ * 對話預覽介面 (for listing conversations)
+ * This matches the structure from MessagesController#index
  */
-export interface IConversation {
-    id: string
-    bicycleId: string
-    buyerId: string
-    sellerId: string
-    lastMessage?: string
-    lastMessageTime?: string
-    unreadCount: number
-    createdAt: string
-    updatedAt: string
-    isArchived: boolean
-    bicycle: {
-        id: string
-        title: string
-        price: number
-        photos: string[]
-        status: string
-    }
-    otherUser: {
-        id: string
-        fullName: string
-        avatar?: string
-    }
+export interface IConversationPreview {
+    withUser: IUserSimple // Changed from with_user
+    lastMessage: {
+        content: string
+        createdAt: string // Changed from created_at
+        isRead?: boolean
+        senderId?: string // Added senderId to last_message for unread logic
+    } | null
+    updatedAt: string | null // Changed from updated_at
+    bicycleId?: string // Changed from bicycle_id
+    bicycleTitle?: string // Changed from bicycle_title
+    bicycleImageUrl?: string // Changed from bicycle_image_url
 }
 
 /**
- * 創建消息請求介面
+ * 創建消息請求介面 (for POST /api/v1/messages)
+ * Matches backend message_params: receiver_id, content, bicycle_id
  */
 export interface ICreateMessageRequest {
-    conversationId: string
+    recipientId: string // Changed from recipient_id
     content: string
-    isOffer?: boolean
-    offerAmount?: number
-    attachments?: File[]
+    bicycleId?: string // Changed from bicycle_id
+    // isOffer, offerAmount, attachments can be added if supported by backend create
 }
 
-/**
- * 對話列表參數介面
- */
-export interface IConversationListParams {
-    page?: number
-    limit?: number
-    bicycleId?: string
-    isArchived?: boolean
-}
+// The IConversation, IConversationListParams, IConversationListResponse,
+// ICreateConversationRequest might need to be re-evaluated or removed if
+// the backend primarily works with IConversationPreview and direct messages (IMessage[]).
+// For now, let's assume IConversationPreview is what MessagesController#index returns.
+// And MessagesController#show returns IMessage[].
 
 /**
- * 對話列表響應介面
- */
-export interface IConversationListResponse {
-    conversations: IConversation[]
-    totalCount: number
-    page: number
-    limit: number
-    totalPages: number
-}
-
-/**
- * 創建對話請求介面
- */
-export interface ICreateConversationRequest {
-    bicycleId: string
-    initialMessage: string
-}
-
-/**
- * 標記消息為已讀請求介面
+ * 標記消息為已讀請求介面 (Example, if needed)
  */
 export interface IMarkAsReadRequest {
     conversationId: string
