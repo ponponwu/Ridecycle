@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react'
 import { authService } from '@/api'
 import { IUser, ILoginRequest, IRegisterRequest, ISocialLoginRequest, IUpdateProfileRequest } from '@/types/auth.types'
 
@@ -14,6 +14,7 @@ interface AuthContextType {
     socialLogin: (data: ISocialLoginRequest) => Promise<void>
     logout: () => Promise<void>
     updateProfile: (data: IUpdateProfileRequest) => Promise<void>
+    handleOauthSuccess: (user: IUser) => void
     clearError: () => void
 }
 
@@ -30,33 +31,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [currentUser, setCurrentUser] = useState<IUser | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
+    const initialAuthCheckFlag = useRef(false)
 
     // 在組件加載時檢查用戶是否已登錄
     useEffect(() => {
-        const checkAuth = async () => {
+        const checkAuthStatus = async () => {
+            if (initialAuthCheckFlag.current) {
+                return
+            }
+            initialAuthCheckFlag.current = true
+
+            setIsLoading(true)
+
             try {
-                // Use 'access_token' consistent with ApiClient and AuthService
-                if (localStorage.getItem('access_token')) {
-                    const user = await authService.getCurrentUser()
-                    setCurrentUser(user)
-                }
-            } catch (err: unknown) {
-                console.error('身份驗證檢查失敗:', err)
-                if (err instanceof Error) {
-                    setError(err.message || '身份驗證檢查失敗')
-                } else {
-                    setError('發生未知錯誤導致身份驗證檢查失敗')
-                }
-                // 清除可能無效的 token (access_token and refresh_token if used)
-                localStorage.removeItem('access_token')
-                localStorage.removeItem('refresh_token') // Ensure refresh token is also cleared
-                localStorage.removeItem('user') // if user info is stored separately
+                const user = await authService.getCurrentUser()
+                setCurrentUser(user)
+                setError(null)
+            } catch (err) {
+                setCurrentUser(null)
             } finally {
                 setIsLoading(false)
             }
         }
 
-        checkAuth()
+        checkAuthStatus()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // 登錄函數
@@ -97,7 +96,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     }
 
-    // 社交媒體登錄函數
     const socialLogin = async (data: ISocialLoginRequest) => {
         setIsLoading(true)
         setError(null)
@@ -123,13 +121,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             await authService.logout()
             setCurrentUser(null)
+            localStorage.removeItem('user')
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message || '登出失敗')
             } else {
                 setError('發生未知錯誤導致登出失敗')
             }
-            throw err
         } finally {
             setIsLoading(false)
         }
@@ -159,7 +157,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(null)
     }
 
-    // 提供的上下文值
+    const handleOauthSuccess = (user: IUser) => {
+        setCurrentUser(user)
+        setIsLoading(false)
+        setError(null)
+    }
+
     const value = {
         currentUser,
         isAuthenticated: !!currentUser,
@@ -170,13 +173,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         socialLogin,
         logout,
         updateProfile,
+        handleOauthSuccess,
         clearError,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-// 使用認證上下文的 Hook
 export const useAuth = () => {
     const context = useContext(AuthContext)
     if (context === undefined) {

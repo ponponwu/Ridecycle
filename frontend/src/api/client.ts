@@ -1,6 +1,13 @@
 // src/api/client.ts
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import applyCaseMiddleware from 'axios-case-converter' // Import the case converter
+import axios, {
+    AxiosError,
+    AxiosInstance,
+    AxiosRequestConfig,
+    AxiosResponse,
+    InternalAxiosRequestConfig,
+    AxiosRequestHeaders,
+} from 'axios'
+import applyCaseMiddleware from 'axios-case-converter'
 import { toast } from '@/hooks/use-toast'
 
 // API 基本配置
@@ -18,161 +25,167 @@ const ERROR_MESSAGES = {
     SERVER: '伺服器錯誤，請稍後再試',
 }
 
-// API 客戶端類
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+    _retryAttempted?: boolean
+}
+
+interface ErrorResponseData {
+    message?: string
+    error?: string
+    errors?: string[] | { [key: string]: string[] }
+}
+
 class ApiClient {
     private instance: AxiosInstance
-    private refreshTokenPromise: Promise<string> | null = null
+    private refreshTokenPromise: Promise<void> | null = null
 
     constructor() {
-        // 創建 axios 實例
         const baseInstance = axios.create({
-            // Create a base instance first
             baseURL: API_URL,
             timeout: API_TIMEOUT,
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-            },
+            } as AxiosRequestHeaders,
         })
 
-        // Apply case converter middleware to the base instance
-        // This will handle converting request data to snake_case and response data to camelCase
         this.instance = applyCaseMiddleware(baseInstance)
-
-        // 添加請求攔截器
         this.setupRequestInterceptor()
-
-        // 添加響應攔截器
         this.setupResponseInterceptor()
     }
 
-    // 設置請求攔截器
     private setupRequestInterceptor(): void {
         this.instance.interceptors.request.use(
-            (config: AxiosRequestConfig) => {
-                // 從 localStorage 獲取 token
-                const token = localStorage.getItem('access_token')
+            (config: InternalAxiosRequestConfig) => {
+                config.headers = config.headers || ({} as AxiosRequestHeaders)
 
-                // 如果 token 存在，添加到請求頭
-                if (token && config.headers) {
-                    config.headers['Authorization'] = `Bearer ${token}`
+                if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
+                    const csrfToken = this.getCsrfToken()
+                    if (csrfToken) {
+                        ;(config.headers as AxiosRequestHeaders)['X-CSRF-Token'] = csrfToken
+                    }
                 }
+
+                config.withCredentials = true
 
                 return config
             },
             (error: AxiosError) => {
-                console.error('Request error:', error)
+                // console.error('ApiClient: Request error in interceptor:', error);
                 return Promise.reject(error)
             }
         )
     }
 
-    // 設置響應攔截器
+    private getCsrfToken(): string | null {
+        const cookies = document.cookie.split(';')
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim()
+            if (cookie.startsWith('CSRF-TOKEN=')) {
+                return decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
+            }
+        }
+        return null
+    }
+
     private setupResponseInterceptor(): void {
         this.instance.interceptors.response.use(
             (response: AxiosResponse) => response,
             async (error: AxiosError) => {
-                const originalRequest = error.config
+                const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined
 
-                // 檢查是否是 401 錯誤（未授權）
-                if (error.response?.status === 401 && originalRequest && !originalRequest.headers._retry) {
-                    // 防止多個請求同時刷新 token
-                    if (this.refreshTokenPromise === null) {
+                const refreshUrlPath = 'auth/refresh'
+                const fullRefreshUrl = `${API_URL}${refreshUrlPath}`
+                const fullRefreshUrlWithSlash = `${fullRefreshUrl}/`
+
+                if (
+                    originalRequest?.url === fullRefreshUrl ||
+                    originalRequest?.url === fullRefreshUrlWithSlash ||
+                    originalRequest?.url === refreshUrlPath
+                ) {
+                    // console.warn('ApiClient: Failed request was to refresh token endpoint. Not attempting refresh again.');
+                    return Promise.reject(error)
+                }
+
+                if (error.response?.status === 401 && originalRequest && !originalRequest._retryAttempted) {
+                    originalRequest._retryAttempted = true
+                    if (!this.refreshTokenPromise) {
                         this.refreshTokenPromise = this.refreshToken().finally(() => {
                             this.refreshTokenPromise = null
                         })
                     }
-
                     try {
-                        // 等待 token 刷新
-                        const newToken = await this.refreshTokenPromise
-
-                        // 使用新 token 重試原始請求
-                        if (originalRequest.headers) {
-                            originalRequest.headers['Authorization'] = `Bearer ${newToken}`
-                            originalRequest.headers._retry = true
-                        }
-
+                        await this.refreshTokenPromise
                         return this.instance(originalRequest)
                     } catch (refreshError) {
-                        // 如果刷新 token 失敗，清除憑據並導向登入頁面
+                        // console.error("ApiClient: Refresh token failed during retry logic.", refreshError);
                         this.clearAuthData()
-                        this.redirectToLogin()
                         return Promise.reject(refreshError)
                     }
                 }
-
-                // 處理其他錯誤
                 this.handleApiError(error)
                 return Promise.reject(error)
             }
         )
     }
 
-    // 刷新 token 的方法
-    private async refreshToken(): Promise<string> {
-        try {
-            const refreshToken = localStorage.getItem('refresh_token')
-
-            if (!refreshToken) {
-                throw new Error('No refresh token available')
-            }
-
-            const response = await axios.post(`${API_URL}/auth/refresh`, {
-                refresh_token: refreshToken,
-            })
-
-            const { access_token, refresh_token } = response.data
-
-            // 存儲新的 token
-            localStorage.setItem('access_token', access_token)
-            localStorage.setItem('refresh_token', refresh_token)
-
-            return access_token
-        } catch (error) {
-            console.error('Token refresh failed:', error)
-            this.clearAuthData()
-            throw error
-        }
+    private async refreshToken(): Promise<void> {
+        await this.instance.post('auth/refresh')
     }
 
-    // 處理 API 錯誤
     private handleApiError(error: AxiosError): void {
         let errorMessage = ERROR_MESSAGES.GENERAL
-
         if (error.response) {
-            // 服務器回覆的錯誤
             const status = error.response.status
+            const responseData = error.response.data as ErrorResponseData | string | undefined
+            let serverMessage: string | undefined
+
+            if (typeof responseData === 'object' && responseData !== null) {
+                if (responseData.message) {
+                    serverMessage = responseData.message
+                } else if (responseData.error) {
+                    serverMessage = responseData.error
+                } else if (responseData.errors) {
+                    if (Array.isArray(responseData.errors)) {
+                        serverMessage = responseData.errors.join(', ')
+                    } else if (typeof responseData.errors === 'object') {
+                        serverMessage = Object.values(responseData.errors).flat().join(', ')
+                    }
+                }
+            } else if (typeof responseData === 'string') {
+                serverMessage = responseData
+            }
 
             switch (status) {
                 case 400:
-                    errorMessage = error.response.data?.message || '無效的請求'
+                    errorMessage = serverMessage || '無效的請求'
                     break
                 case 401:
-                    errorMessage = ERROR_MESSAGES.UNAUTHORIZED
+                    errorMessage = serverMessage || ERROR_MESSAGES.UNAUTHORIZED
                     break
                 case 403:
-                    errorMessage = ERROR_MESSAGES.FORBIDDEN
+                    errorMessage = serverMessage || ERROR_MESSAGES.FORBIDDEN
                     break
                 case 404:
-                    errorMessage = ERROR_MESSAGES.NOT_FOUND
+                    errorMessage = serverMessage || ERROR_MESSAGES.NOT_FOUND
                     break
                 case 500:
-                    errorMessage = ERROR_MESSAGES.SERVER
+                case 502:
+                case 503:
+                case 504:
+                    errorMessage = serverMessage || ERROR_MESSAGES.SERVER
                     break
                 default:
-                    errorMessage = `伺服器回傳錯誤: ${status}`
+                    errorMessage = serverMessage || `伺服器回傳錯誤: ${status}`
             }
         } else if (error.request) {
-            // 請求已發送但未收到響應
             if (error.code === 'ECONNABORTED') {
                 errorMessage = ERROR_MESSAGES.TIMEOUT
             } else {
                 errorMessage = ERROR_MESSAGES.NETWORK
             }
         }
-
-        // 顯示錯誤消息
+        // console.log("ApiClient: handleApiError displaying toast for error:", errorMessage);
         toast({
             variant: 'destructive',
             title: '錯誤',
@@ -180,54 +193,46 @@ class ApiClient {
         })
     }
 
-    // 清除身份驗證數據
     private clearAuthData(): void {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
         localStorage.removeItem('user')
     }
 
-    // 重定向到登入頁面
     private redirectToLogin(): void {
-        // 保存當前 URL 以便登入後重定向回來
         const currentPath = window.location.pathname
-        if (currentPath !== '/login') {
-            localStorage.setItem('auth_redirect', currentPath)
+        if (currentPath !== '/login' && currentPath !== '/register') {
+            localStorage.setItem('auth_redirect', currentPath + window.location.search)
             window.location.href = '/login'
         }
     }
 
-    // 公共方法：發送 GET 請求
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.instance.get<T>(url, config)
         return response.data
     }
 
-    // 公共方法：發送 POST 請求
-    public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.post<T>(url, data, config)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public async post<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+        const response = await this.instance.post<T, AxiosResponse<T>, D>(url, data, config)
         return response.data
     }
 
-    // 公共方法：發送 PUT 請求
-    public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.put<T>(url, data, config)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public async put<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+        const response = await this.instance.put<T, AxiosResponse<T>, D>(url, data, config)
         return response.data
     }
 
-    // 公共方法：發送 PATCH 請求
-    public async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.patch<T>(url, data, config)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public async patch<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+        const response = await this.instance.patch<T, AxiosResponse<T>, D>(url, data, config)
         return response.data
     }
 
-    // 公共方法：發送 DELETE 請求
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.instance.delete<T>(url, config)
         return response.data
     }
 }
 
-// 創建並導出 API 客戶端單例
 const apiClient = new ApiClient()
 export default apiClient

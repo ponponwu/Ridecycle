@@ -43,16 +43,18 @@ const Index = () => {
     }, [])
 
     // Transform IBicycle[] to BicycleCardProps[]
-    const bicycleCardData: BicycleCardProps[] = allBicycles.map((bike) => ({
-        id: bike.id,
-        title: bike.title,
-        price: bike.price,
-        location: bike.location,
-        condition: bike.condition,
-        brand: bike.brand,
-        photosUrls: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls : ['/placeholder.svg'], // Use photosUrls and ensure it's an array
-        isFavorite: bike.isFavorite,
-    }))
+    const bicycleCardData: BicycleCardProps[] =
+        allBicycles?.map((bike) => ({
+            id: bike.id,
+            title: bike.title,
+            price: bike.price,
+            location: bike.location,
+            condition: bike.condition,
+            brand: bike.brand,
+            photosUrls:
+                Array.isArray(bike.photosUrls) && bike.photosUrls.length > 0 ? bike.photosUrls : ['/placeholder.svg'],
+            isFavorite: bike.isFavorite,
+        })) || []
 
     return (
         <MainLayout>

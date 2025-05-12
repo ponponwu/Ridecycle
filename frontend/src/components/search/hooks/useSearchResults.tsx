@@ -113,19 +113,16 @@ export const useSearchResults = () => {
                 if (response && Array.isArray(response.bicycles)) {
                     setBicycles(
                         response.bicycles.map((bike) => ({
-                            // bike is IBicycle from '@/types/bicycle.types'
                             id: bike.id,
-                            title: bike.title, // Use original title from IBicycle
+                            title: bike.title,
                             price: bike.price,
                             location: bike.location,
-                            condition: bike.condition, // This is string based on IBicycle type update
+                            condition: bike.condition,
                             brand: bike.brand,
-                            type: bike.bikeType, // This is string based on IBicycle type update
-                            // Use photos_urls and provide a placeholder if no image
+                            type: bike.bikeType,
                             imageUrl:
-                                bike.photos_urls && bike.photos_urls.length > 0
-                                    ? bike.photos_urls[0]
-                                    : '/placeholder.svg',
+                                bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
+                            photosUrls: bike.photosUrls || [], // Ensure photosUrls is passed through
                         }))
                     )
                 } else {
