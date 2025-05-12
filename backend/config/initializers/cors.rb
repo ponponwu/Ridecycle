@@ -8,9 +8,11 @@
 # config/initializers/cors.rb
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
+
     allowed_origins = [
       'http://localhost:3000',
-      'http://localhost:8080'
+      'http://localhost:8080',
+      'https://ridecyclef2e-production.up.railway.app/',
     ]
     
     # 從環境變數獲取部署網域

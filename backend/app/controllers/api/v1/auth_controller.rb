@@ -6,24 +6,23 @@ module Api
       
       def register
         # user_params will permit :email, :password, :password_confirmation, :fullName, :phone
+
         permitted_params = user_params
         
         # Map fullName to name for the User model
         user_attributes = {
           email: permitted_params[:email],
           password: permitted_params[:password],
-          password_confirmation: permitted_params[:passwordConfirmation],
-          name: permitted_params[:fullName]
+          password_confirmation: permitted_params[:password_confirmation],
+          name: permitted_params[:full_name]
           # phone: permitted_params[:phone] # User model does not have phone yet
         }.compact
 
         user = User.new(user_attributes)
         
         if user.save
-          token = encode_token({ user_id: user.id })
-          # Return user object that matches IUser (e.g. with fullName)
-          # For now, default user.as_json will be used by render. Consider a serializer.
-          render json: { user: user.as_json(methods: [], except: [:password_digest]), token: token }, status: :created
+          set_auth_cookies(user) # Set both access and refresh HttpOnly cookies
+          render json: { user: user.as_json(methods: [], except: [:password_digest]) }, status: :created
         else
           render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
         end
@@ -33,22 +32,25 @@ module Api
         user = User.find_by(email: params[:email])
         
         if user && user.authenticate(params[:password])
-          token = encode_token({ user_id: user.id })
-          render json: { user: user, token: token }
+          set_auth_cookies(user) # Set both access and refresh HttpOnly cookies
+          render json: { user: user.as_json(methods: [], except: [:password_digest]) }
         else
           render json: { error: 'Invalid email or password' }, status: :unauthorized
         end
       end
       
       def me
-        render json: { user: @current_user }
+        # current_user is set by authenticate_user! which now reads from cookie
+        if @current_user
+          render json: { user: @current_user.as_json(methods: [], except: [:password_digest]) }
+        else
+          # This case should ideally be caught by authenticate_user! itself
+          render json: { error: 'Not authenticated' }, status: :unauthorized
+        end
       end
 
       def logout
-        # For JWT, logout is primarily handled client-side by deleting the token.
-        # If you have a token blacklist, you would add the token to it here.
-        # For now, just return a success response.
-        # This action should be protected by authenticate_user! to ensure a user is logged in to log out.
+        delete_auth_cookies # Delete both access and refresh HttpOnly cookies
         head :no_content
       end
       
@@ -63,7 +65,7 @@ module Api
         # Let's try requiring :auth first. If that fails, it means wrap_parameters is not acting as expected or frontend is truly flat.
         # The log "Unpermitted parameters: ... :auth" suggests :auth itself is a parameter at the top level.
         # This implies wrap_parameters might be wrapping based on controller name 'auth'.
-        params.require(:auth).permit(:email, :password, :passwordConfirmation, :fullName)
+        params.require(:auth).permit(:email, :password, :password_confirmation, :full_name, :agreement)
       end
     end
   end

@@ -1,8 +1,13 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
-if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
+# If running in a production-like environment and the command seems to be starting the server,
+# then prepare the database.
+# This condition checks if the first argument is 'bundle' and the second is 'exec',
+# which is common for puma/unicorn starts.
+if [ "$RAILS_ENV" = "production" ] && ([ "${1}" = "bundle" ] && [ "${2}" = "exec" ] && [ "${3}" = "puma" ] || [ "${1}" = "./bin/rails" ] && [ "${2}" = "server" ]); then
+  echo "Preparing database..."
   ./bin/rails db:prepare
+  echo "Database preparation finished."
 fi
 
 exec "${@}"

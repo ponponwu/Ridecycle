@@ -6,7 +6,12 @@ Rails.application.routes.draw do
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'
       get '/me', to: 'auth#me'
-      post '/logout', to: 'auth#logout' # Changed to POST to match frontend call
+      post '/logout', to: 'auth#logout'
+      post '/auth/refresh', to: 'refresh#create' # Route for refreshing token
+
+      # OmniAuth callback route
+      match '/auth/:provider/callback', to: 'sessions#omniauth', via: [:get, :post]
+      get '/auth/failure', to: 'sessions#auth_failure'
       
       # 自行車路由
       resources :bicycles do
