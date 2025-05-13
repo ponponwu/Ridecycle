@@ -5,6 +5,7 @@ module Api
       # as this endpoint relies on the refresh_token_cookie itself for authentication.
       # However, if refresh token is invalid/expired, it should not grant a new access token.
       skip_before_action :authenticate_user!, only: [:create]
+      skip_before_action :verify_authenticity_token, only: [:create]
 
       def create
         jwt_payload = decoded_token(:refresh)

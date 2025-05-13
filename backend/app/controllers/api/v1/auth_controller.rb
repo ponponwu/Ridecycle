@@ -3,6 +3,7 @@ module Api
   module V1
     class AuthController < ApplicationController
       skip_before_action :authenticate_user!, only: [:login, :register]
+      skip_before_action :verify_authenticity_token, only: [:login, :register]
       
       def register
         # user_params will permit :email, :password, :password_confirmation, :fullName, :phone

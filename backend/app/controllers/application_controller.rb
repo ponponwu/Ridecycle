@@ -11,9 +11,10 @@ class ApplicationController < ActionController::API
   def set_csrf_cookie
     cookies['CSRF-TOKEN'] = {
       value: form_authenticity_token,
-      same_site: :lax,
-      secure: Rails.env.production?,
-      httponly: false
+      # 在生產環境使用 :none 以支援跨域, :lax 適用於同站或開發
+      same_site: Rails.env.production? ? :none : :lax,
+      secure: Rails.env.production?, # :none 要求 secure: true
+      httponly: false # 必須為 false，JS 才能讀取
     }
   end
   
