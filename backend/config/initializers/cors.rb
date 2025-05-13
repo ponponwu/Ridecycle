@@ -9,6 +9,7 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
 
+    allowed_origins = []
     if Rails.env.development?
       allowed_origins += [
         'http://localhost:3000',
