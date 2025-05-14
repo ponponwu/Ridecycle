@@ -2,6 +2,9 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
+      # CSRF token 路由
+      get '/csrf-token', to: 'auth#csrf_token'
+
       # 認證路由
       post '/register', to: 'auth#register'
       post '/login', to: 'auth#login'

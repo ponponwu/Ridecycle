@@ -10,6 +10,7 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import { SearchProvider } from '@/contexts/SearchContext'
 import NotificationContainer from '@/components/NotificationContainer'
 import PrivateRoute from '@/components/PrivateRoute'
+import { useEffect } from 'react'
 
 import Index from './pages/Index'
 import Login from './pages/Login'
@@ -27,6 +28,103 @@ import OrderSuccess from './pages/OrderSuccess'
 // Create a client
 const queryClient = new QueryClient()
 
+// 初始化 CSRF token 的函數
+const initializeCsrfToken = async () => {
+    try {
+        const response = await fetch('/api/v1/csrf-token', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+            },
+        })
+        if (response.ok) {
+            console.log('CSRF token initialized successfully')
+        } else {
+            console.error('Failed to initialize CSRF token:', response.statusText)
+        }
+    } catch (error) {
+        console.error('Error initializing CSRF token:', error)
+    }
+}
+
+// 主應用組件，包含路由和 CSRF token 初始化
+function AppContent() {
+    // 在應用載入時初始化 CSRF token
+    useEffect(() => {
+        initializeCsrfToken()
+    }, [])
+
+    return (
+        <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <NotificationContainer />
+            <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/bicycle/:id" element={<BicycleDetail />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/search" element={<Search />} />
+
+                {/* 需要認證的路由 */}
+                <Route
+                    path="/upload"
+                    element={
+                        <PrivateRoute>
+                            <UploadBike />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <PrivateRoute>
+                            <Profile />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/messages" // General messages overview
+                    element={
+                        <PrivateRoute>
+                            <Messages />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/messages/:conversationId" // Specific conversation view
+                    element={
+                        <PrivateRoute>
+                            <Messages />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/checkout"
+                    element={
+                        <PrivateRoute>
+                            <Checkout />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/order-success"
+                    element={
+                        <PrivateRoute>
+                            <OrderSuccess />
+                        </PrivateRoute>
+                    }
+                />
+
+                {/* 404 頁面 */}
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </TooltipProvider>
+    )
+}
+
 function App() {
     return (
         <QueryClientProvider client={queryClient}>
@@ -35,72 +133,7 @@ function App() {
                     <CartProvider>
                         <NotificationProvider>
                             <SearchProvider>
-                                <TooltipProvider>
-                                    <Toaster />
-                                    <Sonner />
-                                    <NotificationContainer />
-                                    <Routes>
-                                        <Route path="/" element={<Index />} />
-                                        <Route path="/login" element={<Login />} />
-                                        <Route path="/register" element={<Register />} />
-                                        <Route path="/bicycle/:id" element={<BicycleDetail />} />
-                                        <Route path="/auth/callback" element={<AuthCallback />} />
-                                        <Route path="/search" element={<Search />} />
-
-                                        {/* 需要認證的路由 */}
-                                        <Route
-                                            path="/upload"
-                                            element={
-                                                <PrivateRoute>
-                                                    <UploadBike />
-                                                </PrivateRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="/profile"
-                                            element={
-                                                <PrivateRoute>
-                                                    <Profile />
-                                                </PrivateRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="/messages" // General messages overview
-                                            element={
-                                                <PrivateRoute>
-                                                    <Messages />
-                                                </PrivateRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="/messages/:conversationId" // Specific conversation view
-                                            element={
-                                                <PrivateRoute>
-                                                    <Messages />
-                                                </PrivateRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="/checkout"
-                                            element={
-                                                <PrivateRoute>
-                                                    <Checkout />
-                                                </PrivateRoute>
-                                            }
-                                        />
-                                        <Route
-                                            path="/order-success"
-                                            element={
-                                                <PrivateRoute>
-                                                    <OrderSuccess />
-                                                </PrivateRoute>
-                                            }
-                                        />
-
-                                        {/* 404 頁面 */}
-                                        <Route path="*" element={<NotFound />} />
-                                    </Routes>
-                                </TooltipProvider>
+                                <AppContent />
                             </SearchProvider>
                         </NotificationProvider>
                     </CartProvider>

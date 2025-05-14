@@ -2,7 +2,7 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user!, only: [:login, :register]
+      skip_before_action :authenticate_user!, only: [:login, :register, :csrf_token]
       skip_before_action :verify_authenticity_token, only: [:login, :register]
       
       def register
@@ -53,6 +53,15 @@ module Api
       def logout
         delete_auth_cookies # Delete both access and refresh HttpOnly cookies
         head :no_content
+      end
+
+      # 專門用於獲取和設置 CSRF token 的端點
+      def csrf_token
+        # set_csrf_cookie 在 ApplicationController 中已經定義
+        # 這個方法會被 before_action 自動調用，所以這裡不需要顯式調用
+        
+        # 返回成功響應，CSRF token 已經設置在 cookie 中
+        render json: { status: 'ok' }
       end
       
       private

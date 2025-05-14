@@ -2,7 +2,7 @@
 class ApplicationController < ActionController::API
   include ActionController::Cookies
   include ActionController::RequestForgeryProtection
-  protect_from_forgery with: :exception
+  protect_from_forgery with: :exception # API 模式使用 :null_session 而非 :exception
   before_action :set_csrf_cookie
   before_action :authenticate_user!
 
@@ -17,6 +17,9 @@ class ApplicationController < ActionController::API
       httponly: false, # 必須為 false，JS 才能讀取
       domain: Rails.env.production? ? URI.parse(ENV.fetch('FRONTEND_URL', 'https://your-frontend-domain.com')).host : nil
     }
+    
+    # 日誌顯示 CSRF token，幫助調試
+    Rails.logger.debug "Set CSRF token in cookie: #{form_authenticity_token}"
   end
   
   def encode_token(payload, exp = 1.hour.from_now)
