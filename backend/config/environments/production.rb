@@ -38,7 +38,27 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
+
+  config.active_storage.service_configurations = {
+    "google" => {
+      "service" => "GCS",
+      "project" => ENV['GOOGLE_CLOUD_PROJECT_ID'],
+      "credentials" => ENV['GOOGLE_CLOUD_KEYFILE'] || '/tmp/gcp_credentials.json',
+      "bucket" => ENV['GOOGLE_CLOUD_BUCKET']
+    }
+  }
   config.active_storage.service = :google
+
+  if ENV['GOOGLE_CLOUD_CREDENTIALS'].present?
+    require 'fileutils'
+    temp_credentials_path = '/tmp/gcp_credentials.json'
+    
+    File.open(temp_credentials_path, 'w') do |f|
+      f.write(ENV['GOOGLE_CLOUD_CREDENTIALS'])
+    end
+    FileUtils.chmod(0600, temp_credentials_path)
+    ENV['GOOGLE_CLOUD_KEYFILE'] = temp_credentials_path
+  end
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil

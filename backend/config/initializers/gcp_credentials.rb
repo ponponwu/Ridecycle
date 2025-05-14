@@ -1,21 +1,27 @@
-# # config/initializers/gcp_credentials.rb
-# if ENV['GOOGLE_CLOUD_CREDENTIALS'].present? && Rails.env.production?
-#   require 'fileutils'
+# config/initializers/gcp_credentials.rb
+if Rails.env.production? && ENV['GOOGLE_CLOUD_CREDENTIALS'].present?
+  require 'fileutils'
   
-#   begin
-#     # 確保 config 目錄存在
-#     FileUtils.mkdir_p(Rails.root.join('config'))
+  temp_credentials_path = '/tmp/gcp_credentials.json'
+  
+  begin
+    # 確保目錄存在
+    FileUtils.mkdir_p(File.dirname(temp_credentials_path))
     
-#     # 將環境變數的內容寫入文件
-#     File.open(Rails.root.join('config/gcp_credentials.json'), 'w') do |f|
-#       f.write(ENV['GOOGLE_CLOUD_CREDENTIALS'])
-#     end
+    # 寫入憑證文件
+    File.open(temp_credentials_path, 'w') do |f|
+      f.write(ENV['GOOGLE_CLOUD_CREDENTIALS'])
+    end
     
-#     # 設置正確的文件權限
-#     FileUtils.chmod(0600, Rails.root.join('config/gcp_credentials.json'))
+    # 設置文件權限
+    FileUtils.chmod(0600, temp_credentials_path)
     
-#     Rails.logger.info "GCP credentials file created successfully"
-#   rescue => e
-#     Rails.logger.error "Failed to create GCP credentials file: #{e.message}"
-#   end
-# end
+    # 設置環境變數指向這個文件
+    ENV['GOOGLE_CLOUD_KEYFILE'] = temp_credentials_path
+    
+    Rails.logger.info "GCP credentials file created at #{temp_credentials_path}"
+  rescue => e
+    Rails.logger.error "Failed to create GCP credentials file: #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+  end
+end
