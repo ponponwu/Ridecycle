@@ -11,6 +11,7 @@ import { SearchProvider } from '@/contexts/SearchContext'
 import NotificationContainer from '@/components/NotificationContainer'
 import PrivateRoute from '@/components/PrivateRoute'
 import { useEffect } from 'react'
+import apiClient from '@/api/client'
 
 import Index from './pages/Index'
 import Login from './pages/Login'
@@ -31,20 +32,11 @@ const queryClient = new QueryClient()
 // 初始化 CSRF token 的函數
 const initializeCsrfToken = async () => {
     try {
-        const response = await fetch('/api/v1/csrf-token', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                Accept: 'application/json',
-            },
-        })
-        if (response.ok) {
-            console.log('CSRF token initialized successfully')
-        } else {
-            console.error('Failed to initialize CSRF token:', response.statusText)
-        }
+        console.log('初始化 CSRF token')
+        await apiClient.get('csrf_token') // 使用 apiClient 而非直接 fetch
+        console.log('CSRF token 初始化成功')
     } catch (error) {
-        console.error('Error initializing CSRF token:', error)
+        console.error('初始化 CSRF token 錯誤:', error)
     }
 }
 
