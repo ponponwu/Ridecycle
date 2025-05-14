@@ -32,11 +32,12 @@ const queryClient = new QueryClient()
 // 初始化 CSRF token 的函數
 const initializeCsrfToken = async () => {
     try {
-        console.log('初始化 CSRF token')
-        await apiClient.get('csrf_token') // 使用 apiClient 而非直接 fetch
-        console.log('CSRF token 初始化成功')
+        console.log('===== 應用啟動，初始化 CSRF token 開始 =====')
+        await apiClient.get('csrf_token') // 使用下劃線與後端路由匹配
+        console.log('===== CSRF token 初始化成功 =====')
+        console.log('===== 當前 cookies:', document.cookie, '=====')
     } catch (error) {
-        console.error('初始化 CSRF token 錯誤:', error)
+        console.error('===== 初始化 CSRF token 錯誤:', error, '=====')
     }
 }
 

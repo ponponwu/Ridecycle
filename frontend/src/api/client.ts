@@ -10,7 +10,7 @@ import axios, {
 import applyCaseMiddleware from 'axios-case-converter'
 import { toast } from '@/hooks/use-toast'
 
-// API 基本配置
+// API 基本配置 - 確保使用完整的 URL 包括協議和域名
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/'
 const API_TIMEOUT = 15000
 
@@ -120,6 +120,8 @@ function processJSONAPIResponse<T>(response: unknown): T {
 class ApiClient {
     private instance: AxiosInstance
     private refreshTokenPromise: Promise<void> | null = null
+    private csrfTokenPromise: Promise<string | null> | null = null
+    private csrfToken: string | null = null
 
     constructor() {
         // 配置 axios-case-converter 進行自動命名轉換
@@ -131,13 +133,17 @@ class ApiClient {
             },
         }
 
+        // 確保 API_URL 以斜線結尾
+        const baseURL = API_URL.endsWith('/') ? API_URL : `${API_URL}/`
+
         const baseInstance = axios.create({
-            baseURL: API_URL,
+            baseURL,
             timeout: API_TIMEOUT,
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
             } as AxiosRequestHeaders,
+            withCredentials: true, // 始終發送憑證（cookies）
         })
 
         this.instance = applyCaseMiddleware(baseInstance, options)
@@ -145,24 +151,46 @@ class ApiClient {
         this.setupResponseInterceptor()
     }
 
+    // 公共異步初始化方法 - 在應用啟動時調用
+    public async initialize(): Promise<void> {
+        try {
+            console.log('===== 初始化 API 客戶端 =====')
+            await this.fetchCsrfToken()
+            console.log('===== API 客戶端初始化完成 =====')
+        } catch (error) {
+            console.error('===== API 客戶端初始化失敗 =====', error)
+        }
+    }
+
     private setupRequestInterceptor(): void {
         this.instance.interceptors.request.use(
-            (config: InternalAxiosRequestConfig) => {
+            async (config: InternalAxiosRequestConfig) => {
                 config.headers = config.headers || ({} as AxiosRequestHeaders)
 
+                // 只為非 GET/HEAD/OPTIONS 請求添加 CSRF token
                 if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
-                    const csrfToken = this.getCsrfToken()
                     console.log(`===== 請求方法: ${config.method}, URL: ${config.url} =====`)
 
-                    if (csrfToken) {
-                        console.log(`===== 添加 CSRF token 到請求頭: ${csrfToken.substring(0, 10)}... =====`)
-                        ;(config.headers as AxiosRequestHeaders)['X-CSRF-Token'] = csrfToken
+                    // 如果已經有 token，直接使用
+                    if (this.csrfToken) {
+                        console.log(`===== 使用已有 CSRF token: ${this.csrfToken.substring(0, 10)}... =====`)
+                        ;(config.headers as AxiosRequestHeaders)['X-CSRF-Token'] = this.csrfToken
                     } else {
-                        console.warn(`===== 請求缺少 CSRF token! URL: ${config.url} =====`)
+                        // 否則獲取 token
+                        try {
+                            const token = await this.getCsrfToken()
+                            if (token) {
+                                console.log(`===== 添加 CSRF token 到請求頭: ${token.substring(0, 10)}... =====`)
+                                ;(config.headers as AxiosRequestHeaders)['X-CSRF-Token'] = token
+                            } else {
+                                console.warn(`===== 請求缺少 CSRF token! URL: ${config.url} =====`)
+                            }
+                        } catch (error) {
+                            console.error('===== 獲取 CSRF token 失敗 =====', error)
+                        }
                     }
                 }
 
-                config.withCredentials = true
                 return config
             },
             (error: AxiosError) => {
@@ -172,73 +200,111 @@ class ApiClient {
         )
     }
 
-    private getCsrfToken(): string | null {
+    private async getCsrfToken(): Promise<string | null> {
         try {
             console.log('===== 嘗試獲取 CSRF token =====')
 
-            // 1. 先從 cookie 中尋找
-            const cookies = document.cookie.split(';')
-            console.log('===== 所有 cookies:', cookies, '=====')
-
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim()
-                if (cookie.startsWith('CSRF-TOKEN=')) {
-                    const token = decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
-                    console.log('===== CSRF token 從 cookie 中找到:', token, '=====')
-                    return token
-                }
-                if (cookie.startsWith('X-CSRF-Token=')) {
-                    const token = decodeURIComponent(cookie.substring('X-CSRF-Token='.length))
-                    console.log('===== CSRF token 從 X-CSRF-Token cookie 中找到:', token, '=====')
-                    return token
-                }
+            // 如果已經有 token，直接返回
+            if (this.csrfToken) {
+                return this.csrfToken
             }
 
-            // 2. 從 meta 標籤尋找
-            const metaTag = document.querySelector('meta[name="csrf-token"]')
-            if (metaTag) {
-                const token = metaTag.getAttribute('content')
-                console.log('===== CSRF token 從 meta 標籤找到:', token, '=====')
-                return token
+            // 1. 從 cookie 中獲取
+            const tokenFromCookie = this.getTokenFromCookie()
+            if (tokenFromCookie) {
+                this.csrfToken = tokenFromCookie
+                return tokenFromCookie
             }
 
-            // 3. 最後一次嘗試 - 直接向後端請求新的 token
-            console.warn('===== 無法找到 CSRF token! 嘗試立即獲取新的 token =====')
-            return this.fetchNewCsrfToken()
+            // 2. 從 meta 標籤獲取
+            const tokenFromMeta = this.getTokenFromMeta()
+            if (tokenFromMeta) {
+                this.csrfToken = tokenFromMeta
+                return tokenFromMeta
+            }
+
+            // 3. 如果沒有找到，從後端獲取
+            return this.fetchCsrfToken()
         } catch (error) {
             console.error('===== 獲取 CSRF token 時發生錯誤:', error, '=====')
             return null
         }
     }
 
-    // 添加同步獲取新 CSRF token 的方法
-    private fetchNewCsrfToken(): string | null {
-        try {
-            console.log('===== 同步請求新的 CSRF token =====')
-            // 使用同步 XMLHttpRequest
-            const xhr = new XMLHttpRequest()
-            xhr.open('GET', '/api/v1/csrf-token', false) // 第三個參數 false 表示同步請求
-            xhr.setRequestHeader('Accept', 'application/json')
-            xhr.withCredentials = true
-            xhr.send(null)
+    private getTokenFromCookie(): string | null {
+        console.log('===== 從 cookie 中查找 CSRF token =====')
+        const cookies = document.cookie.split(';')
+        console.log('===== 所有 cookies:', cookies, '=====')
 
-            if (xhr.status === 200) {
-                try {
-                    const response = JSON.parse(xhr.responseText)
-                    if (response && response.token) {
-                        console.log('===== 成功獲取新的 CSRF token =====')
-                        return response.token
-                    }
-                } catch (e) {
-                    console.error('===== 解析 CSRF token 響應失敗 =====', e)
-                }
-            } else {
-                console.error(`===== 獲取 CSRF token 請求失敗: ${xhr.status} =====`)
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim()
+            if (cookie.startsWith('CSRF-TOKEN=')) {
+                const token = decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
+                console.log('===== CSRF token 從 cookie 中找到:', token.substring(0, 10) + '... =====')
+                return token
             }
-        } catch (error) {
-            console.error('===== 同步獲取 CSRF token 失敗:', error, '=====')
+            if (cookie.startsWith('X-CSRF-Token=')) {
+                const token = decodeURIComponent(cookie.substring('X-CSRF-Token='.length))
+                console.log('===== CSRF token 從 X-CSRF-Token cookie 中找到:', token.substring(0, 10) + '... =====')
+                return token
+            }
         }
+
+        console.log('===== 在 cookie 中未找到 CSRF token =====')
         return null
+    }
+
+    private getTokenFromMeta(): string | null {
+        console.log('===== 從 meta 標籤查找 CSRF token =====')
+        const metaTag = document.querySelector('meta[name="csrf-token"]')
+        if (metaTag) {
+            const token = metaTag.getAttribute('content')
+            console.log('===== CSRF token 從 meta 標籤找到:', token?.substring(0, 10) + '... =====')
+            return token
+        }
+
+        console.log('===== 在 meta 標籤中未找到 CSRF token =====')
+        return null
+    }
+
+    // 異步獲取 CSRF token
+    public async fetchCsrfToken(): Promise<string | null> {
+        // 如果已經有請求在進行中，返回該請求的 promise
+        if (this.csrfTokenPromise) {
+            return this.csrfTokenPromise
+        }
+
+        console.log('===== 從 API 獲取新的 CSRF token =====')
+
+        // 創建新的請求 promise
+        this.csrfTokenPromise = new Promise<string | null>(async (resolve) => {
+            try {
+                // 使用完整的 URL，確保即使前端和 API 在不同域也能正確請求
+                const response = await axios.get<{ status: string; token: string }>(`${API_URL}csrf_token`, {
+                    withCredentials: true,
+                    headers: {
+                        Accept: 'application/json',
+                    },
+                })
+
+                if (response.status === 200 && response.data && response.data.token) {
+                    this.csrfToken = response.data.token
+                    console.log('===== 成功獲取新的 CSRF token:', response.data.token.substring(0, 10) + '... =====')
+                    resolve(response.data.token)
+                } else {
+                    console.error('===== API 返回的 CSRF token 格式不正確 =====', response.data)
+                    resolve(null)
+                }
+            } catch (error) {
+                console.error('===== 從 API 獲取 CSRF token 失敗 =====', error)
+                resolve(null)
+            } finally {
+                // 完成後清除 promise
+                this.csrfTokenPromise = null
+            }
+        })
+
+        return this.csrfTokenPromise
     }
 
     private setupResponseInterceptor(): void {
@@ -247,20 +313,40 @@ class ApiClient {
             async (error: AxiosError) => {
                 const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined
 
+                // 處理 CSRF token 相關錯誤
+                if (error.response?.status === 422 && originalRequest && !originalRequest._retryAttempted) {
+                    console.log('===== 檢測到 CSRF 錯誤 (422)，嘗試獲取新 token =====')
+                    try {
+                        // 清除舊 token
+                        this.csrfToken = null
+                        // 獲取新 token
+                        const newToken = await this.fetchCsrfToken()
+                        if (newToken && originalRequest.headers) {
+                            originalRequest._retryAttempted = true
+                            originalRequest.headers['X-CSRF-Token'] = newToken
+                            return this.instance(originalRequest)
+                        }
+                    } catch (retryError) {
+                        console.error('===== CSRF token 重試失敗 =====', retryError)
+                    }
+                }
+
                 const refreshUrlPath = 'auth/refresh'
                 const fullRefreshUrl = `${API_URL}${refreshUrlPath}`
                 const fullRefreshUrlWithSlash = `${fullRefreshUrl}/`
 
+                // 處理 401 錯誤（未授權）
                 if (
                     originalRequest?.url === fullRefreshUrl ||
                     originalRequest?.url === fullRefreshUrlWithSlash ||
                     originalRequest?.url === refreshUrlPath
                 ) {
-                    // console.warn('ApiClient: Failed request was to refresh token endpoint. Not attempting refresh again.');
+                    console.warn('===== 刷新令牌端點失敗，不再嘗試刷新 =====')
                     return Promise.reject(error)
                 }
 
                 if (error.response?.status === 401 && originalRequest && !originalRequest._retryAttempted) {
+                    console.log('===== 檢測到 401 錯誤，嘗試刷新令牌 =====')
                     originalRequest._retryAttempted = true
                     if (!this.refreshTokenPromise) {
                         this.refreshTokenPromise = this.refreshToken().finally(() => {
@@ -269,13 +355,15 @@ class ApiClient {
                     }
                     try {
                         await this.refreshTokenPromise
+                        console.log('===== 令牌刷新成功，重試原始請求 =====')
                         return this.instance(originalRequest)
                     } catch (refreshError) {
-                        // console.error("ApiClient: Refresh token failed during retry logic.", refreshError);
+                        console.error('===== 令牌刷新失敗 =====', refreshError)
                         this.clearAuthData()
                         return Promise.reject(refreshError)
                     }
                 }
+
                 this.handleApiError(error)
                 return Promise.reject(error)
             }
@@ -338,7 +426,7 @@ class ApiClient {
                 errorMessage = ERROR_MESSAGES.NETWORK
             }
         }
-        // console.log("ApiClient: handleApiError displaying toast for error:", errorMessage);
+
         toast({
             variant: 'destructive',
             title: '錯誤',
@@ -360,34 +448,29 @@ class ApiClient {
 
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.instance.get<unknown>(url, config)
-        // 處理 JSON:API 結構
         return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async post<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
         const response = await this.instance.post<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        // 處理 JSON:API 結構
         return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async put<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
         const response = await this.instance.put<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        // 處理 JSON:API 結構
         return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async patch<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
         const response = await this.instance.patch<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        // 處理 JSON:API 結構
         return processJSONAPIResponse<T>(response.data)
     }
 
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const response = await this.instance.delete<unknown>(url, config)
-        // 處理 JSON:API 結構
         return processJSONAPIResponse<T>(response.data)
     }
 }
