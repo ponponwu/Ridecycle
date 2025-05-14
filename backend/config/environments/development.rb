@@ -24,9 +24,10 @@ Rails.application.configure do
     config.public_file_server.headers = {
       "Cache-Control" => "public, max-age=#{2.days.to_i}"
     }
+    config.action_controller.perform_caching = true
+    config.action_controller.enable_fragment_cache_logging = true
   else
     config.action_controller.perform_caching = false
-
     config.cache_store = :null_store
   end
 
@@ -56,10 +57,6 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
-
-  # Raises error for missing translations.
-  # config.i18n.raise_on_missing_translations = true
-
   # Annotate rendered view with file names.
   # config.action_view.annotate_rendered_view_with_filenames = true
 
@@ -68,4 +65,11 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Set default URL options for Action Mailer and routes in development
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+  Rails.application.routes.default_url_options = { host: 'localhost', port: 3000 }
+
+  # Raises error for missing translations.
+  # config.i18n.raise_on_missing_translations = true
 end

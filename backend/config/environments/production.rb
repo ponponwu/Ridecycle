@@ -14,13 +14,21 @@ Rails.application.configure do
 
   # Full error reports are disabled and caching is turned on.
   config.consider_all_requests_local = false
+  config.action_controller.perform_caching = true
 
-  # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"], config/master.key, or an environment
-  # key such as config/credentials/production.key. This key is used to decrypt credentials (and other encrypted files).
+  # Ensures that a master key has been made available in ENV["RAILS_MASTER_KEY"]
+  # or in config/master.key. This key is used to decrypt credentials (and other encrypted files).
   # config.require_master_key = true
 
-  # Disable serving static files from `public/`, relying on NGINX/Apache to do so instead.
-  # config.public_file_server.enabled = false
+  # Disable serving static files from the `/public` folder by default since
+  # Apache or NGINX already handles this.
+  config.public_file_server.enabled = ENV["RAILS_SERVE_STATIC_FILES"].present?
+
+  # Compress CSS using a preprocessor.
+  # config.assets.css_compressor = :sass
+
+  # Do not fallback to assets pipeline if a precompiled asset is missed.
+  config.assets.compile = false
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
@@ -30,7 +38,7 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  config.active_storage.service = :google
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
@@ -49,26 +57,14 @@ Rails.application.configure do
     .tap  { |logger| logger.formatter = ::Logger::Formatter.new }
     .then { |logger| ActiveSupport::TaggedLogging.new(logger) }
 
-  # Prepend all log lines with the following tags.
+  # Prepend all log lines with a tag to help debug multi-stage builds.
   config.log_tags = [ :request_id ]
 
-  # "info" includes generic and useful information about system operation, but avoids logging too much
-  # information to avoid inadvertent exposure of personally identifiable information (PII). If you
-  # want to log everything, set the level to "debug".
+  # Info include generic information about the request itself such as Action names, parameters, Formatting Action Mailer messages etc.
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
-
-  # Use a real queuing backend for Active Job (and separate queues per environment).
-  # config.active_job.queue_adapter = :resque
-  # config.active_job.queue_name_prefix = "backend_production"
-
-  config.action_mailer.perform_caching = false
-
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # Don't log passwords, if you use Devise or other solutions that internally use Rails parameters filtering.
+  # config.log_filter += [ :password ]
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -87,4 +83,15 @@ Rails.application.configure do
   # ]
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # 確保 Active Storage 和其他需要生成 URL 的地方可以獲取主機名
+  # 建議將實際的主機名設定在環境變數 APPLICATION_HOST 中
+  config.action_mailer.default_url_options = { 
+    host: ENV.fetch('APPLICATION_HOST', 'your-backend-domain.railway.app'), 
+    protocol: 'https'
+  }
+  Rails.application.routes.default_url_options = { 
+    host: ENV.fetch('APPLICATION_HOST', 'your-backend-domain.railway.app'), 
+    protocol: 'https' 
+  }
 end

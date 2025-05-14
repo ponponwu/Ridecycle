@@ -11,30 +11,32 @@ module Api
         limit = params.fetch(:limit, 10).to_i
         offset = (page - 1) * limit
 
-        all_orders = @current_user.orders.includes(bicycle: [:user, { photos_attachments: :blob }]).order(created_at: :desc)
+        all_orders = @current_user.orders.includes(:bicycle, bicycle: [:user, { photos_attachments: :blob }]).order(created_at: :desc)
         @orders = all_orders.offset(offset).limit(limit)
         total_count = all_orders.count
 
-        orders_with_details = @orders.map do |order|
-          order_data = order.as_json(include: { 
-            bicycle: { 
-              include: { 
-                user: { only: [:id, :name] }, # Seller info
-              },
-              methods: [] # Add :photos_urls if you define it in Bicycle model
-            }
-          })
-          # Manually add bicycle photo URL if not handled by methods in model's as_json
-          if order.bicycle && order.bicycle.photos.attached?
-            order_data['bicycle']['photos_urls'] = order.bicycle.photos.map { |photo| url_for(photo) }
-          else
-            order_data['bicycle']['photos_urls'] = [] if order.bicycle
-          end
-          order_data
-        end
+        # 使用 OrderSerializer 進行序列化
+        options = {}
+        options[:include] = [:user, :bicycle] # 包含關聯的用戶和自行車
+        
+        # 序列化訂單
+        serialized_orders = OrderSerializer.new(@orders, options).serializable_hash
 
+        # 為了保持與前端的兼容，可以轉換回舊的 JSON 結構
+        # 或者讓前端適應 JSON:API 格式
         render json: {
-          orders: orders_with_details,
+          orders: serialized_orders[:data].map { |item| 
+            order_attributes = item[:attributes]
+            bicycle = item[:relationships][:bicycle][:data]
+            # 找到 bicycle 的資料
+            bicycle_data = serialized_orders[:included]&.find { |inc| inc[:type] == 'bicycle' && inc[:id] == bicycle[:id] }
+            
+            # 合併資料
+            order_attributes.merge(
+              id: item[:id],
+              bicycle: bicycle_data ? bicycle_data[:attributes].merge(id: bicycle_data[:id]) : nil
+            )
+          },
           totalCount: total_count,
           page: page,
           limit: limit,
@@ -48,7 +50,7 @@ module Api
       #   @order = @current_user.orders.build(order_params)
       #   if @order.save
       #     # Potentially update bicycle status, send notifications, etc.
-      #     render json: @order, status: :created
+      #     render json: OrderSerializer.new(@order).serializable_hash, status: :created
       #   else
       #     render json: @order.errors, status: :unprocessable_entity
       #   end

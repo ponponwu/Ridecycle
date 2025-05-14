@@ -23,7 +23,7 @@ module Api
         
         if user.save
           set_auth_cookies(user) # Set both access and refresh HttpOnly cookies
-          render json: { user: user.as_json(methods: [], except: [:password_digest]) }, status: :created
+          render json: { user: UserSerializer.new(user).serializable_hash[:data][:attributes] }, status: :created
         else
           render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
         end
@@ -34,7 +34,7 @@ module Api
         
         if user && user.authenticate(params[:password])
           set_auth_cookies(user) # Set both access and refresh HttpOnly cookies
-          render json: { user: user.as_json(methods: [], except: [:password_digest]) }
+          render json: { user: UserSerializer.new(user).serializable_hash[:data][:attributes] }
         else
           render json: { error: 'Invalid email or password' }, status: :unauthorized
         end
@@ -43,7 +43,7 @@ module Api
       def me
         # current_user is set by authenticate_user! which now reads from cookie
         if @current_user
-          render json: { user: @current_user.as_json(methods: [], except: [:password_digest]) }
+          render json: { user: UserSerializer.new(@current_user).serializable_hash[:data][:attributes] }
         else
           # This case should ideally be caught by authenticate_user! itself
           render json: { error: 'Not authenticated' }, status: :unauthorized

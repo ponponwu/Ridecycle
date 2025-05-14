@@ -55,3 +55,9 @@ gem "bcrypt", "~> 3.1"
 gem "omniauth"
 gem "omniauth-google-oauth2"
 gem "omniauth-facebook"
+
+# handle picture
+
+gem "image_processing", ">= 1.2"
+gem 'google-cloud-storage', '~> 1.30', require: false
+gem 'jsonapi-serializer'

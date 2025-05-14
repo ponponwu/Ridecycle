@@ -38,7 +38,7 @@ module Api
           last_message = Message.where(
             "(sender_id = :current_user_id AND recipient_id = :other_user_id) OR (sender_id = :other_user_id AND recipient_id = :current_user_id)",
             current_user_id: @current_user.id, other_user_id: other_user_id
-          ).includes(bicycle: { photos_attachments: :blob }).order(created_at: :desc).first # Added includes
+          ).includes(:bicycle, :sender, :recipient, bicycle: { photos_attachments: :blob }).order(created_at: :desc).first # Added includes
 
           # Ensure User model has an avatar_url method or similar if you want to use it.
           # For now, assuming it might not exist and relying on frontend fallback for avatar.
@@ -81,18 +81,15 @@ module Api
         # Mark messages sent by the other user to the current user as read
         messages.where(sender_id: other_user_id, recipient_id: @current_user.id, is_read: false).update_all(is_read: true, read_at: Time.current)
 
-        render json: messages.as_json(
-          include: {
-            sender: { only: [:id, :name] }, # Consider adding avatar_url if User model supports it
-            recipient: { only: [:id, :name] }, # Consider adding avatar_url
-            bicycle: { only: [:id, :title] } # Include basic bicycle info if present
-          }
-        )
+        # 使用 MessageSerializer 進行序列化
+        options = {}
+        options[:include] = [:sender, :recipient, :bicycle] # 包含關聯資源
+        
+        render json: MessageSerializer.new(messages, options).serializable_hash
       end
 
       # POST /api/v1/messages
       def create
-
         if message_params[:recipient_id].to_i == @current_user.id
           render json: { errors: ["Cannot send a message to yourself."] }, status: :unprocessable_entity
           return
@@ -102,7 +99,11 @@ module Api
         # recipient_id must be in message_params
         if message.save
           # Here you might want to broadcast the message via ActionCable if using WebSockets
-          render json: message.as_json(include: { sender: { only: [:id, :name] } }), status: :created
+          # 使用 MessageSerializer 進行序列化
+          options = {}
+          options[:include] = [:sender] # 只包含發送者
+          
+          render json: MessageSerializer.new(message, options).serializable_hash, status: :created
         else
           render json: { errors: message.errors.full_messages }, status: :unprocessable_entity
         end

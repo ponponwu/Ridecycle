@@ -18,10 +18,8 @@ module Api
 
           frontend_callback_url = "#{ENV.fetch('FRONTEND_URL', 'http://localhost:8080')}/auth/callback"
           
-          user_info_for_callback = user.as_json(
-            only: [:id, :email, :name],
-            methods: []
-          ).to_json
+          # 使用 UserSerializer 進行序列化
+          user_info_for_callback = UserSerializer.new(user).serializable_hash[:data][:attributes].to_json
 
           redirect_url = "#{frontend_callback_url}?user=#{CGI.escape(user_info_for_callback)}"
           
