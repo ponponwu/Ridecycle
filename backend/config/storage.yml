@@ -10,7 +10,7 @@ local:
 google:
     service: GCS
     project: <%= ENV['GOOGLE_CLOUD_PROJECT_ID'] %>
-    credentials: "<%= ENV['GOOGLE_CLOUD_CREDENTIALS'].present? ? JSON.parse(ENV['GOOGLE_CLOUD_CREDENTIALS']) : Rails.root.join('config/gcp_credentials.json') %>"
+    credentials: <%= Rails.root.join('config/gcp_credentials.json') %>
     bucket: <%= ENV['GOOGLE_CLOUD_BUCKET'] %>
 # Remember not to checkin your GCS keyfile to a repository
 # google:
