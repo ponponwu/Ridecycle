@@ -11,7 +11,7 @@ export interface BicycleCardProps {
     location: string
     condition: string
     brand: string
-    photosUrls?: string[] // Changed from imageUrl to photosUrls, and made it an array
+    imageUrl: string
     isFavorite?: boolean
 }
 
@@ -22,18 +22,16 @@ const BicycleCard = ({
     location,
     condition,
     brand,
-    photosUrls, // Changed from imageUrl
+    imageUrl,
     isFavorite = false,
 }: BicycleCardProps) => {
-    const displayImageUrl = photosUrls && photosUrls.length > 0 ? photosUrls[0] : '/placeholder.svg' // Use first image or a placeholder
-
     return (
         <div className="bg-white rounded-lg overflow-hidden bicycle-card-shadow transition-all duration-300 hover:shadow-lg">
             <div className="relative">
                 {/* Image */}
                 <Link to={`/bicycle/${id}`} className="block aspect-[4/3] overflow-hidden">
                     <img
-                        src={displayImageUrl} // Use the derived displayImageUrl
+                        src={imageUrl} // Use the derived displayImageUrl
                         alt={title}
                         className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
                     />
