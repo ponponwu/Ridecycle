@@ -12,18 +12,30 @@ class ApplicationController < ActionController::API
     token = form_authenticity_token
     Rails.logger.info "====== Generating CSRF token: #{token} ======"
     
-    cookie_options = {
+    # 確保 cookie 正確設置，不受同源策略限制
+    cookies['CSRF-TOKEN'] = {
       value: token,
-      same_site: Rails.env.production? ? :none : :lax,
-      secure: Rails.env.production?,
-      httponly: false,
-      domain: Rails.env.production? ? URI.parse(ENV.fetch('FRONTEND_URL', 'https://your-frontend-domain.com')).host : nil
+      same_site: 'None', # 允許跨站點請求
+      secure: true,      # 要求使用 HTTPS
+      httponly: false,   # 允許 JavaScript 訪問
+      path: '/'          # 適用於整個網站
     }
     
-    cookies['CSRF-TOKEN'] = cookie_options
+    # 同時設置為標準 Rails CSRF token (可能會被 ActionDispatch::Cookies 使用)
+    cookies['X-CSRF-Token'] = {
+      value: token,
+      same_site: 'None',
+      secure: true,
+      httponly: false, 
+      path: '/'
+    }
     
-    Rails.logger.info "====== Set CSRF token in cookie with options: #{cookie_options.inspect} ======"
-    Rails.logger.info "====== Current cookies: #{cookies.to_h.keys} ======"
+    # 確認 cookie 是否成功設置
+    Rails.logger.info "====== Set CSRF token cookies ======"
+    Rails.logger.info "====== Cookies after setting: #{cookies.to_h.inspect} ======"
+    
+    # 在響應標頭中也設置 CSRF token，提供備用方式訪問
+    response.headers['X-CSRF-Token'] = token
   end
   
   def encode_token(payload, exp = 1.hour.from_now)

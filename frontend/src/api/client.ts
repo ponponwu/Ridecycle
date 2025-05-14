@@ -175,6 +175,8 @@ class ApiClient {
     private getCsrfToken(): string | null {
         try {
             console.log('===== 嘗試獲取 CSRF token =====')
+
+            // 1. 先從 cookie 中尋找
             const cookies = document.cookie.split(';')
             console.log('===== 所有 cookies:', cookies, '=====')
 
@@ -185,9 +187,14 @@ class ApiClient {
                     console.log('===== CSRF token 從 cookie 中找到:', token, '=====')
                     return token
                 }
+                if (cookie.startsWith('X-CSRF-Token=')) {
+                    const token = decodeURIComponent(cookie.substring('X-CSRF-Token='.length))
+                    console.log('===== CSRF token 從 X-CSRF-Token cookie 中找到:', token, '=====')
+                    return token
+                }
             }
 
-            // 如果沒有在 cookie 中找到，嘗試從 meta 標籤獲取
+            // 2. 從 meta 標籤尋找
             const metaTag = document.querySelector('meta[name="csrf-token"]')
             if (metaTag) {
                 const token = metaTag.getAttribute('content')
@@ -195,38 +202,43 @@ class ApiClient {
                 return token
             }
 
-            console.warn('===== 無法找到 CSRF token! 嘗試重新初始化 =====')
-            // 如果找不到 CSRF token，嘗試重新初始化
-            this.initializeCsrfToken()
-            return null
+            // 3. 最後一次嘗試 - 直接向後端請求新的 token
+            console.warn('===== 無法找到 CSRF token! 嘗試立即獲取新的 token =====')
+            return this.fetchNewCsrfToken()
         } catch (error) {
             console.error('===== 獲取 CSRF token 時發生錯誤:', error, '=====')
             return null
         }
     }
 
-    // 添加初始化 CSRF token 的方法
-    private async initializeCsrfToken(): Promise<void> {
+    // 添加同步獲取新 CSRF token 的方法
+    private fetchNewCsrfToken(): string | null {
         try {
-            console.log('===== 開始初始化 CSRF token =====')
-            const response = await fetch('/api/v1/csrf-token', {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            })
+            console.log('===== 同步請求新的 CSRF token =====')
+            // 使用同步 XMLHttpRequest
+            const xhr = new XMLHttpRequest()
+            xhr.open('GET', '/api/v1/csrf-token', false) // 第三個參數 false 表示同步請求
+            xhr.setRequestHeader('Accept', 'application/json')
+            xhr.withCredentials = true
+            xhr.send(null)
 
-            if (response.ok) {
-                console.log('===== CSRF token 初始化成功 =====')
-                console.log('===== 初始化後的所有 cookies:', document.cookie.split(';'), '=====')
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText)
+                    if (response && response.token) {
+                        console.log('===== 成功獲取新的 CSRF token =====')
+                        return response.token
+                    }
+                } catch (e) {
+                    console.error('===== 解析 CSRF token 響應失敗 =====', e)
+                }
             } else {
-                console.error(`===== CSRF token 初始化請求失敗: ${response.status} ${response.statusText} =====`)
+                console.error(`===== 獲取 CSRF token 請求失敗: ${xhr.status} =====`)
             }
         } catch (error) {
-            console.error('===== CSRF token 初始化過程中發生錯誤:', error, '=====')
+            console.error('===== 同步獲取 CSRF token 失敗:', error, '=====')
         }
+        return null
     }
 
     private setupResponseInterceptor(): void {
