@@ -38,9 +38,6 @@ interface ErrorResponseData {
 // 定義 JSON:API 相關的類型
 interface JSONAPIAttributes {
     [key: string]: unknown
-    price?: string | number
-    sellerInfo?: { id: number; name: string; email?: string }
-    user?: { id: number; name: string; email?: string }
 }
 
 interface JSONAPIResource<T extends JSONAPIAttributes = JSONAPIAttributes> {
@@ -56,33 +53,37 @@ interface JSONAPIResponse<T extends JSONAPIAttributes = JSONAPIAttributes> {
     meta?: Record<string, unknown>
 }
 
-// 改進的處理函數，支援集合和單一資源
+// 通用型的 JSON:API 響應處理函數
 function processJSONAPIResponse<T>(response: unknown): T {
-    // 如果不是物件或為 null，直接返回
+    // 非物件直接返回
     if (!response || typeof response !== 'object') {
         return response as T
     }
 
-    // 檢查是否有 data 屬性，判斷是否為 JSON:API 回應
+    // 檢查是否為 JSON:API 格式
     if ('data' in response && response.data !== null && typeof response.data === 'object') {
         const apiResponse = response as JSONAPIResponse
 
-        // 處理集合（data 是陣列）
+        // 處理集合資源
         if (Array.isArray(apiResponse.data)) {
             return apiResponse.data.map((item) => {
                 const { id, attributes } = item
-                const result = {
+                const result: Record<string, unknown> = {
                     id,
                     ...attributes,
                 }
 
-                // 特殊處理某些欄位
-                if (result.price && typeof result.price === 'string') {
-                    result.price = parseFloat(result.price)
-                }
-                if (result.sellerInfo && !result.user) {
-                    result.user = result.sellerInfo
-                }
+                // 處理數字類型轉換
+                Object.keys(result).forEach((key) => {
+                    // 將字符串數字轉換為實際數字
+                    if (
+                        typeof result[key] === 'string' &&
+                        !isNaN(Number(result[key])) &&
+                        (key === 'price' || key.endsWith('Price') || key.endsWith('Amount'))
+                    ) {
+                        result[key] = parseFloat(result[key] as string)
+                    }
+                })
 
                 return result
             }) as unknown as T
@@ -91,18 +92,22 @@ function processJSONAPIResponse<T>(response: unknown): T {
         // 處理單一資源
         if ('attributes' in apiResponse.data) {
             const { id, attributes } = apiResponse.data
-            const result = {
+            const result: Record<string, unknown> = {
                 id,
                 ...attributes,
             }
 
-            // 特殊處理某些欄位
-            if (result.price && typeof result.price === 'string') {
-                result.price = parseFloat(result.price)
-            }
-            if (result.sellerInfo && !result.user) {
-                result.user = result.sellerInfo
-            }
+            // 處理數字類型轉換
+            Object.keys(result).forEach((key) => {
+                // 將字符串數字轉換為實際數字
+                if (
+                    typeof result[key] === 'string' &&
+                    !isNaN(Number(result[key])) &&
+                    (key === 'price' || key.endsWith('Price') || key.endsWith('Amount'))
+                ) {
+                    result[key] = parseFloat(result[key] as string)
+                }
+            })
 
             return result as unknown as T
         }
@@ -117,6 +122,15 @@ class ApiClient {
     private refreshTokenPromise: Promise<void> | null = null
 
     constructor() {
+        // 配置 axios-case-converter 進行自動命名轉換
+        const options = {
+            ignoreHeaders: true, // 不轉換標頭
+            caseFunctions: {
+                snake: (input: string) => input.replace(/[A-Z]/g, (char) => `_${char.toLowerCase()}`),
+                camel: (input: string) => input.replace(/_([a-z])/g, (match, char) => char.toUpperCase()),
+            },
+        }
+
         const baseInstance = axios.create({
             baseURL: API_URL,
             timeout: API_TIMEOUT,
@@ -126,7 +140,7 @@ class ApiClient {
             } as AxiosRequestHeaders,
         })
 
-        this.instance = applyCaseMiddleware(baseInstance)
+        this.instance = applyCaseMiddleware(baseInstance, options)
         this.setupRequestInterceptor()
         this.setupResponseInterceptor()
     }
@@ -155,14 +169,27 @@ class ApiClient {
     }
 
     private getCsrfToken(): string | null {
-        const cookies = document.cookie.split(';')
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim()
-            if (cookie.startsWith('CSRF-TOKEN=')) {
-                return decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
+        try {
+            const cookies = document.cookie.split(';')
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim()
+                if (cookie.startsWith('CSRF-TOKEN=')) {
+                    return decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
+                }
             }
+
+            // 如果沒有在 cookie 中找到，嘗試從 meta 標籤獲取
+            const metaTag = document.querySelector('meta[name="csrf-token"]')
+            if (metaTag) {
+                return metaTag.getAttribute('content')
+            }
+
+            console.warn('CSRF token not found in cookies or meta tag')
+            return null
+        } catch (error) {
+            console.error('Error getting CSRF token:', error)
+            return null
         }
-        return null
     }
 
     private setupResponseInterceptor(): void {

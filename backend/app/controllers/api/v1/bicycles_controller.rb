@@ -7,6 +7,7 @@ class Api::V1::BicyclesController < ApplicationController
   # POST /api/v1/bicycles
   def create
     # 1. 保留您原有的 bicycle_attributes 處理邏輯
+    Rails.logger.info "!!!!!#{ENV["FRONTEND_URL"]}"
     bicycle_attributes = bicycle_params_for_create.to_h
     
     # 移除 seller_id 並設置 user_id (這部分邏輯可能需要調整，因為通常 user_id 應該來自 @current_user)

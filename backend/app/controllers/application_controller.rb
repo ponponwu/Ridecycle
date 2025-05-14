@@ -14,7 +14,8 @@ class ApplicationController < ActionController::API
       # 在生產環境使用 :none 以支援跨域, :lax 適用於同站或開發
       same_site: Rails.env.production? ? :none : :lax,
       secure: Rails.env.production?, # :none 要求 secure: true
-      httponly: false # 必須為 false，JS 才能讀取
+      httponly: false, # 必須為 false，JS 才能讀取
+      domain: Rails.env.production? ? URI.parse(ENV.fetch('FRONTEND_URL', 'https://your-frontend-domain.com')).host : nil
     }
   end
   

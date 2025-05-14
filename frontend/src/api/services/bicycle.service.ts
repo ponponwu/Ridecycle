@@ -90,17 +90,49 @@ export class BicycleService {
             }
         })
 
-        // Note: The photos and specifications are now handled inside the loop.
-        // The original separate blocks for photos and specifications can be removed if all data keys are iterated.
-        // However, IBicycleCreateRequest might have optional fields, so ensuring all relevant keys from 'data' are processed is key.
-        // The current loop iterates over `data`'s own enumerable properties.
+        // 獲取 CSRF token
+        const csrfToken = this.getCsrfToken()
+        const headers: Record<string, string> = {
+            'Content-Type': 'multipart/form-data',
+        }
+
+        // 如果有 CSRF token，添加到請求頭
+        if (csrfToken) {
+            headers['X-CSRF-Token'] = csrfToken
+        }
 
         return apiClient.post<IBicycle>('bicycles', formData, {
             // apiClient prepends /api/v1
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
+            headers,
         })
+    }
+
+    /**
+     * 獲取 CSRF token
+     * @returns {string|null} CSRF token
+     */
+    private getCsrfToken(): string | null {
+        try {
+            const cookies = document.cookie.split(';')
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim()
+                if (cookie.startsWith('CSRF-TOKEN=')) {
+                    return decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
+                }
+            }
+
+            // 如果沒有在 cookie 中找到，嘗試從 meta 標籤獲取
+            const metaTag = document.querySelector('meta[name="csrf-token"]')
+            if (metaTag) {
+                return metaTag.getAttribute('content')
+            }
+
+            console.warn('CSRF token not found in cookies or meta tag')
+            return null
+        } catch (error) {
+            console.error('Error getting CSRF token:', error)
+            return null
+        }
     }
 
     /**

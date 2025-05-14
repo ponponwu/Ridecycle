@@ -22,16 +22,18 @@ const UploadBike = () => {
     const navigate = useNavigate()
     const [currentStep, setCurrentStep] = useState(0)
     const [uploadProgress, setUploadProgress] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const form = useSellBikeForm()
-    const { formState } = form
 
     const totalSteps = 4 // Total number of steps
     const progressPercentage = ((currentStep + 1) / totalSteps) * 100
 
     const nextStep = () => {
-        if (currentStep < totalSteps - 1) {
-            setCurrentStep((prevStep) => prevStep + 1)
-        }
+        form.trigger().then((isValid) => {
+            if (isValid && currentStep < totalSteps - 1) {
+                setCurrentStep((prevStep) => prevStep + 1)
+            }
+        })
     }
 
     const prevStep = () => {
@@ -41,16 +43,25 @@ const UploadBike = () => {
     }
 
     const goToStep = (step: number) => {
+        // 理想情況下，應該驗證之前的所有步驟
+        // 這裡簡化為允許直接導航
         setCurrentStep(step)
     }
 
-    const onSubmit = async (data: SellBikeFormValues) => {
+    const handleFinalSubmit = async () => {
         try {
+            setIsSubmitting(true)
             setUploadProgress(0) // Reset progress
 
-            // TODO: Handle image uploads and get their URLs or identifiers
-            // For now, assuming photos are File objects and backend handles them.
-            // The bicycleService.createBicycle method already handles FormData.
+            const data = form.getValues()
+
+            // 驗證表單
+            const isValid = await form.trigger()
+            if (!isValid) {
+                toast.error('Please fill all required fields correctly')
+                setIsSubmitting(false)
+                return
+            }
 
             // Simulate initial progress
             await new Promise((resolve) => setTimeout(resolve, 100))
@@ -59,12 +70,6 @@ const UploadBike = () => {
             const response = await bicycleService.createBicycle({
                 ...data,
                 price: parseFloat(data.price), // Convert price to number
-                // Ensure photos are correctly passed if they are part of 'data'
-                // If 'photos' in SellBikeFormValues are File[] then it's fine.
-                // If they are URLs or other types, adjust accordingly.
-                // photos: data.photos, // Assuming data.photos is already in the correct format (File[])
-                // status: 'available', // Set default status or get from form
-                // sellerId: currentUser?.id || '', // Ensure sellerId is passed
             })
 
             // Simulate remaining upload progress
@@ -80,6 +85,8 @@ const UploadBike = () => {
             console.error('Error submitting form:', error)
             toast.error('Failed to list your bike. Please try again.')
             setUploadProgress(0) // Reset progress on error
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -111,12 +118,13 @@ const UploadBike = () => {
                         totalSteps={totalSteps}
                         progressPercentage={progressPercentage}
                         goToStep={goToStep}
-                        isSubmitting={formState.isSubmitting}
+                        isSubmitting={isSubmitting}
                     />
 
                     <div className="p-4 sm:p-6">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)}>
+                            {/* 一個虛擬表單只用於顯示步驟，不處理實際提交 */}
+                            <div>
                                 {/* Display current step content */}
                                 {steps[currentStep]}
 
@@ -126,10 +134,11 @@ const UploadBike = () => {
                                     totalSteps={totalSteps}
                                     prevStep={prevStep}
                                     nextStep={nextStep}
+                                    onSubmit={handleFinalSubmit}
                                     form={form}
-                                    isSubmitting={formState.isSubmitting}
+                                    isSubmitting={isSubmitting}
                                 />
-                            </form>
+                            </div>
                         </Form>
                     </div>
                 </div>
