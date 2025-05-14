@@ -28,12 +28,36 @@ const UploadBike = () => {
     const totalSteps = 4 // Total number of steps
     const progressPercentage = ((currentStep + 1) / totalSteps) * 100
 
-    const nextStep = () => {
-        form.trigger().then((isValid) => {
-            if (isValid && currentStep < totalSteps - 1) {
-                setCurrentStep((prevStep) => prevStep + 1)
-            }
-        })
+    // 每個步驟需要驗證的字段
+    const stepFields = [
+        // 步驟 1: 基本詳情
+        ['title', 'brand', 'model', 'year', 'bikeType', 'frameSize', 'description'],
+        // 步驟 2: 照片和狀況
+        ['photos', 'condition'],
+        // 步驟 3: 定價和位置
+        ['price', 'location', 'contactMethod'],
+        // 步驟 4: 審核 (無需驗證，只是檢視)
+        [],
+    ]
+
+    const nextStep = async () => {
+        if (currentStep >= totalSteps - 1) return
+
+        // 只驗證當前步驟的字段
+        const fieldsToValidate = stepFields[currentStep]
+        const isValid = await form.trigger(fieldsToValidate as Array<keyof SellBikeFormValues>)
+
+        if (isValid) {
+            setCurrentStep((prevStep) => prevStep + 1)
+        } else {
+            // 顯示錯誤消息
+            toast.error('請填寫所有必填欄位', {
+                description: '您需要填寫所有標記為必填的欄位才能繼續',
+            })
+
+            // 突出顯示錯誤字段（React Hook Form 已經處理了這部分）
+            console.log('Form errors:', form.formState.errors)
+        }
     }
 
     const prevStep = () => {
@@ -50,18 +74,19 @@ const UploadBike = () => {
 
     const handleFinalSubmit = async () => {
         try {
+            // 在最終提交前驗證所有字段
+            const isValid = await form.trigger()
+            if (!isValid) {
+                toast.error('請填寫所有必填欄位', {
+                    description: '您需要填寫所有標記為必填的欄位才能提交',
+                })
+                return
+            }
+
             setIsSubmitting(true)
             setUploadProgress(0) // Reset progress
 
             const data = form.getValues()
-
-            // 驗證表單
-            const isValid = await form.trigger()
-            if (!isValid) {
-                toast.error('Please fill all required fields correctly')
-                setIsSubmitting(false)
-                return
-            }
 
             // Simulate initial progress
             await new Promise((resolve) => setTimeout(resolve, 100))
