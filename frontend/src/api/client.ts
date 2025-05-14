@@ -152,17 +152,21 @@ class ApiClient {
 
                 if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
                     const csrfToken = this.getCsrfToken()
+                    console.log(`===== 請求方法: ${config.method}, URL: ${config.url} =====`)
+
                     if (csrfToken) {
+                        console.log(`===== 添加 CSRF token 到請求頭: ${csrfToken.substring(0, 10)}... =====`)
                         ;(config.headers as AxiosRequestHeaders)['X-CSRF-Token'] = csrfToken
+                    } else {
+                        console.warn(`===== 請求缺少 CSRF token! URL: ${config.url} =====`)
                     }
                 }
 
                 config.withCredentials = true
-
                 return config
             },
             (error: AxiosError) => {
-                // console.error('ApiClient: Request error in interceptor:', error);
+                console.error('===== 請求攔截器錯誤:', error, '=====')
                 return Promise.reject(error)
             }
         )
@@ -170,12 +174,15 @@ class ApiClient {
 
     private getCsrfToken(): string | null {
         try {
+            console.log('===== 嘗試獲取 CSRF token =====')
             const cookies = document.cookie.split(';')
+            console.log('===== 所有 cookies:', cookies, '=====')
+
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim()
                 if (cookie.startsWith('CSRF-TOKEN=')) {
                     const token = decodeURIComponent(cookie.substring('CSRF-TOKEN='.length))
-                    console.log('CSRF token found:', token)
+                    console.log('===== CSRF token 從 cookie 中找到:', token, '=====')
                     return token
                 }
             }
@@ -184,16 +191,16 @@ class ApiClient {
             const metaTag = document.querySelector('meta[name="csrf-token"]')
             if (metaTag) {
                 const token = metaTag.getAttribute('content')
-                console.log('CSRF token found in meta tag:', token)
+                console.log('===== CSRF token 從 meta 標籤找到:', token, '=====')
                 return token
             }
 
-            console.warn('CSRF token not found in cookies or meta tag')
+            console.warn('===== 無法找到 CSRF token! 嘗試重新初始化 =====')
             // 如果找不到 CSRF token，嘗試重新初始化
             this.initializeCsrfToken()
             return null
         } catch (error) {
-            console.error('Error getting CSRF token:', error)
+            console.error('===== 獲取 CSRF token 時發生錯誤:', error, '=====')
             return null
         }
     }
@@ -201,7 +208,8 @@ class ApiClient {
     // 添加初始化 CSRF token 的方法
     private async initializeCsrfToken(): Promise<void> {
         try {
-            await fetch('/api/v1/csrf-token', {
+            console.log('===== 開始初始化 CSRF token =====')
+            const response = await fetch('/api/v1/csrf-token', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -209,9 +217,15 @@ class ApiClient {
                     'Content-Type': 'application/json',
                 },
             })
-            console.log('CSRF token initialized')
+
+            if (response.ok) {
+                console.log('===== CSRF token 初始化成功 =====')
+                console.log('===== 初始化後的所有 cookies:', document.cookie.split(';'), '=====')
+            } else {
+                console.error(`===== CSRF token 初始化請求失敗: ${response.status} ${response.statusText} =====`)
+            }
         } catch (error) {
-            console.error('Failed to initialize CSRF token:', error)
+            console.error('===== CSRF token 初始化過程中發生錯誤:', error, '=====')
         }
     }
 

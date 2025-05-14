@@ -9,17 +9,21 @@ class ApplicationController < ActionController::API
   private
 
   def set_csrf_cookie
-    cookies['CSRF-TOKEN'] = {
-      value: form_authenticity_token,
-      # 在生產環境使用 :none 以支援跨域, :lax 適用於同站或開發
+    token = form_authenticity_token
+    Rails.logger.info "====== Generating CSRF token: #{token} ======"
+    
+    cookie_options = {
+      value: token,
       same_site: Rails.env.production? ? :none : :lax,
-      secure: Rails.env.production?, # :none 要求 secure: true
-      httponly: false, # 必須為 false，JS 才能讀取
+      secure: Rails.env.production?,
+      httponly: false,
       domain: Rails.env.production? ? URI.parse(ENV.fetch('FRONTEND_URL', 'https://your-frontend-domain.com')).host : nil
     }
     
-    # 日誌顯示 CSRF token，幫助調試
-    Rails.logger.debug "Set CSRF token in cookie: #{form_authenticity_token}"
+    cookies['CSRF-TOKEN'] = cookie_options
+    
+    Rails.logger.info "====== Set CSRF token in cookie with options: #{cookie_options.inspect} ======"
+    Rails.logger.info "====== Current cookies: #{cookies.to_h.keys} ======"
   end
   
   def encode_token(payload, exp = 1.hour.from_now)

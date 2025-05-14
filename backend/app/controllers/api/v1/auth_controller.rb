@@ -3,7 +3,7 @@ module Api
   module V1
     class AuthController < ApplicationController
       skip_before_action :authenticate_user!, only: [:login, :register, :csrf_token]
-      skip_before_action :verify_authenticity_token, only: [:login, :register]
+      skip_before_action :verify_authenticity_token, only: [:login, :register, :logout]
       
       def register
         # user_params will permit :email, :password, :password_confirmation, :fullName, :phone
@@ -60,8 +60,15 @@ module Api
         # set_csrf_cookie 在 ApplicationController 中已經定義
         # 這個方法會被 before_action 自動調用，所以這裡不需要顯式調用
         
+        token = form_authenticity_token
+        Rails.logger.info "====== Auth#csrf_token endpoint called, returning token: #{token} ======"
+        Rails.logger.info "====== Current request headers: #{request.headers.to_h.select { |k, _| k.start_with?('HTTP_') }.inspect} ======"
+        
+        # 確保設置了最新的 token
+        set_csrf_cookie
+        
         # 返回成功響應，CSRF token 已經設置在 cookie 中
-        render json: { status: 'ok' }
+        render json: { status: 'ok', token: token }
       end
       
       private
