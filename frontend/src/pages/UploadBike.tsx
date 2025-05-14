@@ -58,12 +58,13 @@ const UploadBike = () => {
 
             const response = await bicycleService.createBicycle({
                 ...data,
+                price: parseFloat(data.price), // Convert price to number
                 // Ensure photos are correctly passed if they are part of 'data'
                 // If 'photos' in SellBikeFormValues are File[] then it's fine.
                 // If they are URLs or other types, adjust accordingly.
                 // photos: data.photos, // Assuming data.photos is already in the correct format (File[])
-                status: 'available', // Set default status or get from form
-                sellerId: currentUser?.id || '', // Ensure sellerId is passed
+                // status: 'available', // Set default status or get from form
+                // sellerId: currentUser?.id || '', // Ensure sellerId is passed
             })
 
             // Simulate remaining upload progress

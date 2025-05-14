@@ -44,7 +44,7 @@ const MyBicycles = () => {
         location: bike.location,
         condition: bike.condition,
         brand: bike.brand,
-        imageUrl: bike.photos_urls && bike.photos_urls.length > 0 ? bike.photos_urls[0] : '/placeholder.svg',
+        imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
         isFavorite: bike.isFavorite,
     }))
 

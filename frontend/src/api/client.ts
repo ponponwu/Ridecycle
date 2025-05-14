@@ -35,6 +35,83 @@ interface ErrorResponseData {
     errors?: string[] | { [key: string]: string[] }
 }
 
+// 定義 JSON:API 相關的類型
+interface JSONAPIAttributes {
+    [key: string]: unknown
+    price?: string | number
+    sellerInfo?: { id: number; name: string; email?: string }
+    user?: { id: number; name: string; email?: string }
+}
+
+interface JSONAPIResource<T extends JSONAPIAttributes = JSONAPIAttributes> {
+    id: string
+    type: string
+    attributes: T
+    relationships?: Record<string, unknown>
+}
+
+interface JSONAPIResponse<T extends JSONAPIAttributes = JSONAPIAttributes> {
+    data: JSONAPIResource<T> | JSONAPIResource<T>[]
+    included?: JSONAPIResource<JSONAPIAttributes>[]
+    meta?: Record<string, unknown>
+}
+
+// 改進的處理函數，支援集合和單一資源
+function processJSONAPIResponse<T>(response: unknown): T {
+    // 如果不是物件或為 null，直接返回
+    if (!response || typeof response !== 'object') {
+        return response as T
+    }
+
+    // 檢查是否有 data 屬性，判斷是否為 JSON:API 回應
+    if ('data' in response && response.data !== null && typeof response.data === 'object') {
+        const apiResponse = response as JSONAPIResponse
+
+        // 處理集合（data 是陣列）
+        if (Array.isArray(apiResponse.data)) {
+            return apiResponse.data.map((item) => {
+                const { id, attributes } = item
+                const result = {
+                    id,
+                    ...attributes,
+                }
+
+                // 特殊處理某些欄位
+                if (result.price && typeof result.price === 'string') {
+                    result.price = parseFloat(result.price)
+                }
+                if (result.sellerInfo && !result.user) {
+                    result.user = result.sellerInfo
+                }
+
+                return result
+            }) as unknown as T
+        }
+
+        // 處理單一資源
+        if ('attributes' in apiResponse.data) {
+            const { id, attributes } = apiResponse.data
+            const result = {
+                id,
+                ...attributes,
+            }
+
+            // 特殊處理某些欄位
+            if (result.price && typeof result.price === 'string') {
+                result.price = parseFloat(result.price)
+            }
+            if (result.sellerInfo && !result.user) {
+                result.user = result.sellerInfo
+            }
+
+            return result as unknown as T
+        }
+    }
+
+    // 不是 JSON:API 格式，返回原始資料
+    return response as T
+}
+
 class ApiClient {
     private instance: AxiosInstance
     private refreshTokenPromise: Promise<void> | null = null
@@ -206,31 +283,36 @@ class ApiClient {
     }
 
     public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.get<T>(url, config)
-        return response.data
+        const response = await this.instance.get<unknown>(url, config)
+        // 處理 JSON:API 結構
+        return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async post<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
-        const response = await this.instance.post<T, AxiosResponse<T>, D>(url, data, config)
-        return response.data
+        const response = await this.instance.post<unknown, AxiosResponse<unknown>, D>(url, data, config)
+        // 處理 JSON:API 結構
+        return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async put<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
-        const response = await this.instance.put<T, AxiosResponse<T>, D>(url, data, config)
-        return response.data
+        const response = await this.instance.put<unknown, AxiosResponse<unknown>, D>(url, data, config)
+        // 處理 JSON:API 結構
+        return processJSONAPIResponse<T>(response.data)
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async patch<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
-        const response = await this.instance.patch<T, AxiosResponse<T>, D>(url, data, config)
-        return response.data
+        const response = await this.instance.patch<unknown, AxiosResponse<unknown>, D>(url, data, config)
+        // 處理 JSON:API 結構
+        return processJSONAPIResponse<T>(response.data)
     }
 
     public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.instance.delete<T>(url, config)
-        return response.data
+        const response = await this.instance.delete<unknown>(url, config)
+        // 處理 JSON:API 結構
+        return processJSONAPIResponse<T>(response.data)
     }
 }
 

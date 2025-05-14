@@ -31,6 +31,7 @@ const BicycleDetail = () => {
             try {
                 setIsLoading(true)
                 const data = await bicycleService.getBicycleById(id)
+                console.log('Bicycle details:', data)
                 setBicycle(data)
                 setError(null)
             } catch (err) {
