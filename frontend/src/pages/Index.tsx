@@ -51,8 +51,7 @@ const Index = () => {
             location: bike.location,
             condition: bike.condition,
             brand: bike.brand,
-            photosUrls:
-                Array.isArray(bike.photosUrls) && bike.photosUrls.length > 0 ? bike.photosUrls : ['/placeholder.svg'],
+            imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
             isFavorite: bike.isFavorite,
         })) || []
 
