@@ -39,6 +39,13 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri mswin mswin64 mingw x64_mingw ]
   gem 'pry-byebug'
+  
+  # RSpec 測試框架
+  gem 'rspec-rails', '~> 6.0'
+  gem 'factory_bot_rails', '~> 6.2'
+  gem 'faker', '~> 3.0'
+  gem 'shoulda-matchers', '~> 5.0'
+  gem 'database_cleaner-active_record', '~> 2.0'
 end
 
 group :development do
@@ -46,6 +53,11 @@ group :development do
   # gem "spring"
 end
 
+group :test do
+  # 測試覆蓋率
+  gem 'simplecov', require: false
+  gem 'simplecov-html', require: false
+end
 
 gem "rack-cors", "~> 2.0"
 gem "jwt", "~> 2.10"
