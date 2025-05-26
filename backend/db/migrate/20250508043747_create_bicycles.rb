@@ -4,7 +4,7 @@ class CreateBicycles < ActiveRecord::Migration[7.1]
       t.string :title
       t.text :description
       t.decimal :price
-      t.string :condition
+      t.integer :condition, default: 0
       t.string :brand
       t.string :model
       t.integer :year

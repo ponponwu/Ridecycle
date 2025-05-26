@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_12_072712) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -51,12 +51,36 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_12_072712) do
     t.index ["bicycle_id"], name: "index_bicycle_images_on_bicycle_id"
   end
 
+  create_table "bicycle_models", force: :cascade do |t|
+    t.string "name"
+    t.integer "year"
+    t.bigint "brand_id", null: false
+    t.decimal "msrp"
+    t.decimal "original_msrp"
+    t.boolean "is_frameset"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "transmission_id"
+    t.integer "bicycle_type"
+    t.integer "frame_material"
+    t.integer "color"
+    t.text "frame_sizes_available"
+    t.text "description"
+    t.index ["bicycle_type"], name: "index_bicycle_models_on_bicycle_type"
+    t.index ["brand_id", "bicycle_type"], name: "index_bicycle_models_on_brand_id_and_bicycle_type"
+    t.index ["brand_id"], name: "index_bicycle_models_on_brand_id"
+    t.index ["color"], name: "index_bicycle_models_on_color"
+    t.index ["frame_material"], name: "index_bicycle_models_on_frame_material"
+    t.index ["transmission_id"], name: "index_bicycle_models_on_transmission_id"
+    t.index ["year", "bicycle_type"], name: "index_bicycle_models_on_year_and_bicycle_type"
+    t.index ["year"], name: "index_bicycle_models_on_year"
+  end
+
   create_table "bicycles", force: :cascade do |t|
     t.string "title"
     t.text "description"
     t.decimal "price"
-    t.string "condition"
-    t.string "brand"
+    t.integer "condition", default: 0
     t.string "model"
     t.integer "year"
     t.string "frame_size"
@@ -64,12 +88,45 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_12_072712) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "bike_type"
     t.string "contact_method"
     t.string "status", default: "available"
-    t.index ["bike_type"], name: "index_bicycles_on_bike_type"
+    t.bigint "brand_id", null: false
+    t.bigint "bicycle_model_id"
+    t.bigint "transmission_id", null: false
+    t.integer "bicycle_type"
+    t.integer "frame_material"
+    t.integer "color"
+    t.boolean "is_frameset_only", default: false
+    t.index ["bicycle_model_id"], name: "index_bicycles_on_bicycle_model_id"
+    t.index ["bicycle_type", "price"], name: "index_bicycles_on_bicycle_type_and_price"
+    t.index ["bicycle_type"], name: "index_bicycles_on_bicycle_type"
+    t.index ["brand_id", "bicycle_type"], name: "index_bicycles_on_brand_id_and_bicycle_type"
+    t.index ["brand_id"], name: "index_bicycles_on_brand_id"
+    t.index ["color"], name: "index_bicycles_on_color"
+    t.index ["frame_material"], name: "index_bicycles_on_frame_material"
+    t.index ["is_frameset_only"], name: "index_bicycles_on_is_frameset_only"
+    t.index ["location", "bicycle_type"], name: "index_bicycles_on_location_and_bicycle_type"
+    t.index ["status", "bicycle_type"], name: "index_bicycles_on_status_and_bicycle_type"
     t.index ["status"], name: "index_bicycles_on_status"
+    t.index ["transmission_id"], name: "index_bicycles_on_transmission_id"
     t.index ["user_id"], name: "index_bicycles_on_user_id"
+    t.index ["year", "bicycle_type"], name: "index_bicycles_on_year_and_bicycle_type"
+  end
+
+  create_table "brands", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "components", force: :cascade do |t|
+    t.string "name"
+    t.bigint "bicycle_models_id"
+    t.bigint "component_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bicycle_models_id"], name: "index_components_on_bicycle_models_id"
+    t.index ["component_id"], name: "index_components_on_component_id"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -121,6 +178,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_12_072712) do
     t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
   end
 
+  create_table "transmissions", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "bicycle_models_id"
+    t.bigint "component_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bicycle_models_id"], name: "index_transmissions_on_bicycle_models_id"
+    t.index ["component_id"], name: "index_transmissions_on_component_id"
+    t.index ["name"], name: "index_transmissions_on_name", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email"
     t.string "password_digest"
@@ -136,9 +204,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_12_072712) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "bicycle_images", "bicycles"
+  add_foreign_key "bicycle_models", "brands"
+  add_foreign_key "bicycle_models", "transmissions"
+  add_foreign_key "bicycles", "bicycle_models"
+  add_foreign_key "bicycles", "brands"
+  add_foreign_key "bicycles", "transmissions"
   add_foreign_key "bicycles", "users"
+  add_foreign_key "components", "bicycle_models", column: "bicycle_models_id"
+  add_foreign_key "components", "components"
   add_foreign_key "messages", "bicycles"
   add_foreign_key "orders", "bicycles"
   add_foreign_key "orders", "users"
   add_foreign_key "refresh_tokens", "users"
+  add_foreign_key "transmissions", "bicycle_models", column: "bicycle_models_id"
+  add_foreign_key "transmissions", "components"
 end
