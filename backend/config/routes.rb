@@ -20,12 +20,26 @@ Rails.application.routes.draw do
       resources :bicycles do
         collection do
           get :me # Route for /api/v1/bicycles/me
+          get :featured # Route for /api/v1/bicycles/featured
+          get :recently_added # Route for /api/v1/bicycles/recently_added
         end
         resources :images, only: [:create, :destroy]
       end
       
       # 訊息路由
       resources :messages, only: [:index, :show, :create]
+
+      # 品牌路由
+      resources :brands, only: [:index, :show, :create]
+      
+      # 型號路由
+      resources :bicycle_models, only: [:index, :show, :create]
+      
+      # 變速系統路由
+      resources :transmissions, only: [:index, :show, :create]
+      
+      # 目錄資料路由
+      get '/catalog', to: 'catalog#index'
 
       # Order routes
       resources :orders, only: [:create] do # Assuming create for now, add others if needed

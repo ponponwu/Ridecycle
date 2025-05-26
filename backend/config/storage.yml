@@ -11,7 +11,7 @@ google:
     service: GCS
     project: project-id
     credentials: keyfile-path
-    bucket: bucket-name
+    bucket: ride-cycle/
 # Remember not to checkin your GCS keyfile to a repository
 # google:
 #   service: GCS

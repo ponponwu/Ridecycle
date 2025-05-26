@@ -1,6 +1,0 @@
-Rails.logger.info "Application root: #{Rails.root}"
-Rails.logger.info "Current directory: #{Dir.pwd}"
-Rails.logger.info "Environment: #{Rails.env}"
-Rails.logger.info "GOOGLE_CLOUD_PROJECT_ID: #{ENV['GOOGLE_CLOUD_PROJECT_ID'].present? ? 'Present' : 'Missing'}"
-Rails.logger.info "GOOGLE_CLOUD_CREDENTIALS: #{ENV['GOOGLE_CLOUD_CREDENTIALS'].present? ? 'Present (length: ' + ENV['GOOGLE_CLOUD_CREDENTIALS'].length.to_s + ')' : 'Missing'}"
-Rails.logger.info "GOOGLE_CLOUD_BUCKET: #{ENV['GOOGLE_CLOUD_BUCKET'].present? ? 'Present' : 'Missing'}"
