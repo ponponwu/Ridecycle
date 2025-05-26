@@ -1,6 +1,6 @@
 class BicycleSerializer
   include JSONAPI::Serializer
-  attributes :id, :title, :description, :price, :brand, :model, :bike_type, :condition, :location, :status, :created_at, :updated_at # 加入您需要的其他屬性
+  attributes :id, :title, :description, :price, :model, :year, :frame_size, :bicycle_type, :condition, :location, :contact_method, :status, :created_at, :updated_at # 加入您需要的其他屬性
 
   # 為了能正確生成 URL，請確保在 config/environments/*.rb 中設定了 default_url_options
   # 例如，在 config/environments/production.rb 中:
@@ -101,9 +101,21 @@ class BicycleSerializer
     end
   end
 
+  belongs_to :brand, optional: true
+  belongs_to :bicycle_model, optional: true
   # 賣家關聯
   belongs_to :seller, serializer: :user do |object|
     object.seller if object.respond_to?(:seller)
+  end
+
+  # 產生品牌名稱屬性，即使品牌 ID 為空
+  attribute :brand_name do |object|
+    object.brand&.name
+  end
+  
+  # 產生型號名稱屬性，即使型號 ID 為空
+  attribute :model_name do |object|
+    object.bicycle_model&.name
   end
 
   # 保留舊的 seller_info 屬性以向後兼容
