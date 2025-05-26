@@ -17,6 +17,13 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       ]
     end
     
+    if Rails.env.test?
+      allowed_origins += [
+        'http://localhost:3000',
+        'http://test.host'
+      ]
+    end
+    
     if Rails.env.production?
       # 如果設置了前端URL環境變數，則使用它
       if ENV["FRONTEND_URL"].present?
@@ -27,7 +34,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       # allowed_origins << "https://#{ENV['RAILWAY_STATIC_URL']}" if ENV['RAILWAY_STATIC_URL'].present?
     end
     
-    origins allowed_origins.empty? ? '*' : allowed_origins
+    # 確保在測試環境中不使用通配符
+    origins allowed_origins.empty? ? ['http://localhost:3000'] : allowed_origins
     # Railway 部署後用 (根據你的實際部署情況調整)
     # origins 'https://yourapp.railway.app', 'https://your-app-name.up.railway.app'
     

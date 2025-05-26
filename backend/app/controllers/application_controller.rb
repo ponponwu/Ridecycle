@@ -9,8 +9,8 @@ class ApplicationController < ActionController::API
   private
 
   def set_csrf_cookie
-    token = form_authenticity_token
-    Rails.logger.info "====== Generating CSRF token: #{token} ======"
+    token = cookies['CSRF-TOKEN'] || form_authenticity_token
+    Rails.logger.info "====== Generating or Exist CSRF token: #{token} ======"
     
     # 確保 cookie 正確設置，不受同源策略限制
     cookies['CSRF-TOKEN'] = {
