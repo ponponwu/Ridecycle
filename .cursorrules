@@ -1,0 +1,249 @@
+# === CURSOR AI 行為規範 ===
+# 此檔案定義 Cursor AI 的默認行為，無需在每次 prompt 中重複
+
+## 🎯 核心原則 (自動遵守)
+- 每次生成代碼時自動包含適當測試
+- 所有函數/方法必須包含 JSDoc/YARD 註釋
+- 錯誤處理是必需的，不是可選的
+- 遵循專案的命名規範和目錄結構
+- 生成的代碼必須是可立即運行的
+
+## 🏗️ Rails API 規範 (後端)
+當處理 Rails 相關請求時：
+- 使用 Rails 7+ 語法和最佳實踐
+- Service Objects 模式處理業務邏輯
+- 控制器只負責 HTTP 處理
+- 使用 Strong Parameters 驗證參數
+- 包含 RSpec 測試 (model/controller/service)
+- 錯誤回應格式: `{ success: false, errors: [...] }`
+- 成功回應格式: `{ success: true, data: {...} }`
+- 自動包含適當的 HTTP 狀態碼
+
+## ⚛️ React 規範 (前端)
+當處理 React 相關請求時：
+- 使用函數式組件 + Hooks
+- TypeScript 嚴格模式，定義所有 interface
+- 自訂 Hook 提取複雜邏輯
+- 使用 React.memo 包裝純組件
+- 包含 Jest + Testing Library 測試
+- 錯誤邊界處理異常情況
+- 可訪問性 (a11y) 屬性
+
+## 專案概述
+- 前端：React + TypeScript + Vite
+- 後端：Ruby on Rails API
+- 資料庫：PostgreSQL
+- 樣式：Tailwind CSS + shadcn/ui
+- 國際化：react-i18next
+- API 格式：JSON:API
+
+## 程式碼風格與規範
+
+### TypeScript/React 前端規範
+
+#### 檔案命名
+- 元件檔案：PascalCase (例：`BicycleCard.tsx`)
+- Hook 檔案：camelCase 以 `use` 開頭 (例：`useBicycleForm.ts`)
+- 工具函數：camelCase (例：`bicycleTranslations.ts`)
+- 型別定義：camelCase 以 `.types.ts` 結尾 (例：`bicycle.types.ts`)
+- 服務檔案：camelCase 以 `.service.ts` 結尾 (例：`bicycle.service.ts`)
+
+#### 型別定義
+- 介面使用 `I` 前綴：`interface IBicycle`
+- 型別別名使用 `T` 前綴：`type TBicycleStatus`
+- 列舉使用 PascalCase：`enum BicycleCondition`
+- 所有 API 回應都要有明確的型別定義
+- 使用 `Record<string, unknown>` 而非 `any`
+
+#### 元件規範
+- 使用函數式元件和 hooks
+- Props 介面命名：`ComponentNameProps`
+- 使用 `React.FC` 或直接函數宣告
+- 元件內部狀態使用 `useState`
+- 副作用使用 `useEffect`
+- 表單處理使用 `react-hook-form` + `zod`
+
+#### 狀態管理
+- 本地狀態：`useState`
+- 表單狀態：`react-hook-form`
+- 全域狀態：Context API 或 Zustand
+- 伺服器狀態：React Query (TanStack Query)
+
+#### API 服務
+- 所有 API 呼叫都要有統一的錯誤處理
+- 使用 axios 進行 HTTP 請求
+- API 回應格式統一使用 JSON:API
+- 服務類別使用單例模式
+- 輔助函數要有明確的型別定義
+
+### Ruby on Rails 後端規範
+
+#### 檔案命名
+- 模型：snake_case 單數 (例：`bicycle.rb`)
+- 控制器：snake_case 複數 (例：`bicycles_controller.rb`)
+- 序列化器：snake_case 單數 (例：`bicycle_serializer.rb`)
+- 服務：snake_case 以 `_service.rb` 結尾 (例：`image_upload_service.rb`)
+
+#### 模型規範
+- 使用 ActiveRecord 驗證
+- 關聯要明確定義 `dependent` 選項
+- 使用 `scope` 定義常用查詢
+- 敏感資料使用 `attr_encrypted` 或類似方案
+- 序列化欄位使用新語法：`serialize :field, type: Array`
+
+#### 控制器規範
+- 繼承 `ApplicationController`
+- 使用 `before_action` 進行授權檢查
+- 參數過濾使用 `strong_parameters`
+- 統一使用 JSON:API 格式回應
+- 錯誤處理要有適當的 HTTP 狀態碼
+
+#### API 設計
+- RESTful 路由設計
+- 版本控制：`/api/v1/`
+- 統一的錯誤回應格式
+- 分頁使用 `page` 和 `limit` 參數
+- 過濾和搜尋參數要有驗證
+
+## SOLID 原則實作
+
+### Single Responsibility Principle (單一職責原則)
+- 每個類別/元件只負責一個功能
+- 服務類別專注於特定業務邏輯
+- 元件只負責 UI 渲染和使用者互動
+- 工具函數只處理特定的資料轉換
+
+### Open/Closed Principle (開放封閉原則)
+- 使用介面和抽象類別進行擴展
+- 元件使用 props 進行客製化
+- 服務使用依賴注入模式
+- 配置檔案分離環境設定
+
+### Liskov Substitution Principle (里氏替換原則)
+- 子類別可以完全替換父類別
+- 介面實作要保持一致性
+- 型別定義要支援多型
+
+### Interface Segregation Principle (介面隔離原則)
+- 介面要小而專精
+- 避免強迫實作不需要的方法
+- 使用組合而非繼承
+
+### Dependency Inversion Principle (依賴反轉原則)
+- 高層模組不依賴低層模組
+- 使用依賴注入
+- 抽象不依賴具體實作
+
+## 程式碼品質
+
+### 命名規範
+- 變數和函數使用描述性名稱
+- 避免縮寫和單字母變數
+- 布林值使用 `is`、`has`、`can` 前綴
+- 常數使用 UPPER_SNAKE_CASE
+
+### 註解規範
+- 公開 API 要有 JSDoc/YARD 註解
+- 複雜邏輯要有說明註解
+- TODO 註解要包含負責人和日期
+- 避免顯而易見的註解
+
+### 錯誤處理
+- 前端：使用 try-catch 和 Error Boundary
+- 後端：使用 rescue 和自定義例外類別
+- 記錄錯誤到日誌系統
+- 使用者友善的錯誤訊息
+
+### 測試規範
+- 前端：Jest + React Testing Library
+- 後端：RSpec
+- 測試覆蓋率目標：80%+
+- 單元測試、整合測試、E2E 測試
+
+## 安全性規範
+
+### 前端安全
+- 輸入驗證和清理
+- XSS 防護
+- CSRF 保護
+- 敏感資料不存在前端
+
+### 後端安全
+- 參數白名單過濾
+- SQL 注入防護
+- 授權檢查
+- 速率限制
+
+## 效能優化
+
+### 前端優化
+- 元件懶載入
+- 圖片優化和懶載入
+- Bundle 分割
+- 記憶化昂貴的計算
+
+### 後端優化
+- 資料庫查詢優化
+- N+1 查詢預防
+- 快取策略
+- 背景任務處理
+
+## 國際化 (i18n)
+
+### 前端 i18n
+- 使用 react-i18next
+- 翻譯鍵值使用 camelCase
+- 支援繁體中文和英文
+- 動態載入語言包
+
+### 後端 i18n
+- 使用 Rails I18n
+- 錯誤訊息要支援多語言
+- 資料庫內容考慮多語言支援
+
+## Git 工作流程
+
+### 分支命名
+- `feature/功能名稱`
+- `bugfix/問題描述`
+- `hotfix/緊急修復`
+- `refactor/重構內容`
+
+### 提交訊息
+- 使用繁體中文
+- 格式：`類型: 簡短描述`
+- 類型：feat, fix, docs, style, refactor, test, chore
+
+### 程式碼審查
+- 所有 PR 都要經過審查
+- 檢查程式碼風格和規範
+- 確保測試通過
+- 檢查安全性問題
+
+## 部署規範
+
+### 環境管理
+- development, staging, production
+- 環境變數管理
+- 資料庫遷移策略
+- 回滾計畫
+
+### CI/CD
+- 自動化測試
+- 程式碼品質檢查
+- 自動部署
+- 監控和警報
+
+## 文件規範
+
+### API 文件
+; - 使用 OpenAPI/Swagger
+; - 包含請求/回應範例
+; - 錯誤碼說明
+; - 版本變更記錄
+
+### 程式碼文件
+- README.md 包含專案設定
+- 架構圖和流程圖
+- 開發指南
+- 故障排除指南
