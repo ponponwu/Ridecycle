@@ -1,0 +1,25 @@
+example_id                             | status | run_time        |
+-------------------------------------- | ------ | --------------- |
+./spec/models/bicycle_spec.rb[1:1:1]   | failed | 0.00116 seconds |
+./spec/models/bicycle_spec.rb[1:1:2]   | failed | 0.00154 seconds |
+./spec/models/bicycle_spec.rb[1:1:3]   | passed | 0.00115 seconds |
+./spec/models/bicycle_spec.rb[1:1:4]   | passed | 0.00526 seconds |
+./spec/models/bicycle_spec.rb[1:1:5]   | passed | 0.01901 seconds |
+./spec/models/bicycle_spec.rb[1:2:1]   | failed | 0.00295 seconds |
+./spec/models/bicycle_spec.rb[1:2:2]   | failed | 0.00261 seconds |
+./spec/models/bicycle_spec.rb[1:2:3]   | failed | 0.01394 seconds |
+./spec/models/bicycle_spec.rb[1:2:4]   | failed | 0.00266 seconds |
+./spec/models/bicycle_spec.rb[1:2:5]   | failed | 0.00256 seconds |
+./spec/models/bicycle_spec.rb[1:2:6]   | failed | 0.00109 seconds |
+./spec/models/bicycle_spec.rb[1:2:7]   | failed | 0.00096 seconds |
+./spec/models/bicycle_spec.rb[1:2:8]   | failed | 0.0008 seconds  |
+./spec/models/bicycle_spec.rb[1:3:1]   | failed | 0.00127 seconds |
+./spec/models/bicycle_spec.rb[1:3:2]   | failed | 0.01037 seconds |
+./spec/models/bicycle_spec.rb[1:4:1]   | failed | 0.00813 seconds |
+./spec/models/bicycle_spec.rb[1:4:2]   | failed | 0.00747 seconds |
+./spec/models/bicycle_spec.rb[1:5:1:1] | failed | 0.00717 seconds |
+./spec/models/bicycle_spec.rb[1:5:2:1] | failed | 0.00826 seconds |
+./spec/models/bicycle_spec.rb[1:5:2:2] | failed | 1.7 seconds     |
+./spec/models/bicycle_spec.rb[1:5:3:1] | failed | 0.00691 seconds |
+./spec/models/bicycle_spec.rb[1:7:1]   | failed | 0.00438 seconds |
+./spec/models/bicycle_spec.rb[1:8:1]   | failed | 0.00732 seconds |
