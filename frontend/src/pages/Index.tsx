@@ -25,6 +25,7 @@ const Index = () => {
                 setIsLoading(true)
                 // Assuming getBicycles returns IBicycleListResponse which has a 'bicycles' array
                 const response = await bicycleService.getBicycles({ limit: 8 }) // Fetch initial set, e.g., 8 bikes
+                console.log('response', response)
                 setAllBicycles(response.bicycles)
                 setError(null)
             } catch (err) {
@@ -50,7 +51,7 @@ const Index = () => {
             price: bike.price,
             location: bike.location,
             condition: bike.condition,
-            brand: bike.brand,
+            brand: bike.brand?.name || 'Unknown Brand', // Handle brand object
             imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
             isFavorite: bike.isFavorite,
         })) || []

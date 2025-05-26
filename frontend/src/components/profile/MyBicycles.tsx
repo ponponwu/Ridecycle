@@ -38,14 +38,15 @@ const MyBicycles = () => {
     }, [])
 
     const bicycleCardData: BicycleCardProps[] = myBicycles.map((bike) => ({
-        id: bike.id,
+        id: bike.id.toString(),
         title: bike.title,
         price: bike.price,
         location: bike.location,
         condition: bike.condition,
-        brand: bike.brand,
+        brand: bike.brand?.name || 'Unknown Brand',
         imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
         isFavorite: bike.isFavorite,
+        showEditButton: true,
     }))
 
     return (
@@ -57,7 +58,7 @@ const MyBicycles = () => {
                 </Button>
             </div>
 
-            {isLoading && <div className="text-center py-12">{t('loadingYourBikes')}...</div>}
+            {isLoading && <div className="text-center py-12">{t('loading')}...</div>}
             {error && <div className="text-center py-12 text-red-500">Error: {error}</div>}
 
             {!isLoading && !error && (

@@ -87,10 +87,10 @@ export const useSearchResults = () => {
                     page: 1, // TODO: Implement actual pagination
                     limit: 20, // TODO: Make limit configurable or part of pagination
                     search: searchParams.get('q') || undefined,
-                    // Ensure that the values passed for bikeType and condition match what the backend expects
+                    // Ensure that the values passed for bicycleType and condition match what the backend expects
                     // If backend expects BicycleType/BicycleCondition enum string values, ensure they are passed correctly.
                     // The current IBicycleListParams uses string[] for these.
-                    bikeType: selectedFilters.categories.length > 0 ? selectedFilters.categories : undefined,
+                    bicycleType: selectedFilters.categories.length > 0 ? selectedFilters.categories : undefined,
                     condition: selectedFilters.conditions.length > 0 ? selectedFilters.conditions : undefined,
                     priceMin: selectedFilters.priceMin > 0 ? selectedFilters.priceMin : undefined,
                     // Ensure priceMax is only sent if it's a meaningful filter (e.g., not the default max)
@@ -119,7 +119,7 @@ export const useSearchResults = () => {
                             location: bike.location,
                             condition: bike.condition,
                             brand: bike.brand,
-                            type: bike.bikeType,
+                            type: bike.bicycleType,
                             imageUrl:
                                 bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
                             photosUrls: bike.photosUrls || [], // Ensure photosUrls is passed through

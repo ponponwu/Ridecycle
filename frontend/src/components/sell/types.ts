@@ -1,9 +1,13 @@
 export type SellBikeFormValues = {
     title: string
-    brand: string
-    model: string
+    brandId: string
+    brandName?: string
+    transmissionId: string
+    transmissionName?: string
+    bicycleModelId?: string
+    bicycleModelName?: string
     year: string
-    bikeType: string
+    bicycleType: string
     frameSize: string
     description: string
     photos: File[]

@@ -5,11 +5,12 @@ import orderService from './services/order.service'
 import messageService from './services/message.service'
 import favoriteService from './services/favorite.service'
 import offerService from './services/offer.service'
+import catalogService from './services/catalog.service'
 
 /**
  * 導出所有 API 服務
  */
-export { authService, bicycleService, orderService, messageService, favoriteService, offerService }
+export { authService, bicycleService, orderService, messageService, favoriteService, offerService, catalogService }
 
 /**
  * 統一的 API 對象
@@ -21,6 +22,7 @@ export const api = {
     messages: messageService,
     favorites: favoriteService,
     offers: offerService,
+    catalogs: catalogService,
 }
 
 export default api

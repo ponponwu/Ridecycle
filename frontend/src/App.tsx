@@ -12,6 +12,7 @@ import NotificationContainer from '@/components/NotificationContainer'
 import PrivateRoute from '@/components/PrivateRoute'
 import { useEffect } from 'react'
 import apiClient from '@/api/client'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 import Index from './pages/Index'
 import Login from './pages/Login'
@@ -25,6 +26,7 @@ import Search from './pages/Search'
 import Messages from './pages/Messages'
 import Checkout from './pages/Checkout'
 import OrderSuccess from './pages/OrderSuccess'
+import EditBike from './pages/EditBike'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -32,10 +34,7 @@ const queryClient = new QueryClient()
 // 初始化 CSRF token 的函數
 const initializeCsrfToken = async () => {
     try {
-        console.log('===== 應用啟動，初始化 CSRF token 開始 =====')
         await apiClient.get('csrf_token') // 使用下劃線與後端路由匹配
-        console.log('===== CSRF token 初始化成功 =====')
-        console.log('===== 當前 cookies:', document.cookie, '=====')
     } catch (error) {
         console.error('===== 初始化 CSRF token 錯誤:', error, '=====')
     }
@@ -110,6 +109,14 @@ function AppContent() {
                         </PrivateRoute>
                     }
                 />
+                <Route
+                    path="/upload/:bicycleId/edit"
+                    element={
+                        <PrivateRoute>
+                            <EditBike />
+                        </PrivateRoute>
+                    }
+                />
 
                 {/* 404 頁面 */}
                 <Route path="*" element={<NotFound />} />
@@ -120,19 +127,21 @@ function AppContent() {
 
 function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-                <AuthProvider>
-                    <CartProvider>
-                        <NotificationProvider>
-                            <SearchProvider>
-                                <AppContent />
-                            </SearchProvider>
-                        </NotificationProvider>
-                    </CartProvider>
-                </AuthProvider>
-            </BrowserRouter>
-        </QueryClientProvider>
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <BrowserRouter>
+                    <AuthProvider>
+                        <CartProvider>
+                            <NotificationProvider>
+                                <SearchProvider>
+                                    <AppContent />
+                                </SearchProvider>
+                            </NotificationProvider>
+                        </CartProvider>
+                    </AuthProvider>
+                </BrowserRouter>
+            </QueryClientProvider>
+        </ErrorBoundary>
     )
 }
 

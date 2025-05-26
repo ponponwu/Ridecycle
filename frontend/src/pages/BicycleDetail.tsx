@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { bicycleService } from '@/api' // Import bicycleService
 import { IBicycle } from '@/types/bicycle.types' // Import IBicycle type
@@ -11,6 +11,9 @@ import SellerInformation from '@/components/bicycle/SellerInformation'
 import ContactSellerForm from '@/components/bicycle/ContactSellerForm'
 import MakeOfferDialog from '@/components/bicycle/MakeOfferDialog'
 import BicycleDescription from '@/components/bicycle/BicycleDescription'
+import { useAuth } from '@/contexts/AuthContext' // 新增 useAuth 引入
+import { Button } from '@/components/ui/button'
+import { translateBicycleCondition, translateBicycleType } from '@/utils/bicycleTranslations'
 
 // Removed sample bicycleData
 
@@ -20,6 +23,8 @@ const BicycleDetail = () => {
     const [bicycle, setBicycle] = useState<IBicycle | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const { currentUser } = useAuth() // 取得登入用戶
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchBicycleDetails = async () => {
@@ -73,7 +78,7 @@ const BicycleDetail = () => {
         )
     }
 
-    // Assuming bicycle.bikeType is a string like "Road Bike" from the backend
+    // Assuming bicycle.bicycleType is a string like "Road Bike" from the backend
     // and bicycle.user.name exists
     return (
         <MainLayout>
@@ -88,12 +93,12 @@ const BicycleDetail = () => {
                         {t('search')}
                     </Link>
                     <span className="mx-2">/</span>
-                    {/* Ensure bicycle.bikeType is a string before using in URL */}
+                    {/* Ensure bicycle.bicycleType is a string before using in URL */}
                     <Link
-                        to={`/search?category=${encodeURIComponent(bicycle.bikeType || '')}`}
+                        to={`/search?category=${encodeURIComponent(bicycle.bicycleType || '')}`}
                         className="hover:text-marketplace-blue"
                     >
-                        {bicycle.bikeType || 'N/A'}
+                        {translateBicycleType(bicycle.bicycleType, t) || 'N/A'}
                     </Link>
                     <span className="mx-2">/</span>
                     <span className="text-gray-700">{bicycle.title}</span>
@@ -112,43 +117,50 @@ const BicycleDetail = () => {
                     <div>
                         <BicycleDetailsHeader
                             title={bicycle.title}
-                            condition={bicycle.condition} // Assuming string
-                            brand={bicycle.brand}
-                            category={bicycle.bikeType} // Assuming string
+                            condition={translateBicycleCondition(bicycle.condition, t)}
+                            brand={bicycle.brand?.name || 'Unknown Brand'}
+                            category={translateBicycleType(bicycle.bicycleType, t)}
                             price={bicycle.price}
                             location={bicycle.location}
                             bicycle={bicycle} // Pass the whole bicycle object if needed by the component
                         />
 
                         {/* Make Offer Button */}
-                        <div className="mt-4">
-                            {/* Ensure id is not undefined before passing */}
-                            <MakeOfferDialog bicycleTitle={bicycle.title} bicycleId={id || ''} />
-                        </div>
+                        {(!currentUser || currentUser.id.toString() !== bicycle.sellerInfo?.id.toString()) && (
+                            <div className="mt-4">
+                                <MakeOfferDialog
+                                    bicycleTitle={bicycle.title}
+                                    bicycleId={id || ''}
+                                    currentUser={currentUser} // 傳遞 currentUser
+                                />
+                            </div>
+                        )}
 
                         {/* Specifications */}
                         <BicycleSpecifications
-                            brand={bicycle.brand}
-                            model={bicycle.model}
+                            brand={bicycle.brand?.name || 'Unknown Brand'}
+                            model={'N/A'} // Model information not available in current IBicycle interface
                             year={parseInt(bicycle.year, 10)} // Assuming bicycle.year is string, convert to number
                             frameSize={bicycle.frameSize}
                             wheelSize={bicycle.wheelSize || 'N/A'} // Provide fallback for optional fields
-                            // yearsOfUse is not in IBicycle, remove or add to IBicycle if needed
+                            yearsOfUse={bicycle.yearsOfUse} // This is optional in both interfaces
                         />
 
                         {/* Seller Information */}
                         <SellerInformation
-                            sellerName={bicycle.user?.name || 'N/A'} // Use user object
+                            sellerName={bicycle.sellerInfo?.name || 'N/A'} // 改為 sellerInfo
                             sellerRating={bicycle.sellerRating} // This was in IBicycle, keep if still relevant
                         />
 
                         {/* Contact Form */}
-                        {bicycle.user && bicycle.id && (
-                            <ContactSellerForm
-                                sellerId={bicycle.user.id.toString()} // Convert number to string
-                                bicycleId={bicycle.id}
-                            />
-                        )}
+                        {bicycle.sellerInfo &&
+                            bicycle.id &&
+                            (!currentUser || currentUser.id.toString() !== bicycle.sellerInfo.id.toString()) && (
+                                <ContactSellerForm
+                                    sellerId={bicycle.sellerInfo.id.toString()} // 改為 sellerInfo
+                                    bicycleId={bicycle.id.toString()}
+                                />
+                            )}
                     </div>
                 </div>
 

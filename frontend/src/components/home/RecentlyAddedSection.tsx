@@ -1,59 +1,67 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import BicycleGrid from '../bicycles/BicycleGrid'
 import { BicycleCardProps } from '../bicycles/BicycleCard'
-
-const recentBicycles: BicycleCardProps[] = [
-    {
-        id: '5',
-        title: 'Santa Cruz Hightower C S 29" Mountain Bike',
-        price: 3200,
-        location: 'Austin, TX',
-        condition: 'Excellent',
-        brand: 'Santa Cruz',
-        photosUrls: [
-            'https://images.unsplash.com/photo-1596495577886-d920f1fb7238?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-        ],
-    },
-    {
-        id: '6',
-        title: 'Cervelo Aspero GRX 810 1x Gravel Bike',
-        price: 2800,
-        location: 'New York, NY',
-        condition: 'Like New',
-        brand: 'Cervelo',
-        photosUrls: [
-            'https://images.unsplash.com/photo-1565108150247-3593908b5a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-        ],
-    },
-    {
-        id: '7',
-        title: 'Kona Process 134 DL 29',
-        price: 1850,
-        location: 'Los Angeles, CA',
-        condition: 'Good',
-        brand: 'Kona',
-        photosUrls: [
-            'https://images.unsplash.com/photo-1541625602330-2277a4c46182?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-        ],
-        isFavorite: true,
-    },
-    {
-        id: '8',
-        title: 'Surly Midnight Special Road Plus Bike',
-        price: 1400,
-        location: 'Chicago, IL',
-        condition: 'Good',
-        brand: 'Surly',
-        photosUrls: [
-            'https://images.unsplash.com/photo-1571333250630-f0893f4912bf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-        ],
-    },
-]
+import { bicycleService } from '@/api'
+import { IBicycle } from '@/types/bicycle.types'
 
 const RecentlyAddedSection = () => {
+    const { t } = useTranslation()
+    const [recentBicycles, setRecentBicycles] = useState<BicycleCardProps[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        const fetchRecentlyAddedBicycles = async () => {
+            try {
+                setIsLoading(true)
+                const bicycles = await bicycleService.getRecentlyAddedBicycles(4)
+
+                // 將 IBicycle 轉換為 BicycleCardProps 格式
+                const bicycleCards: BicycleCardProps[] = bicycles.map((bicycle: IBicycle) => ({
+                    id: bicycle.id.toString(),
+                    title: bicycle.title,
+                    price: bicycle.price,
+                    location: bicycle.location,
+                    condition: bicycle.condition,
+                    brand: bicycle.brand?.name || 'Unknown Brand',
+                    imageUrl: bicycle.photosUrls?.[0] || '/placeholder-bike.jpg', // 使用第一張圖片或預設圖片
+                    isFavorite: bicycle.isFavorite || false,
+                }))
+
+                setRecentBicycles(bicycleCards)
+                setError(null)
+            } catch (err) {
+                console.error('Failed to fetch recently added bicycles:', err)
+                setError('Failed to load recently added bicycles')
+                setRecentBicycles([]) // 設定為空陣列以避免顯示錯誤
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchRecentlyAddedBicycles()
+    }, [])
+
+    if (isLoading) {
+        return (
+            <div className="container px-4 mx-auto py-8 bg-gray-50 rounded-xl">
+                <div className="text-center text-gray-500">{t('loading')}</div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="container px-4 mx-auto py-8 bg-gray-50 rounded-xl">
+                <div className="text-center text-red-500">{error}</div>
+            </div>
+        )
+    }
+
     return (
         <div className="container px-4 mx-auto py-8 bg-gray-50 rounded-xl">
-            <BicycleGrid bicycles={recentBicycles} title="Recently Added" viewAllLink="/search?sort=newest" />
+            <BicycleGrid bicycles={recentBicycles} title={t('recentlyAdded')} viewAllLink="/search?sort=newest" />
         </div>
     )
 }

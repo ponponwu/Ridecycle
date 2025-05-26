@@ -13,7 +13,7 @@ export enum BicycleStatus {
  * 自行車條件枚舉
  */
 export enum BicycleCondition {
-    NEW = 'new',
+    BRAND_NEW = 'brand_new',
     LIKE_NEW = 'like_new',
     EXCELLENT = 'excellent',
     GOOD = 'good',
@@ -27,17 +27,23 @@ export enum BicycleCondition {
 export enum BicycleType {
     ROAD = 'road',
     MOUNTAIN = 'mountain',
-    HYBRID = 'hybrid',
-    CITY = 'city',
-    ELECTRIC = 'electric',
-    KIDS = 'kids',
-    BMX = 'bmx',
-    FOLDING = 'folding',
-    GRAVEL = 'gravel',
-    TOURING = 'touring',
-    FIXED_GEAR = 'fixed_gear',
-    OTHER = 'other',
 }
+
+/**
+ * 自行車類型介面（用於 UI 選擇）
+ */
+export interface IBicycleTypeOption {
+    value: BicycleType
+    label: string
+}
+
+/**
+ * 自行車類型選項列表
+ */
+export const BICYCLE_TYPES: { value: BicycleType; translationKey: string }[] = [
+    { value: BicycleType.ROAD, translationKey: 'roadbike' },
+    { value: BicycleType.MOUNTAIN, translationKey: 'mountainbike' },
+]
 
 /**
  * 自行車賣家/使用者簡要資訊介面
@@ -49,18 +55,29 @@ export interface IBicycleUser {
 }
 
 /**
+ * 品牌介面
+ */
+export interface IBrand {
+    id: string
+    name: string
+    createdAt: string
+    updatedAt: string
+}
+
+/**
  * 自行車詳情介面
  */
 export interface IBicycle {
     id: string
     title: string
-    brand: string
-    model: string
+    brandId: string
+    transmissionId: string
+    bicycleModelId?: string
     year: string // Consider changing to number if backend sends number
-    bikeType: string // Was BicycleType enum, backend sends string like "Road Bike"
+    bicycleType: string // Was BicycleType enum, backend sends string like "Road Bike"
     frameSize: string
     description: string
-    condition: string // Was BicycleCondition enum, backend sends string
+    condition: BicycleCondition // 使用 BicycleCondition 枚舉
     price: number // Ensure backend sends number, or parse string if needed
     location: string
     contactMethod: string
@@ -81,6 +98,13 @@ export interface IBicycle {
     yearsOfUse?: number // Added optional yearsOfUse
     specifications?: Record<string, string>
     conversationCount?: number
+    // 增加 sellerInfo 欄位以符合 API 回傳
+    sellerInfo?: {
+        id: number
+        name: string
+    }
+    // 新增 brand 物件以符合後端回傳的資料結構
+    brand?: IBrand
 }
 
 /**
@@ -91,10 +115,10 @@ export interface IBicycleCreateRequest {
     brand: string
     model: string
     year: string
-    bikeType: string // Assuming form sends string, consistent with IBicycle
+    bicycleType: string // Assuming form sends string, consistent with IBicycle
     frameSize: string
     description: string
-    condition: string // Assuming form sends string
+    condition: BicycleCondition // 使用 BicycleCondition 枚舉
     price: number // Or string if form input is string, then parse in service/backend
     location: string
     contactMethod: string
@@ -113,17 +137,19 @@ export interface IBicycleCreateRequest {
  */
 export interface IBicycleUpdateRequest {
     title?: string
-    brand?: string
-    model?: string
+    brandId?: string
+    transmissionId?: string
     year?: string
-    bikeType?: string
+    bicycleType?: string
     frameSize?: string
     description?: string
-    condition?: string
+    condition?: BicycleCondition
     price?: number // Or string
     location?: string
     contactMethod?: string
-    photos?: (File | string)[]
+    photos?: File[]
+    existingPhotos?: Array<{ id: string; url?: string }>
+    photosToDelete?: string[] // Added for existing photo IDs to delete
     status?: string
     wheelSize?: string
     color?: string
@@ -141,7 +167,7 @@ export interface IBicycleListParams {
     page?: number
     limit?: number
     search?: string
-    bikeType?: string[] // Assuming filters will use string values
+    bicycleType?: string[] // Assuming filters will use string values
     condition?: string[] // Assuming filters will use string values
     priceMin?: number
     priceMax?: number

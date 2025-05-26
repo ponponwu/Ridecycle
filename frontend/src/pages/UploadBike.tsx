@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import bicycleService from '@/api/services/bicycle.service' // Add this line
+import bicycleService from '@/api/services/bicycle.service'
+import { useTranslation } from 'react-i18next'
+import { BicycleCondition } from '@/types/bicycle.types'
 
 import MainLayout from '@/components/layout/MainLayout'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,10 +22,11 @@ import AuthRequiredPrompt from '@/components/sell/AuthRequiredPrompt'
 const UploadBike = () => {
     const { currentUser } = useAuth()
     const navigate = useNavigate()
+    const { t } = useTranslation()
     const [currentStep, setCurrentStep] = useState(0)
     const [uploadProgress, setUploadProgress] = useState(0)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const form = useSellBikeForm()
+    const form = useSellBikeForm(t)
 
     const totalSteps = 4 // Total number of steps
     const progressPercentage = ((currentStep + 1) / totalSteps) * 100
@@ -31,7 +34,7 @@ const UploadBike = () => {
     // 每個步驟需要驗證的字段
     const stepFields = [
         // 步驟 1: 基本詳情
-        ['title', 'brand', 'model', 'year', 'bikeType', 'frameSize', 'description'],
+        ['title', 'brandId', 'transmissionId', 'year', 'bicycleType', 'frameSize', 'description'],
         // 步驟 2: 照片和狀況
         ['photos', 'condition'],
         // 步驟 3: 定價和位置
@@ -94,6 +97,7 @@ const UploadBike = () => {
 
             const response = await bicycleService.createBicycle({
                 ...data,
+                condition: data.condition as BicycleCondition,
                 price: parseFloat(data.price), // Convert price to number
             })
 

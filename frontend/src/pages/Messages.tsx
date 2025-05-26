@@ -12,7 +12,7 @@ import SafetyBanner from '@/components/messages/SafetyBanner'
 import SellerInfo from '@/components/messages/SellerInfo'
 import { messageService } from '@/api'
 import { IConversationPreview, IMessage, IUserSimple } from '@/types/message.types'
-import { IBicycle } from '@/types/bicycle.types'
+import { IBicycle, BicycleCondition } from '@/types/bicycle.types'
 import { bicycleService } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -117,13 +117,13 @@ const Messages = () => {
                         title: currentConvoPreview.bicycleTitle,
                         price: 0,
                         photosUrls: [currentConvoPreview.bicycleImageUrl],
-                        brand: '',
-                        model: '',
+                        brandId: '',
+                        transmissionId: '',
                         year: '',
-                        bikeType: '',
+                        bicycleType: '',
                         frameSize: '',
                         description: '',
-                        condition: '',
+                        condition: BicycleCondition.BRAND_NEW,
                         location: 'Unknown',
                         contactMethod: '',
                         user: { id: parseInt(withUser.id, 10) || 0, name: withUser.name, email: undefined },
@@ -283,10 +283,10 @@ const Messages = () => {
         title: otherUser ? t('chatWith', { name: otherUser.name }) : t('loadingBicycleInfo'),
         price: 0,
         photosUrls: [otherUser?.avatar || ''],
-        brand: '',
-        model: '',
+        brandId: '',
+        transmissionId: '',
         year: '',
-        bikeType: '',
+        bicycleType: '',
         frameSize: '',
         description: '',
         condition: '',

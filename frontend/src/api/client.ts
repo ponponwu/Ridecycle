@@ -40,80 +40,132 @@ interface JSONAPIAttributes {
     [key: string]: unknown
 }
 
+interface JSONAPIRelationship {
+    data: { id: string; type: string } | { id: string; type: string }[] | null
+    links?: {
+        self?: string
+        related?: string
+    }
+}
+
 interface JSONAPIResource<T extends JSONAPIAttributes = JSONAPIAttributes> {
     id: string
     type: string
     attributes: T
-    relationships?: Record<string, unknown>
+    relationships?: Record<string, JSONAPIRelationship>
+    links?: Record<string, string>
 }
 
-interface JSONAPIResponse<T extends JSONAPIAttributes = JSONAPIAttributes> {
+interface JSONAPIResponseData<T extends JSONAPIAttributes = JSONAPIAttributes> {
     data: JSONAPIResource<T> | JSONAPIResource<T>[]
     included?: JSONAPIResource<JSONAPIAttributes>[]
     meta?: Record<string, unknown>
+    links?: {
+        self?: string
+        first?: string
+        prev?: string
+        next?: string
+        last?: string
+    }
 }
 
-// 通用型的 JSON:API 響應處理函數
-function processJSONAPIResponse<T>(response: unknown): T {
-    // 非物件直接返回
+export interface JSONAPIResponse<T> {
+    data: T | T[]
+    included?: any[]
+    meta?: Record<string, unknown>
+    links?: Record<string, string>
+}
+
+// 新增: 分頁信息接口
+export interface PaginationMeta {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    perPage: number
+}
+
+function processJSONAPIResponse<T>(response: unknown): JSONAPIResponse<T> | T {
+    // 如果不是物件，直接返回
     if (!response || typeof response !== 'object') {
         return response as T
     }
 
     // 檢查是否為 JSON:API 格式
     if ('data' in response && response.data !== null && typeof response.data === 'object') {
-        const apiResponse = response as JSONAPIResponse
+        const apiResponse = response as JSONAPIResponseData
+        const result: JSONAPIResponse<T> = {
+            data: [] as unknown as T | T[],
+            meta: apiResponse.meta,
+            links: apiResponse.links,
+        }
 
         // 處理集合資源
         if (Array.isArray(apiResponse.data)) {
-            return apiResponse.data.map((item) => {
+            result.data = apiResponse.data.map((item) => {
                 const { id, attributes } = item
-                const result: Record<string, unknown> = {
+                return {
                     id,
-                    ...attributes,
-                }
-
-                // 處理數字類型轉換
-                Object.keys(result).forEach((key) => {
-                    // 將字符串數字轉換為實際數字
-                    if (
-                        typeof result[key] === 'string' &&
-                        !isNaN(Number(result[key])) &&
-                        (key === 'price' || key.endsWith('Price') || key.endsWith('Amount'))
-                    ) {
-                        result[key] = parseFloat(result[key] as string)
-                    }
-                })
-
-                return result
-            }) as unknown as T
-        }
-
-        // 處理單一資源
-        if ('attributes' in apiResponse.data) {
-            const { id, attributes } = apiResponse.data
-            const result: Record<string, unknown> = {
-                id,
-                ...attributes,
-            }
-
-            // 處理數字類型轉換
-            Object.keys(result).forEach((key) => {
-                // 將字符串數字轉換為實際數字
-                if (
-                    typeof result[key] === 'string' &&
-                    !isNaN(Number(result[key])) &&
-                    (key === 'price' || key.endsWith('Price') || key.endsWith('Amount'))
-                ) {
-                    result[key] = parseFloat(result[key] as string)
-                }
+                    ...processAttributes(attributes),
+                } as unknown as T
             })
-
-            return result as unknown as T
         }
+        // 處理單一資源
+        else if ('attributes' in apiResponse.data) {
+            const { id, attributes } = apiResponse.data
+            result.data = {
+                id,
+                ...processAttributes(attributes),
+            } as unknown as T
+        }
+
+        // 如果有 included 資源，保留它們
+        if (apiResponse.included) {
+            result.included = apiResponse.included
+        }
+
+        return result
     }
 
     // 不是 JSON:API 格式，返回原始資料
+    return response as T
+}
+
+// 處理屬性的輔助函數
+function processAttributes(attributes: JSONAPIAttributes): Record<string, unknown> {
+    const result: Record<string, unknown> = { ...attributes }
+
+    // 處理數字類型轉換
+    Object.keys(result).forEach((key) => {
+        // 將字符串數字轉換為實際數字
+        if (
+            typeof result[key] === 'string' &&
+            !isNaN(Number(result[key])) &&
+            (key === 'price' || key.endsWith('Price') || key.endsWith('Amount'))
+        ) {
+            result[key] = parseFloat(result[key] as string)
+        }
+    })
+
+    return result
+}
+
+// 新增: 提取分頁信息的輔助函數
+export function extractPaginationMeta(response: JSONAPIResponse<any>): PaginationMeta | null {
+    if (!response.meta) return null
+
+    return {
+        currentPage: (response.meta.currentPage as number) || 1,
+        totalPages: (response.meta.totalPages as number) || 0,
+        totalCount: (response.meta.totalCount as number) || 0,
+        perPage: (response.meta.perPage as number) || 10,
+    }
+}
+
+// 新增: 從 JSON:API 響應中提取純數據
+export function extractData<T>(response: JSONAPIResponse<T> | T): T | T[] {
+    if (response && typeof response === 'object' && 'data' in response) {
+        return (response as JSONAPIResponse<T>).data
+    }
     return response as T
 }
 
@@ -446,32 +498,53 @@ class ApiClient {
         }
     }
 
-    public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    public async get<T>(url: string, config?: AxiosRequestConfig): Promise<JSONAPIResponse<T>> {
         const response = await this.instance.get<unknown>(url, config)
-        return processJSONAPIResponse<T>(response.data)
+        return processJSONAPIResponse<T>(response.data) as JSONAPIResponse<T>
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public async post<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+    public async post<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<JSONAPIResponse<T>> {
         const response = await this.instance.post<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        return processJSONAPIResponse<T>(response.data)
+        return processJSONAPIResponse<T>(response.data) as JSONAPIResponse<T>
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public async put<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+    public async put<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<JSONAPIResponse<T>> {
         const response = await this.instance.put<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        return processJSONAPIResponse<T>(response.data)
+        return processJSONAPIResponse<T>(response.data) as JSONAPIResponse<T>
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public async patch<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<T> {
+    public async patch<T, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>): Promise<JSONAPIResponse<T>> {
         const response = await this.instance.patch<unknown, AxiosResponse<unknown>, D>(url, data, config)
-        return processJSONAPIResponse<T>(response.data)
+        return processJSONAPIResponse<T>(response.data) as JSONAPIResponse<T>
     }
 
-    public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<JSONAPIResponse<T>> {
         const response = await this.instance.delete<unknown>(url, config)
-        return processJSONAPIResponse<T>(response.data)
+        return processJSONAPIResponse<T>(response.data) as JSONAPIResponse<T>
+    }
+
+    // 新增: 方便的方法來只獲取數據部分（向後兼容）
+    public async getData<T>(url: string, config?: AxiosRequestConfig): Promise<T | T[]> {
+        const response = await this.get<T>(url, config)
+        return extractData(response)
+    }
+
+    // 新增: 獲取分頁數據的方法
+    public async getPaginated<T>(
+        url: string,
+        config?: AxiosRequestConfig
+    ): Promise<{
+        data: T[]
+        pagination: PaginationMeta | null
+    }> {
+        const response = await this.get<T>(url, config)
+        return {
+            data: Array.isArray(response.data) ? response.data : [response.data as T],
+            pagination: extractPaginationMeta(response),
+        }
     }
 }
 

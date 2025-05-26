@@ -4,7 +4,18 @@ import { MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 import { messageService } from '@/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 
 interface ContactSellerFormProps {
     sellerId: string
@@ -14,9 +25,20 @@ interface ContactSellerFormProps {
 
 const ContactSellerForm = ({ sellerId, bicycleId }: ContactSellerFormProps) => {
     const [message, setMessage] = useState('')
+    const [open, setOpen] = useState(false)
     const { t } = useTranslation()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const navigate = useNavigate()
+    const location = useLocation()
+    const { currentUser } = useAuth()
+
+    const handleTriggerClick = () => {
+        if (!currentUser) {
+            navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`)
+            return
+        }
+        setOpen(true)
+    }
 
     const handleSubmitMessage = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -31,17 +53,17 @@ const ContactSellerForm = ({ sellerId, bicycleId }: ContactSellerFormProps) => {
         setIsSubmitting(true)
         try {
             await messageService.sendMessage({
-                recipientId: sellerId, // Changed to camelCase
+                recipientId: sellerId,
                 content: message,
-                bicycleId: bicycleId, // Changed to camelCase
+                bicycleId: bicycleId,
             })
             setMessage('')
             toast({
                 title: t('messageSent'),
                 description: t('yourMessageHasBeenSuccessfullySentToTheSeller'),
             })
-            // Optionally, redirect to the messages page
-            // navigate(`/messages/${sellerId}?bicycleId=${bicycleId}`);
+            setOpen(false)
+            navigate(`/messages?bicycleId=${bicycleId}`)
         } catch (error) {
             console.error('Failed to send message:', error)
             toast({
@@ -55,30 +77,44 @@ const ContactSellerForm = ({ sellerId, bicycleId }: ContactSellerFormProps) => {
     }
 
     return (
-        <div className="mt-8">
-            <h3 className="text-lg font-medium">{t('contactSeller')}</h3>
-            <form onSubmit={handleSubmitMessage} className="mt-4">
-                <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={t('askQuestion')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
-                    rows={4}
-                    required
-                ></textarea>
-
-                <Button type="submit" className="mt-4 bg-marketplace-blue hover:bg-blue-600" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                        t('sending') + '...'
-                    ) : (
-                        <>
-                            <MessageCircle className="mr-2 h-5 w-5" />
-                            {t('sendMessage')}
-                        </>
-                    )}
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button className="w-full bg-marketplace-blue hover:bg-blue-600" onClick={handleTriggerClick}>
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    {t('contactSeller')}
                 </Button>
-            </form>
-        </div>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t('contactSeller')}</DialogTitle>
+                    <DialogDescription>{t('sendMessageToSeller')}</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmitMessage}>
+                    <div className="grid gap-4 py-4">
+                        <Textarea
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            placeholder={t('askQuestion')}
+                            className="w-full"
+                            rows={4}
+                            required
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                t('sending') + '...'
+                            ) : (
+                                <>
+                                    <MessageCircle className="mr-2 h-5 w-5" />
+                                    {t('sendMessage')}
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     )
 }
 
