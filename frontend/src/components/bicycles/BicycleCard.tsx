@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { translateBicycleCondition } from '@/utils/bicycleTranslations'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
 export interface BicycleCardProps {
     id: string
@@ -45,6 +46,10 @@ const BicycleCard = ({
                         src={imageUrl}
                         alt={title}
                         className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/placeholder-bike.jpg' // Fallback image
+                        }}
                     />
                 </Link>
 
@@ -75,7 +80,7 @@ const BicycleCard = ({
                             {title}
                         </Link>
                     </h3>
-                    <span className="text-lg font-semibold text-marketplace-green">${price}</span>
+                    <span className="text-lg font-semibold text-marketplace-green">{formatPriceNTD(price)}</span>
                 </div>
 
                 <div className="mt-2 flex items-center justify-between text-sm text-gray-500">

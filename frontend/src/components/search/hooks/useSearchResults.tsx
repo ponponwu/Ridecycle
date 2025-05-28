@@ -8,13 +8,13 @@ export const useSearchResults = () => {
     const [searchParams] = useSearchParams()
     const [bicycles, setBicycles] = useState<Bicycle[]>([])
     const [loading, setLoading] = useState(true)
-    const [priceRange, setPriceRange] = useState<number[]>([0, 5000])
+    const [priceRange, setPriceRange] = useState<number[]>([0, 100000])
     const [filterVisible, setFilterVisible] = useState(false)
     const [selectedFilters, setSelectedFilters] = useState<SearchFilters>({
         categories: [],
         conditions: [],
         priceMin: 0,
-        priceMax: 5000,
+        priceMax: 100000,
     })
 
     // Toggle filter visibility on mobile
@@ -62,9 +62,9 @@ export const useSearchResults = () => {
             categories: [],
             conditions: [],
             priceMin: 0,
-            priceMax: 5000,
+            priceMax: 100000,
         })
-        setPriceRange([0, 5000])
+        setPriceRange([0, 100000])
     }
 
     // Update price range when slider value changes
@@ -95,7 +95,7 @@ export const useSearchResults = () => {
                     priceMin: selectedFilters.priceMin > 0 ? selectedFilters.priceMin : undefined,
                     // Ensure priceMax is only sent if it's a meaningful filter (e.g., not the default max)
                     priceMax:
-                        selectedFilters.priceMax > 0 && selectedFilters.priceMax < 5000
+                        selectedFilters.priceMax > 0 && selectedFilters.priceMax < 100000
                             ? selectedFilters.priceMax
                             : undefined,
                     location: searchParams.get('location') || undefined,
@@ -118,7 +118,7 @@ export const useSearchResults = () => {
                             price: bike.price,
                             location: bike.location,
                             condition: bike.condition,
-                            brand: bike.brand,
+                            brand: bike.brand?.name || 'Unknown',
                             type: bike.bicycleType,
                             imageUrl:
                                 bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',

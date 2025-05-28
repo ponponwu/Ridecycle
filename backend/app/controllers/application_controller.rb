@@ -1,6 +1,7 @@
 # app/controllers/application_controller.rb
 class ApplicationController < ActionController::API
   include ActionController::Cookies
+  include JsonApiResponse
   include ActionController::RequestForgeryProtection
   protect_from_forgery with: :exception # API 模式使用 :null_session 而非 :exception
   before_action :set_csrf_cookie
@@ -9,30 +10,16 @@ class ApplicationController < ActionController::API
   private
 
   def set_csrf_cookie
-    token = cookies['CSRF-TOKEN'] || form_authenticity_token
-    Rails.logger.info "====== Generating or Exist CSRF token: #{token} ======"
+    token = cookies['X-CSRF-Token'] || form_authenticity_token
     
-    # 確保 cookie 正確設置，不受同源策略限制
-    cookies['CSRF-TOKEN'] = {
+    # 設置 CSRF token cookie，根據環境調整安全設置
+    cookies['X-CSRF-Token'] = {
       value: token,
-      same_site: 'None', # 允許跨站點請求
-      secure: true,      # 要求使用 HTTPS
+      same_site: Rails.env.development? ? :lax : 'None', # 開發環境使用 lax，生產環境使用 None
+      secure: Rails.env.production?,      # 只有生產環境要求 HTTPS
       httponly: false,   # 允許 JavaScript 訪問
       path: '/'          # 適用於整個網站
     }
-    
-    # 同時設置為標準 Rails CSRF token (可能會被 ActionDispatch::Cookies 使用)
-    cookies['X-CSRF-Token'] = {
-      value: token,
-      same_site: 'None',
-      secure: true,
-      httponly: false, 
-      path: '/'
-    }
-    
-    # 確認 cookie 是否成功設置
-    Rails.logger.info "====== Set CSRF token cookies ======"
-    Rails.logger.info "====== Cookies after setting: #{cookies.to_h.inspect} ======"
     
     # 在響應標頭中也設置 CSRF token，提供備用方式訪問
     response.headers['X-CSRF-Token'] = token
@@ -64,11 +51,13 @@ class ApplicationController < ActionController::API
     if token
       begin
         JWT.decode(token, secret_key, true, algorithm: 'HS256')
-      rescue JWT::ExpiredSignature
+      rescue JWT::ExpiredSignature => e
         return :expired 
-      rescue JWT::DecodeError
+      rescue JWT::DecodeError => e
         nil 
       end
+    else
+      nil
     end
   end
   
@@ -93,10 +82,10 @@ class ApplicationController < ActionController::API
   def authenticate_user!
     unless logged_in?
       if request.path.start_with?('/api/v1/me')
-        render json: { error: 'Please log in' }, status: :unauthorized
+        render_jsonapi_errors(['Please log in'], status: :unauthorized, title: 'Unauthorized')
       else
         # 對於其他需要驗證的路由，我們仍然返回 401
-        render json: { error: 'Authentication required' }, status: :unauthorized
+        render_jsonapi_errors(['Authentication required'], status: :unauthorized, title: 'Unauthorized')
       end
     end
   end

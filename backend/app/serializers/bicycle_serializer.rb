@@ -1,6 +1,11 @@
 class BicycleSerializer
   include JSONAPI::Serializer
-  attributes :id, :title, :description, :price, :model, :year, :frame_size, :bicycle_type, :condition, :location, :contact_method, :status, :created_at, :updated_at # 加入您需要的其他屬性
+  attributes :id, :title, :description, :model, :year, :frame_size, :bicycle_type, :condition, :location, :contact_method, :status, :created_at, :updated_at # 加入您需要的其他屬性
+  
+  # 價格屬性，確保返回數字型別
+  attribute :price do |object|
+    object.price.to_f
+  end
 
   # 為了能正確生成 URL，請確保在 config/environments/*.rb 中設定了 default_url_options
   # 例如，在 config/environments/production.rb 中:
@@ -101,30 +106,47 @@ class BicycleSerializer
     end
   end
 
-  belongs_to :brand, optional: true
-  belongs_to :bicycle_model, optional: true
-  # 賣家關聯
-  belongs_to :seller, serializer: :user do |object|
-    object.seller if object.respond_to?(:seller)
+  # 添加 user_id 屬性
+  attribute :user_id do |object|
+    object.user_id
   end
 
-  # 產生品牌名稱屬性，即使品牌 ID 為空
-  attribute :brand_name do |object|
-    object.brand&.name
-  end
-  
-  # 產生型號名稱屬性，即使型號 ID 為空
-  attribute :model_name do |object|
-    object.bicycle_model&.name
-  end
-
-  # 保留舊的 seller_info 屬性以向後兼容
-  attribute :seller_info do |object|
-    if object.seller
+  # 統一的品牌資訊 - 內嵌完整資料
+  attribute :brand do |object|
+    if object.brand
       {
-        id: object.seller.id,
-        name: object.seller.name,
-        # profile_image_url: object.seller.profile_image_url # 假設 User model 有此方法
+        id: object.brand.id,
+        name: object.brand.name,
+        created_at: object.brand.created_at,
+        updated_at: object.brand.updated_at
+      }
+    end
+  end
+
+  # 統一的型號資訊 - 內嵌完整資料
+  attribute :bicycle_model do |object|
+    if object.bicycle_model
+      {
+        id: object.bicycle_model.id,
+        name: object.bicycle_model.name,
+        brand_id: object.bicycle_model.brand_id,
+        created_at: object.bicycle_model.created_at,
+        updated_at: object.bicycle_model.updated_at
+      }
+    end
+  end
+
+  # 統一的賣家資訊 - 內嵌完整資料
+  attribute :seller do |object|
+    if object.user
+      {
+        id: object.user.id,
+        name: object.user.name,
+        full_name: object.user.full_name,
+        email: object.user.email,
+        avatar_url: object.user.avatar_url,
+        created_at: object.user.created_at,
+        updated_at: object.user.updated_at
       }
     end
   end
@@ -135,7 +157,7 @@ class BicycleSerializer
     current_user = params[:current_user]
     if current_user
       # 如果是賣家或有查看全部訊息的權限
-      if current_user.id == object.seller_id || params[:include_all_messages]
+      if current_user.id == object.user_id || params[:include_all_messages]
         object.messages.order(created_at: :desc).limit(20)
       else
         # 只顯示當前用戶與賣家之間的通訊

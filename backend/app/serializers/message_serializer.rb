@@ -3,29 +3,40 @@ class MessageSerializer
   
   attributes :id, :content, :read_at, :created_at, :updated_at
   
-  # 訊息相關聯的自行車
-  belongs_to :bicycle
-  
-  # 寄件人
-  belongs_to :sender, serializer: :user do |object|
-    object.sender
-  end
-  
-  # 收件人
-  belongs_to :recipient, serializer: :user do |object|
-    object.recipient
+  # 統一的關聯物件
+  attribute :bicycle do |object|
+    if object.bicycle
+      {
+        id: object.bicycle.id,
+        title: object.bicycle.title,
+        price: object.bicycle.price.to_f,
+        status: object.bicycle.status
+      }
+    end
   end
 
   attribute :sender do |object|
-    object.sender
+    if object.sender
+      {
+        id: object.sender.id,
+        name: object.sender.name,
+        full_name: object.sender.full_name,
+        email: object.sender.email,
+        avatar_url: object.sender.avatar_url
+      }
+    end
   end
 
   attribute :recipient do |object|
-    object.recipient
-  end
-
-  attribute :bicycle do |object|
-    object.bicycle
+    if object.recipient
+      {
+        id: object.recipient.id,
+        name: object.recipient.name,
+        full_name: object.recipient.full_name,
+        email: object.recipient.email,
+        avatar_url: object.recipient.avatar_url
+      }
+    end
   end
   
   # 如果有附件

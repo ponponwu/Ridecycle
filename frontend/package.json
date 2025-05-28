@@ -5,14 +5,17 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "tsc -b && vite build",
+        "build": "tsc && vite build",
         "build:dev": "vite build --mode development",
-        "lint": "eslint .",
+        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "preview": "vite preview",
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest --coverage",
-        "start": "serve -s dist -l $PORT"
+        "start": "serve -s dist -l $PORT",
+        "security:check": "node scripts/security-check.cjs",
+        "security:audit": "npm audit",
+        "security:full": "npm run security:check && npm run security:audit"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.0",

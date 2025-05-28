@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
+ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -89,7 +89,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "contact_method"
-    t.string "status", default: "available"
     t.bigint "brand_id", null: false
     t.bigint "bicycle_model_id"
     t.bigint "transmission_id", null: false
@@ -97,6 +96,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
     t.integer "frame_material"
     t.integer "color"
     t.boolean "is_frameset_only", default: false
+    t.integer "status", default: 0
     t.index ["bicycle_model_id"], name: "index_bicycles_on_bicycle_model_id"
     t.index ["bicycle_type", "price"], name: "index_bicycles_on_bicycle_type_and_price"
     t.index ["bicycle_type"], name: "index_bicycles_on_bicycle_type"
@@ -106,7 +106,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
     t.index ["frame_material"], name: "index_bicycles_on_frame_material"
     t.index ["is_frameset_only"], name: "index_bicycles_on_is_frameset_only"
     t.index ["location", "bicycle_type"], name: "index_bicycles_on_location_and_bicycle_type"
-    t.index ["status", "bicycle_type"], name: "index_bicycles_on_status_and_bicycle_type"
     t.index ["status"], name: "index_bicycles_on_status"
     t.index ["transmission_id"], name: "index_bicycles_on_transmission_id"
     t.index ["user_id"], name: "index_bicycles_on_user_id"
@@ -127,6 +126,34 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
     t.datetime "updated_at", null: false
     t.index ["bicycle_models_id"], name: "index_components_on_bicycle_models_id"
     t.index ["component_id"], name: "index_components_on_component_id"
+  end
+
+  create_table "csp_violation_reports", force: :cascade do |t|
+    t.string "directive", null: false
+    t.text "blocked_uri", null: false
+    t.text "source_file"
+    t.integer "line_number"
+    t.integer "column_number"
+    t.text "user_agent", null: false
+    t.text "url", null: false
+    t.datetime "timestamp"
+    t.string "ip_address", null: false
+    t.text "referrer"
+    t.string "session_id"
+    t.bigint "user_id"
+    t.string "environment", default: "production"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blocked_uri"], name: "index_csp_violation_reports_on_blocked_uri"
+    t.index ["created_at"], name: "index_csp_violation_reports_on_created_at"
+    t.index ["directive", "blocked_uri"], name: "index_csp_violation_reports_on_directive_and_blocked_uri"
+    t.index ["directive", "created_at"], name: "index_csp_violation_reports_on_directive_and_created_at"
+    t.index ["directive"], name: "index_csp_violation_reports_on_directive"
+    t.index ["environment", "created_at"], name: "index_csp_violation_reports_on_environment_and_created_at"
+    t.index ["environment"], name: "index_csp_violation_reports_on_environment"
+    t.index ["ip_address"], name: "index_csp_violation_reports_on_ip_address"
+    t.index ["session_id"], name: "index_csp_violation_reports_on_session_id"
+    t.index ["user_id"], name: "index_csp_violation_reports_on_user_id"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -198,6 +225,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
     t.datetime "updated_at", null: false
     t.string "provider"
     t.string "uid"
+    t.boolean "admin", default: false, null: false
+    t.index ["admin"], name: "index_users_on_admin"
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
   end
 
@@ -212,6 +241,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_24_105750) do
   add_foreign_key "bicycles", "users"
   add_foreign_key "components", "bicycle_models", column: "bicycle_models_id"
   add_foreign_key "components", "components"
+  add_foreign_key "csp_violation_reports", "users"
   add_foreign_key "messages", "bicycles"
   add_foreign_key "orders", "bicycles"
   add_foreign_key "orders", "users"

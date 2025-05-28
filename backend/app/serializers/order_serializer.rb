@@ -3,11 +3,34 @@ class OrderSerializer
   
   attributes :id, :order_number, :total_price, :status, :payment_status, :created_at, :updated_at
   
-  # 訂單相關的買家
-  belongs_to :user
+  # 統一的買家資訊
+  attribute :user do |object|
+    if object.user
+      {
+        id: object.user.id,
+        name: object.user.name,
+        full_name: object.user.full_name,
+        email: object.user.email,
+        avatar_url: object.user.avatar_url
+      }
+    end
+  end
   
-  # 訂單相關的自行車
-  belongs_to :bicycle
+  # 統一的自行車資訊
+  attribute :bicycle do |object|
+    if object.bicycle
+      {
+        id: object.bicycle.id,
+        title: object.bicycle.title,
+        price: object.bicycle.price.to_f,
+        status: object.bicycle.status,
+        brand: object.bicycle.brand&.name,
+        model: object.bicycle.bicycle_model&.name,
+        main_photo_url: object.bicycle.photos.attached? && object.bicycle.photos.first.present? ?
+          Rails.application.routes.url_helpers.rails_blob_url(object.bicycle.photos.first, only_path: false) : nil
+      }
+    end
+  end
   
   # 如果儲存了 shipping_address
   attribute :shipping_address do |object|

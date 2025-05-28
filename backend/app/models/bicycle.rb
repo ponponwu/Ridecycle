@@ -34,8 +34,8 @@ class Bicycle < ApplicationRecord
   # @return [User] The user who owns this bicycle
   belongs_to :user
   
-  # @return [User] Alias for the user (seller)
-  belongs_to :seller, class_name: 'User', foreign_key: 'user_id'
+  # @return [User] Alias for user (seller) - more semantic naming
+  alias_attribute :seller, :user
   
   # @return [Transmission, nil] The transmission type (optional)
   belongs_to :transmission, optional: true
@@ -70,14 +70,14 @@ class Bicycle < ApplicationRecord
   # Defines the status enum for bicycle listing status
   # @return [Hash] Mapping of status names to integer values
   enum status: {
-    available: 0,
-    sold: 1,
-    pending: 2,
-    draft: 3
+    pending: 0,    # 待審核 (新建立的自行車預設狀態)
+    available: 1,  # 可購買
+    sold: 2,       # 已售出
+    draft: 3       # 草稿/被拒絕
   }
   
   # Validates presence of required fields
-  validates :title, :price, :condition, :brand, :location, :bicycle_type, :frame_size, presence: true
+  validates :title, :price, :condition, :location, :bicycle_type, :frame_size, presence: true
   
   # Validates price is positive
   validates :price, numericality: { greater_than: 0 }
@@ -156,7 +156,7 @@ class Bicycle < ApplicationRecord
   
   # @!endgroup
 
-  # Set default status
+  # Set default status to pending for new bicycles
   before_validation :set_default_status, on: :create
   
   # 從 bicycle_model 自動同步資料
@@ -226,18 +226,17 @@ class Bicycle < ApplicationRecord
   
   # Format price for display
   def display_price
-    "$#{price.to_f}"
-  end
-  
-  # Alias for user (seller)
-  def seller
-    user
+    "$#{number_with_delimiter(price.to_f)}"
   end
   
   private
   
+  def number_with_delimiter(number)
+    number.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse
+  end
+  
   def set_default_status
-    self.status ||= :available
+    self.status ||= :pending
   end
   
   def should_sync_from_model?

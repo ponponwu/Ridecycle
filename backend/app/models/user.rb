@@ -9,6 +9,24 @@ class User < ApplicationRecord
   
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
+  
+  # 添加 full_name 方法，與前端期望的介面一致
+  def full_name
+    name
+  end
+  
+  # Admin methods
+  def admin?
+    admin
+  end
+  
+  def make_admin!
+    update!(admin: true)
+  end
+  
+  def remove_admin!
+    update!(admin: false)
+  end
 
   # Finds an existing user or creates a new one from OmniAuth data
   # Assumes 'provider' and 'uid' columns exist on the User model.

@@ -17,6 +17,7 @@ export interface IUser {
     username?: string
     fullName: string
     role: UserRole
+    admin: boolean
     avatar?: string
     phone?: string
     address?: string

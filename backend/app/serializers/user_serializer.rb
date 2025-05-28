@@ -1,7 +1,12 @@
 class UserSerializer
   include JSONAPI::Serializer
   
-  attributes :id, :name, :email, :created_at, :updated_at
+  attributes :id, :name, :email, :admin, :created_at, :updated_at
+
+  # 添加 full_name 屬性，與前端期望的介面一致
+  attribute :full_name do |object|
+    object.name
+  end
 
   # 不返回敏感屬性，如 password_digest, provider, uid
   
@@ -18,6 +23,11 @@ class UserSerializer
         nil
       end
     end
+  end
+
+  # 頭像 URL，直接使用資料庫字段
+  attribute :avatar_url do |object|
+    object.avatar_url
   end
 
   # 用戶的自行車列表關聯

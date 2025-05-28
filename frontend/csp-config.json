@@ -1,0 +1,67 @@
+{
+    "description": "Content Security Policy 配置檔案",
+    "version": "1.0.0",
+    "environments": {
+        "development": {
+            "default-src": ["'self'"],
+            "script-src": [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://cdn.gpteng.co",
+                "https://apis.google.com",
+                "https://accounts.google.com"
+            ],
+            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            "font-src": ["'self'", "https://fonts.gstatic.com"],
+            "img-src": ["'self'", "data:", "https:", "blob:"],
+            "connect-src": [
+                "'self'",
+                "http://localhost:3000",
+                "https://localhost:3000",
+                "https://accounts.google.com",
+                "ws://localhost:8080"
+            ],
+            "frame-src": ["'self'", "https://accounts.google.com"],
+            "object-src": ["'none'"],
+            "base-uri": ["'self'"],
+            "form-action": ["'self'"]
+        },
+        "production": {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "https://cdn.gpteng.co", "https://apis.google.com", "https://accounts.google.com"],
+            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            "font-src": ["'self'", "https://fonts.gstatic.com"],
+            "img-src": ["'self'", "data:", "https:", "blob:"],
+            "connect-src": ["'self'", "https://api.ridecycle.com", "https://accounts.google.com"],
+            "frame-src": ["'self'", "https://accounts.google.com"],
+            "object-src": ["'none'"],
+            "base-uri": ["'self'"],
+            "form-action": ["'self'"],
+            "upgrade-insecure-requests": []
+        }
+    },
+    "security-headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff",
+        "X-XSS-Protection": "1; mode=block",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "Permissions-Policy": "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+    },
+    "notes": {
+        "unsafe-inline": "在 style-src 中需要，因為 React 和 Tailwind CSS 使用內聯樣式",
+        "unsafe-eval": "在開發環境中需要，用於開發工具和熱重載",
+        "cdn.gpteng.co": "開發工具腳本，可在生產環境中移除",
+        "google-services": "用於 OAuth 認證和 Google API",
+        "data-urls": "允許 Base64 編碼的圖片和字體",
+        "blob-urls": "允許動態生成的內容（如用戶上傳的圖片預覽）",
+        "websocket": "開發環境中的熱重載需要 WebSocket 連接"
+    },
+    "recommendations": {
+        "nonce": "考慮使用 nonce 替代 'unsafe-inline'",
+        "hash": "對於固定的內聯腳本，可以使用 hash 值",
+        "report-uri": "設置 CSP 違規報告端點",
+        "strict-dynamic": "對於現代瀏覽器，可以考慮使用 'strict-dynamic'"
+    }
+}

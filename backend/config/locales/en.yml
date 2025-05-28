@@ -28,4 +28,57 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+    hello: 'Hello world'
+
+    activerecord:
+        models:
+            bicycle: 'Bicycle'
+            user: 'User'
+            brand: 'Brand'
+            bicycle_model: 'Bicycle Model'
+            transmission: 'Transmission'
+            message: 'Message'
+        attributes:
+            bicycle:
+                title: 'Title'
+                description: 'Description'
+                price: 'Price'
+                condition: 'Condition'
+                bicycle_type: 'Bicycle Type'
+                frame_size: 'Frame Size'
+                location: 'Location'
+                status: 'Status'
+                year: 'Year'
+                model: 'Model'
+                frame_material: 'Frame Material'
+                color: 'Color'
+                is_frameset_only: 'Frameset Only'
+                contact_method: 'Contact Method'
+                user_id: 'User'
+                brand_id: 'Brand'
+                bicycle_model_id: 'Bicycle Model'
+                transmission_id: 'Transmission'
+            user:
+                name: 'Name'
+                email: 'Email'
+                password: 'Password'
+                admin: 'Admin'
+            brand:
+                name: 'Name'
+                description: 'Description'
+                country: 'Country'
+            bicycle_model:
+                name: 'Name'
+                description: 'Description'
+                year: 'Year'
+                brand_id: 'Brand'
+                frame_material: 'Frame Material'
+            transmission:
+                name: 'Name'
+                description: 'Description'
+                speeds: 'Speeds'
+            message:
+                content: 'Content'
+                bicycle_id: 'Bicycle'
+                sender_id: 'Sender'
+                recipient_id: 'Recipient'

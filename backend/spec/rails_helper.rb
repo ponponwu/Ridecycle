@@ -39,6 +39,13 @@ RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
+  # I18n 測試環境配置
+  config.before(:suite) do
+    # 設定測試環境的預設語言
+    I18n.default_locale = :en
+    I18n.locale = :en
+  end
+
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false
   # instead of true.
@@ -82,15 +89,20 @@ RSpec.configure do |config|
     end
   end
 
-  # Shoulda Matchers 配置
-  config.include(Shoulda::Matchers::ActiveRecord, type: :model)
-  config.include(Shoulda::Matchers::ActiveModel, type: :model)
+  # Shoulda Matchers 配置已移至 spec/support/shoulda_matchers.rb
+
+  # 控制器測試配置
+  config.before(:each, type: :controller) do
+    # 完全禁用 CSRF 保護
+    allow(controller).to receive(:verify_authenticity_token).and_return(true)
+    allow_any_instance_of(ActionController::Base).to receive(:verify_authenticity_token).and_return(true)
+    
+    # 設置 request format 為 JSON（只在 request 存在時）
+    if defined?(request) && request
+      request.env["HTTP_ACCEPT"] = 'application/json'
+      request.env["CONTENT_TYPE"] = 'application/json'
+    end
+  end
 end
 
-# Shoulda Matchers 配置
-Shoulda::Matchers.configure do |config|
-  config.integrate do |with|
-    with.test_framework :rspec
-    with.library :rails
-  end
-end 
+# Shoulda Matchers 配置已移至 spec/support/shoulda_matchers.rb 

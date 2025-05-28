@@ -2,6 +2,7 @@
 module Api
   module V1
     class BrandsController < ApplicationController
+      skip_before_action :authenticate_user!, only: [:index, :show, :create]
       # 展示所有品牌或搜索品牌
       def index
         query = params[:q]&.strip&.downcase
@@ -12,33 +13,41 @@ module Api
           @brands = Brand.all.order(:name)
         end
         
-        render json: BrandSerializer.new(@brands).serializable_hash
+        render_jsonapi_collection(@brands, serializer: BrandSerializer)
       end
       
       # 獲取單個品牌詳情
       def show
         @brand = Brand.find(params[:id])
-        render json: BrandSerializer.new(@brand).serializable_hash
+        render_jsonapi_resource(@brand, serializer: BrandSerializer)
+      rescue ActiveRecord::RecordNotFound
+        render_jsonapi_errors(['Brand not found'], status: :not_found, title: 'Not Found')
       end
       
       # 創建新品牌
       def create
-        # 檢查是否已經存在相同名稱的品牌
-        normalized_name = brand_params[:name].strip.titleize
-        existing_brand = Brand.where("LOWER(name) = ?", normalized_name.downcase).first
-        
-        if existing_brand
-          # 如果已存在，返回現有品牌
-          render json: BrandSerializer.new(existing_brand).serializable_hash, status: :ok
-        else
-          # 創建新品牌
-          @brand = Brand.new(brand_params)
+        begin
+          # 檢查是否已經存在相同名稱的品牌
+          normalized_name = brand_params[:name].strip.titleize
+          existing_brand = Brand.where("LOWER(name) = ?", normalized_name.downcase).first
           
-          if @brand.save
-            render json: BrandSerializer.new(@brand).serializable_hash, status: :created
+          if existing_brand
+            # 如果已存在，返回現有品牌
+            render_jsonapi_resource(existing_brand, serializer: BrandSerializer, status: :ok)
           else
-            render json: { errors: @brand.errors.full_messages }, status: :unprocessable_entity
+            # 創建新品牌，使用正規化的名稱
+            brand_attributes = brand_params.dup
+            brand_attributes[:name] = normalized_name
+            @brand = Brand.new(brand_attributes)
+            
+            if @brand.save
+              render_jsonapi_resource(@brand, serializer: BrandSerializer, status: :created)
+            else
+              render_jsonapi_errors(@brand.errors.full_messages)
+            end
           end
+        rescue ActionController::ParameterMissing => e
+          render_jsonapi_errors(['Missing required parameters'], status: :bad_request, title: 'Bad Request')
         end
       end
       

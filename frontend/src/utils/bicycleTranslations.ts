@@ -37,3 +37,17 @@ export const translateBicycleType = (bicycleType: string, t: TFunction): string 
     }
     return typeMap[bicycleType] || bicycleType
 }
+
+/**
+ * 翻譯自行車狀態
+ * 將後端的狀態轉換為翻譯文字
+ */
+export const translateBicycleStatus = (status: string, t: TFunction): string => {
+    const statusMap: Record<string, string> = {
+        pending: t('statusOptions.pending'),
+        available: t('statusOptions.available'),
+        sold: t('statusOptions.sold'),
+        draft: t('statusOptions.draft'),
+    }
+    return statusMap[status] || status
+}

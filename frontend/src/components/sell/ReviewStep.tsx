@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { BicycleCondition } from '@/types/bicycle.types'
 import { getConditionI18nKey } from '@/constants/conditions'
 import { translateBicycleType } from '@/utils/bicycleTranslations'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
 export interface ReviewStepProps {
     form: UseFormReturn<EditBikeFormValues>
@@ -160,8 +161,8 @@ const ReviewStep = ({ form, isEditMode = false }: ReviewStepProps) => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <h4 className="text-xs font-medium text-gray-500">{t('askingPrice')}</h4>
-                                    <p className="text-sm font-medium text-green-600">
-                                        ${formValues.price || t('notAvailable')}
+                                    <p className="text-sm font-medium">
+                                        {formValues.price ? formatPriceNTD(formValues.price) : t('notAvailable')}
                                     </p>
                                 </div>
                                 <div>

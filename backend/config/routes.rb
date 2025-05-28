@@ -41,11 +41,41 @@ Rails.application.routes.draw do
       # 目錄資料路由
       get '/catalog', to: 'catalog#index'
 
+      # 安全路由
+      namespace :security do
+        post '/csp-violations', to: 'security#csp_violations'
+        get '/status', to: 'security#status'
+        get '/violations/stats', to: 'security#violation_stats'
+      end
+
       # Order routes
       resources :orders, only: [:create] do # Assuming create for now, add others if needed
         collection do
           get :me # Route for /api/v1/orders/me
         end
+      end
+
+      # Admin routes
+      namespace :admin do
+        # Dashboard routes
+        get '/dashboard/stats', to: 'dashboard#stats'
+        get '/dashboard/recent_activity', to: 'dashboard#recent_activity'
+        
+        # Admin bicycle management
+        resources :bicycles do
+          member do
+            patch :approve
+            patch :reject
+          end
+        end
+        
+        # Admin user management (future implementation)
+        # resources :users do
+        #   member do
+        #     patch :make_admin
+        #     patch :remove_admin
+        #   end
+        # end
       end
     end
   end

@@ -2,10 +2,13 @@
 require 'rails_helper'
 
 RSpec.describe Bicycle, type: :model do
+  subject { build(:bicycle) }
+  
   describe 'associations' do
     it { should belong_to(:user) }
     it { should belong_to(:brand).optional }
     it { should belong_to(:bicycle_model).optional }
+    it { should belong_to(:transmission).optional }
     it { should have_many(:messages).dependent(:destroy) }
     it { should have_many_attached(:photos) }
   end
@@ -33,18 +36,22 @@ RSpec.describe Bicycle, type: :model do
     )}
     
     it { should define_enum_for(:status).with_values(
-      available: 0,
-      sold: 1,
-      pending: 2,
+      pending: 0,
+      available: 1,
+      sold: 2,
       draft: 3
     )}
   end
 
   describe 'scopes' do
-    let!(:available_bicycle) { create(:bicycle, status: :available) }
-    let!(:sold_bicycle) { create(:bicycle, status: :sold) }
-    let!(:excellent_bicycle) { create(:bicycle, condition: :excellent) }
-    let!(:road_bicycle) { create(:bicycle, bicycle_type: 'road') }
+    let!(:transmission1) { create(:transmission, name: "Test Transmission #{SecureRandom.hex(4)}") }
+    let!(:transmission2) { create(:transmission, name: "Test Transmission #{SecureRandom.hex(4)}") }
+    let!(:transmission3) { create(:transmission, name: "Test Transmission #{SecureRandom.hex(4)}") }
+    let!(:transmission4) { create(:transmission, name: "Test Transmission #{SecureRandom.hex(4)}") }
+    let!(:available_bicycle) { create(:bicycle, status: :available, transmission: transmission1) }
+    let!(:sold_bicycle) { create(:bicycle, status: :sold, transmission: transmission2) }
+    let!(:excellent_bicycle) { create(:bicycle, condition: :excellent, transmission: transmission3) }
+    let!(:road_bicycle) { create(:bicycle, bicycle_type: 'road', transmission: transmission4) }
 
     it 'returns available bicycles' do
       expect(Bicycle.available).to include(available_bicycle)
@@ -103,10 +110,10 @@ RSpec.describe Bicycle, type: :model do
   end
 
   describe 'callbacks' do
-    it 'sets default status to available' do
+    it 'sets default status to pending' do
       bicycle = build(:bicycle, status: nil)
       bicycle.save
-      expect(bicycle.status).to eq('available')
+      expect(bicycle.status).to eq('pending')
     end
   end
 

@@ -27,6 +27,11 @@ import Messages from './pages/Messages'
 import Checkout from './pages/Checkout'
 import OrderSuccess from './pages/OrderSuccess'
 import EditBike from './pages/EditBike'
+import AdminDashboard from './components/admin/AdminDashboard'
+import BicycleManagement from './components/admin/BicycleManagement'
+import BicycleDetailsView from './components/admin/bicycles/BicycleDetailsView'
+import AdminRoute from './components/AdminRoute'
+import AdminTest from './pages/AdminTest'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -115,6 +120,40 @@ function AppContent() {
                         <PrivateRoute>
                             <EditBike />
                         </PrivateRoute>
+                    }
+                />
+
+                {/* 管理員路由 */}
+                <Route
+                    path="/admin"
+                    element={
+                        <AdminRoute>
+                            <AdminDashboard />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/bicycles"
+                    element={
+                        <AdminRoute>
+                            <BicycleManagement />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/bicycles/:id"
+                    element={
+                        <AdminRoute>
+                            <BicycleDetailsView />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/test"
+                    element={
+                        <AdminRoute>
+                            <AdminTest />
+                        </AdminRoute>
                     }
                 />
 

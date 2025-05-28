@@ -24,7 +24,14 @@ export class AuthService {
      * @returns {Promise<ILoginResponse>} 登錄響應 (主要包含用戶資訊)
      */
     public async login(data: ILoginRequest): Promise<ILoginResponse> {
-        return apiClient.post<ILoginResponse>('login', data)
+        const response = await apiClient.post<IUser>('login', { data })
+        // API client 的 post 方法返回 JSONAPIResponse，需要提取 data
+        const userData = Array.isArray(response.data) ? response.data[0] : response.data
+        return {
+            user: userData,
+            token: '', // 後端使用 cookie，不返回 token
+            expiresAt: 0,
+        }
     }
 
     /**
@@ -33,7 +40,14 @@ export class AuthService {
      * @returns {Promise<IRegisterResponse>} 註冊響應 (主要包含用戶資訊)
      */
     public async register(data: IRegisterRequest): Promise<IRegisterResponse> {
-        return apiClient.post<IRegisterResponse>('register', data)
+        const response = await apiClient.post<IUser>('register', { data })
+        // API client 的 post 方法返回 JSONAPIResponse，需要提取 data
+        const userData = Array.isArray(response.data) ? response.data[0] : response.data
+        return {
+            user: userData,
+            token: '', // 後端使用 cookie，不返回 token
+            expiresAt: 0,
+        }
     }
 
     /**
@@ -42,7 +56,13 @@ export class AuthService {
      * @returns {Promise<ILoginResponse>} 登錄響應
      */
     public async socialLogin(data: ISocialLoginRequest): Promise<ILoginResponse> {
-        return apiClient.post<ILoginResponse>(`auth/${data.provider}/callback`, data)
+        const response = await apiClient.getData<{ user: IUser }>(`auth/${data.provider}/callback`, { data })
+        const userData = Array.isArray(response) ? response[0] : response
+        return {
+            user: userData.user,
+            token: '', // 後端使用 cookie，不返回 token
+            expiresAt: 0,
+        }
     }
 
     /**
@@ -58,10 +78,22 @@ export class AuthService {
      * @returns {Promise<IUser>} 用戶信息
      */
     public async getCurrentUser(): Promise<IUser> {
-        const response = await apiClient.get<{ user: IUser | null }>('me')
-        if (response && response.user) {
-            return response.user
+        // getData 方法已經處理了 JSON:API 格式，直接返回用戶物件
+        const userData = await apiClient.getData<IUser>('me')
+
+        // 如果是陣列（不應該是），取第一個元素
+        if (Array.isArray(userData)) {
+            if (userData.length > 0) {
+                return userData[0]
+            }
+            throw new Error('Empty user data array from /me endpoint.')
         }
+
+        // 檢查是否為有效的用戶物件
+        if (userData && typeof userData === 'object' && 'id' in userData) {
+            return userData
+        }
+
         throw new Error('No valid user data from /me endpoint.')
     }
 
@@ -78,11 +110,14 @@ export class AuthService {
         if (data.address) formData.append('address', data.address)
         if (data.avatar) formData.append('avatar', data.avatar)
 
-        return apiClient.patch<IUser>('profile', formData, {
+        const response = await apiClient.getData<IUser>('profile', {
+            data: formData,
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
         })
+
+        return Array.isArray(response) ? response[0] : response
     }
 
     /**
@@ -91,7 +126,8 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async changePassword(data: IChangePasswordRequest): Promise<{ message: string }> {
-        return apiClient.patch<{ message: string }>('change-password', data)
+        const response = await apiClient.getData<{ message: string }>('change-password', { data })
+        return Array.isArray(response) ? response[0] : response
     }
 
     /**
@@ -100,7 +136,8 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async forgotPassword(data: IForgotPasswordRequest): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('forgot-password', data)
+        const response = await apiClient.getData<{ message: string }>('forgot-password', { data })
+        return Array.isArray(response) ? response[0] : response
     }
 
     /**
@@ -109,7 +146,8 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async resetPassword(data: IResetPasswordRequest): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('reset-password', data)
+        const response = await apiClient.getData<{ message: string }>('reset-password', { data })
+        return Array.isArray(response) ? response[0] : response
     }
 
     /**
@@ -118,7 +156,8 @@ export class AuthService {
      * @returns {Promise<IVerificationResponse>} 驗證結果
      */
     public async verifyEmail(token: string): Promise<IVerificationResponse> {
-        return apiClient.get<IVerificationResponse>(`verify-email?token=${token}`)
+        const response = await apiClient.getData<IVerificationResponse>(`verify-email?token=${token}`)
+        return Array.isArray(response) ? response[0] : response
     }
 
     /**
@@ -126,7 +165,8 @@ export class AuthService {
      * @returns {Promise<{ message: string }>} 操作結果
      */
     public async resendVerificationEmail(): Promise<{ message: string }> {
-        return apiClient.post<{ message: string }>('resend-verification')
+        const response = await apiClient.getData<{ message: string }>('resend-verification')
+        return Array.isArray(response) ? response[0] : response
     }
 }
 

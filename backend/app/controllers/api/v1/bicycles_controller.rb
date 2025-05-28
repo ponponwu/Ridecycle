@@ -26,43 +26,36 @@ class Api::V1::BicyclesController < ApplicationController
   # @return [JSON] The created bicycle in JSON:API format
   # @return [JSON] Error messages if validation fails
   def create
-    Rails.logger.info "Creating bicycle for user: #{@current_user.id}"
-    
-    # Extract photo files from params
-    photo_files = params.dig(:bicycle, :photos).present? ? Array(params[:bicycle][:photos]) : []
-    
-    # Use BicycleCreationService to handle bicycle creation
-    service = BicycleCreationService.new(@current_user, bicycle_params_for_create, photo_files)
-    
-    unless service.valid?
-      render json: { 
-        success: false, 
-        errors: ['Invalid parameters provided'] 
-      }, status: :bad_request
-      return
-    end
-
     begin
-      @bicycle = service.call
-      render json: BicycleSerializer.new(@bicycle).serializable_hash, status: :created
-    rescue ActiveRecord::RecordInvalid => e
-      render json: { 
-        success: false, 
-        errors: e.record.errors.full_messages 
-      }, status: :unprocessable_entity
+      bicycle_params = bicycle_params_for_create
+      
+      # 確保設置賣家為當前用戶
+      bicycle_params = bicycle_params.merge(user_id: current_user.id)
+      
+      @bicycle = Bicycle.new(bicycle_params)
+      
+      if @bicycle.save
+        # 處理照片上傳
+        if params.dig(:bicycle, :photos).present?
+          Array(params[:bicycle][:photos]).each do |photo|
+            @bicycle.photos.attach(photo) if photo.present?
+          end
+        end
+        
+        render_jsonapi_resource(@bicycle, serializer: BicycleSerializer, status: :created)
+      else
+        render_jsonapi_errors(@bicycle.errors.full_messages)
+      end
     rescue StandardError => e
       Rails.logger.error "Bicycle creation failed: #{e.message}"
-      render json: { 
-        success: false, 
-        errors: ['Failed to create bicycle'] 
-      }, status: :internal_server_error
+      render_jsonapi_errors(['Failed to create bicycle'], status: :internal_server_error)
     end
   end
 
   def update
     # @bicycle 由 set_bicycle before_action 設定
-    if @bicycle.user != @current_user # 權限檢查：確保只有物品擁有者可以更新
-      render json: { error: "Not authorized to update this bicycle" }, status: :forbidden
+    if @bicycle.user != current_user # 權限檢查：確保只有物品擁有者可以更新
+      render_jsonapi_errors(['Not authorized to update this bicycle'], status: :forbidden, title: 'Forbidden')
       return
     end
 
@@ -92,25 +85,25 @@ class Api::V1::BicyclesController < ApplicationController
         # 注意：如果 Active Storage Direct Uploads 被使用，這裡的處理會不同
       end
       # 回傳標準的 JSON:API 格式
-      render json: BicycleSerializer.new(@bicycle.reload).serializable_hash # reload 以獲取最新的附件狀態
+      render_jsonapi_resource(@bicycle.reload, serializer: BicycleSerializer) # reload 以獲取最新的附件狀態
     else
-      render json: { errors: @bicycle.errors.full_messages }, status: :unprocessable_entity
+      render_jsonapi_errors(@bicycle.errors.full_messages)
     end
   end
 
   def destroy
     # @bicycle 由 set_bicycle before_action 設定
-    if @bicycle.user != @current_user # 權限檢查：確保只有物品擁有者可以刪除
-      render json: { error: "Not authorized to delete this bicycle" }, status: :forbidden
+    if @bicycle.user != current_user # 權限檢查：確保只有物品擁有者可以刪除
+      render_jsonapi_errors(['Not authorized to delete this bicycle'], status: :forbidden, title: 'Forbidden')
       return
     end
 
     if @bicycle.destroy
       head :no_content # 成功刪除，回傳 204 No Content
-    else
-      # 理論上，如果 set_bicycle 成功，destroy 失敗的情況較少見，除非有回呼阻止
-      render json: { errors: @bicycle.errors.full_messages }, status: :unprocessable_entity
-    end
+          else
+        # 理論上，如果 set_bicycle 成功，destroy 失敗的情況較少見，除非有回呼阻止
+        render_jsonapi_errors(@bicycle.errors.full_messages)
+      end
   end
 
   def show
@@ -121,7 +114,7 @@ class Api::V1::BicyclesController < ApplicationController
     # options[:fields] = { bicycle: [:id, :title, :main_photo_webp_url] } # 如果只想回傳特定欄位
 
     # 回傳標準的 JSON:API 格式
-    render json: BicycleSerializer.new(@bicycle, options).serializable_hash
+    render_jsonapi_resource(@bicycle, serializer: BicycleSerializer, options: options)
   end
 
   # Lists all bicycles with filtering and pagination
@@ -144,19 +137,15 @@ class Api::V1::BicyclesController < ApplicationController
     search_service = BicycleSearchService.new(params.to_unsafe_h)
     result = search_service.call
     
-    # Serialize the results
-    serialized_bicycles = BicycleSerializer.new(result[:bicycles]).serializable_hash
-
     # Return standard JSON:API format with pagination metadata
-    render json: {
-      data: serialized_bicycles[:data],
-      meta: {
-        total_count: result[:total_count],
-        current_page: result[:current_page],
-        per_page: result[:per_page],
-        total_pages: result[:total_pages]
-      }
+    meta = {
+      total_count: result[:total_count],
+      current_page: result[:current_page],
+      per_page: result[:per_page],
+      total_pages: result[:total_pages]
     }
+
+    render_jsonapi_collection(result[:bicycles], serializer: BicycleSerializer, meta: meta)
   end
 
   # GET /api/v1/bicycles/me
@@ -166,7 +155,7 @@ class Api::V1::BicyclesController < ApplicationController
     offset = (page - 1) * limit
 
     # 確保預先載入 User、Brand 和 Photos
-    all_user_bicycles = @current_user.bicycles.includes(:user, :brand, photos_attachments: :blob).order(created_at: :desc)
+    all_user_bicycles = current_user.bicycles.includes(:user, :brand, photos_attachments: :blob).order(created_at: :desc)
     @user_bicycles = all_user_bicycles.offset(offset).limit(limit)
     total_count = all_user_bicycles.count
 
@@ -174,54 +163,42 @@ class Api::V1::BicyclesController < ApplicationController
     # options[:include] = [:seller_info] # current_user 的 bicycles，seller_info 就是 current_user 自己
     # options[:meta] = { total_count: total_count, current_page: page, limit: limit, total_pages: (total_count.to_f / limit).ceil }
     
-    serialized_bicycles = BicycleSerializer.new(@user_bicycles, options).serializable_hash
-
     # 回傳標準的 JSON:API 格式
-    render json: {
-      data: serialized_bicycles[:data],
-      meta: {
-        total_count: total_count,
-        current_page: page,
-        per_page: limit,
-        total_pages: (total_count.to_f / limit).ceil
-      }
+    meta = {
+      total_count: total_count,
+      current_page: page,
+      per_page: limit,
+      total_pages: (total_count.to_f / limit).ceil
     }
+
+    render_jsonapi_collection(@user_bicycles, serializer: BicycleSerializer, meta: meta, options: options)
   end
 
   # GET /api/v1/bicycles/featured
   def featured
     limit = params.fetch(:limit, 4).to_i
     
-    # 特色自行車的邏輯：可以是價格較高、狀況較好、或者有特殊標記的自行車
-    # 這裡我們選擇狀況為 'excellent' 或 'like_new' 且價格較高的自行車
+    # 特色自行車的邏輯：只顯示已審核通過的自行車，狀況為 'excellent' 或 'like_new' 且價格較高
     @featured_bicycles = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+                                .available  # 只顯示可購買的自行車
                                 .where(condition: ['brand_new', 'like_new'])
                                 .order(price: :desc, created_at: :desc)
                                 .limit(limit)
     
-    options = {}
-    serialized_bicycles = BicycleSerializer.new(@featured_bicycles, options).serializable_hash
-    
-    render json: {
-      data: serialized_bicycles[:data]
-    }
+    render_jsonapi_collection(@featured_bicycles, serializer: BicycleSerializer)
   end
 
   # GET /api/v1/bicycles/recently_added
   def recently_added
     limit = params.fetch(:limit, 4).to_i
     
-    # 最近新增的自行車：按創建時間排序
+    # 最近新增的自行車：只顯示已審核通過的自行車，按創建時間排序
     @recent_bicycles = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+                              .available  # 只顯示可購買的自行車
                               .order(created_at: :desc)
                               .limit(limit)
     
-    options = {}
-    serialized_bicycles = BicycleSerializer.new(@recent_bicycles, options).serializable_hash
-    
-    render json: {
-      data: serialized_bicycles[:data]
-    }
+    render_jsonapi_collection(@recent_bicycles, serializer: BicycleSerializer)
   end
 
   private
@@ -231,7 +208,7 @@ class Api::V1::BicyclesController < ApplicationController
     # 假設您的 Bicycle model 中有關聯: belongs_to :user 或 belongs_to :seller, class_name: 'User'
     @bicycle = Bicycle.includes(:user, :brand, photos_attachments: :blob).find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: "Bicycle not found" }, status: :not_found
+    render_jsonapi_errors(['Bicycle not found'], status: :not_found, title: 'Not Found')
   end
 
   def bicycle_params_for_create

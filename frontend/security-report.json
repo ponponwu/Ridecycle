@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-05-28T04:32:20.274Z",
+  "results": {
+    "cspConfig": true,
+    "securityFiles": true,
+    "nginxConfig": true,
+    "viteConfig": true,
+    "htmlSecurity": true
+  },
+  "recommendations": [
+    "定期更新依賴套件",
+    "監控 CSP 違規報告",
+    "定期檢查安全配置",
+    "考慮實作 Subresource Integrity (SRI)",
+    "設置安全監控和警報"
+  ]
+}

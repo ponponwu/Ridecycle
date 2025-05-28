@@ -1,51 +1,32 @@
 import React from 'react'
-import { useTranslation } from 'react-i18next'
-import { ArrowLeft, MoreVertical } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { ArrowLeft } from 'lucide-react'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
 interface ChatHeaderProps {
     bicycleName: string
-    bicycleImage: string
+    bicycleImage?: string
     bicyclePrice: number
-    currency: string // Added currency
+    currency?: string
     onBack: () => void
 }
 
 const ChatHeader = ({ bicycleName, bicycleImage, bicyclePrice, currency, onBack }: ChatHeaderProps) => {
-    const { t } = useTranslation()
-
     return (
-        <div className="bg-white p-4 border-b flex items-center">
-            <Button variant="ghost" size="icon" onClick={onBack}>
+        <div className="flex items-center p-4 bg-white border-b border-gray-200">
+            <button onClick={onBack} className="mr-3 p-1 hover:bg-gray-100 rounded-full">
                 <ArrowLeft className="h-5 w-5" />
-            </Button>
+            </button>
 
-            <div className="flex items-center flex-1 ml-2">
-                <div className="h-12 w-12 rounded bg-gray-200 flex-shrink-0 overflow-hidden">
-                    {bicycleImage && (
-                        <img src={bicycleImage} alt={bicycleName} className="h-full w-full object-cover" />
-                    )}
-                </div>
-                <div className="ml-3 overflow-hidden">
-                    <h2 className="text-base font-medium truncate">{bicycleName}</h2>
-                    <p className="text-sm font-semibold">
-                        {currency}
-                        {bicyclePrice.toLocaleString()}
-                    </p>
+            {bicycleImage && (
+                <img src={bicycleImage} alt={bicycleName} className="w-10 h-10 rounded-lg object-cover mr-3" />
+            )}
+
+            <div className="flex-1">
+                <h3 className="font-medium text-gray-900">{bicycleName}</h3>
+                <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">{formatPriceNTD(bicyclePrice)}</span>
                 </div>
             </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-5 w-5" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem>{t('report')}</DropdownMenuItem>
-                    <DropdownMenuItem>{t('block')}</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
         </div>
     )
 }

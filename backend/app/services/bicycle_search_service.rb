@@ -93,8 +93,12 @@ class BicycleSearchService
   # Filters by status (defaults to available)
   # @return [void]
   def filter_by_status
-    status = @params[:status].present? ? @params[:status] : 'available'
-    @query = @query.where(status: status)
+    # 預設只顯示可購買的自行車，管理員可以透過參數查看其他狀態
+    if @params[:status].present?
+      @query = @query.where(status: @params[:status])
+    else
+      @query = @query.available  # 使用 enum scope，只顯示可購買的自行車
+    end
   end
 
   # Applies sorting to the query

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom' // Import useNavigate
 import { Button } from '@/components/ui/button'
-import { Search, User, MessageCircle, Bookmark, Menu, X, LogOut } from 'lucide-react'
+import { Search, User, MessageCircle, Bookmark, Menu, X, LogOut, Shield } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const Navbar = () => {
@@ -81,6 +81,14 @@ const Navbar = () => {
                                     個人中心
                                 </Button>
                             </Link>
+                            {currentUser.admin && (
+                                <Link to="/admin">
+                                    <Button variant="ghost" className="text-gray-700 hover:text-marketplace-blue">
+                                        <Shield className="h-5 w-5 mr-2" />
+                                        管理員
+                                    </Button>
+                                </Link>
+                            )}
                             <Button
                                 variant="ghost"
                                 className="text-gray-700 hover:text-marketplace-blue"
@@ -151,6 +159,17 @@ const Navbar = () => {
                                         <User className="w-5 h-5 mr-3 text-gray-500" />
                                         <span className="text-gray-700">個人中心</span>
                                     </Link>
+
+                                    {currentUser.admin && (
+                                        <Link
+                                            to="/admin"
+                                            className="flex items-center p-3 rounded-lg hover:bg-gray-100"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <Shield className="w-5 h-5 mr-3 text-gray-500" />
+                                            <span className="text-gray-700">管理員</span>
+                                        </Link>
+                                    )}
 
                                     <button
                                         className="flex items-center p-3 rounded-lg hover:bg-gray-100 w-full text-left"

@@ -1,53 +1,60 @@
-
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { IBicycle } from '@/types/bicycle.types'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
 interface OrderSummaryProps {
-  bicycle: any;
+    bicycle: IBicycle
 }
 
-const OrderSummary = ({ bicycle }: OrderSummaryProps) => {
-  const { t } = useTranslation();
-  const shipping = 25; // Example shipping cost
-  const tax = bicycle.price * 0.08; // Example tax calculation (8%)
-  const total = bicycle.price + shipping + tax;
+const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle }) => {
+    const { t } = useTranslation()
+    const shipping = 25 // Fixed shipping cost
+    const tax = bicycle.price * 0.05 // 5% tax
+    const total = bicycle.price + shipping + tax
 
-  return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h2 className="mb-4 text-xl font-semibold">{t('orderSummary')}</h2>
-      
-      <div className="flex items-center mb-4 space-x-4">
-        <img 
-          src={bicycle.images?.[0]} 
-          alt={bicycle.title} 
-          className="object-cover w-20 h-20 rounded-md"
-        />
-        <div>
-          <h3 className="font-medium">{bicycle.title}</h3>
-          <p className="text-sm text-gray-600">{bicycle.condition}</p>
-        </div>
-      </div>
-      
-      <div className="py-4 border-t border-gray-200">
-        <div className="flex justify-between mb-2">
-          <span>{t('subtotal')}</span>
-          <span>${bicycle.price.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span>{t('shipping')}</span>
-          <span>${shipping.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span>{t('tax')}</span>
-          <span>${tax.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between pt-2 mt-2 font-semibold border-t border-gray-200">
-          <span>{t('total')}</span>
-          <span>${total.toFixed(2)}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{t('orderSummary')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {/* Bicycle Info */}
+                <div className="flex items-center space-x-4 pb-4 border-b">
+                    <img
+                        src={bicycle.photosUrls?.[0] || '/placeholder-bike.jpg'}
+                        alt={bicycle.title}
+                        className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="flex-1">
+                        <h4 className="font-medium">{bicycle.title}</h4>
+                        <p className="text-sm text-gray-600">{bicycle.brand?.name}</p>
+                    </div>
+                </div>
 
-export default OrderSummary;
+                {/* Price Breakdown */}
+                <div className="space-y-2">
+                    <div className="flex justify-between">
+                        <span>{t('subtotal')}</span>
+                        <span>{formatPriceNTD(bicycle.price)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>運費</span>
+                        <span>{formatPriceNTD(shipping)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>{t('tax')}</span>
+                        <span>{formatPriceNTD(tax)}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold text-lg pt-2 border-t">
+                        <span>{t('total')}</span>
+                        <span>{formatPriceNTD(total)}</span>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default OrderSummary

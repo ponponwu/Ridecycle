@@ -126,7 +126,7 @@ const BicycleDetail = () => {
                         />
 
                         {/* Make Offer Button */}
-                        {(!currentUser || currentUser.id.toString() !== bicycle.sellerInfo?.id.toString()) && (
+                        {(!currentUser || currentUser.id.toString() !== bicycle.seller?.id.toString()) && (
                             <div className="mt-4">
                                 <MakeOfferDialog
                                     bicycleTitle={bicycle.title}
@@ -139,7 +139,7 @@ const BicycleDetail = () => {
                         {/* Specifications */}
                         <BicycleSpecifications
                             brand={bicycle.brand?.name || 'Unknown Brand'}
-                            model={'N/A'} // Model information not available in current IBicycle interface
+                            model={bicycle.bicycle_model?.name || 'N/A'}
                             year={parseInt(bicycle.year, 10)} // Assuming bicycle.year is string, convert to number
                             frameSize={bicycle.frameSize}
                             wheelSize={bicycle.wheelSize || 'N/A'} // Provide fallback for optional fields
@@ -148,16 +148,16 @@ const BicycleDetail = () => {
 
                         {/* Seller Information */}
                         <SellerInformation
-                            sellerName={bicycle.sellerInfo?.name || 'N/A'} // 改為 sellerInfo
+                            sellerName={bicycle.seller?.full_name || bicycle.seller?.name || 'N/A'}
                             sellerRating={bicycle.sellerRating} // This was in IBicycle, keep if still relevant
                         />
 
                         {/* Contact Form */}
-                        {bicycle.sellerInfo &&
+                        {bicycle.seller &&
                             bicycle.id &&
-                            (!currentUser || currentUser.id.toString() !== bicycle.sellerInfo.id.toString()) && (
+                            (!currentUser || currentUser.id.toString() !== bicycle.seller.id.toString()) && (
                                 <ContactSellerForm
-                                    sellerId={bicycle.sellerInfo.id.toString()} // 改為 sellerInfo
+                                    sellerId={bicycle.seller.id.toString()}
                                     bicycleId={bicycle.id.toString()}
                                 />
                             )}

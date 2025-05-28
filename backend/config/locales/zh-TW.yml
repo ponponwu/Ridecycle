@@ -1,0 +1,55 @@
+zh-TW:
+    hello: '您好，世界'
+
+    activerecord:
+        models:
+            bicycle: '自行車'
+            user: '用戶'
+            brand: '品牌'
+            bicycle_model: '自行車型號'
+            transmission: '變速系統'
+            message: '訊息'
+        attributes:
+            bicycle:
+                title: '標題'
+                description: '描述'
+                price: '價格'
+                condition: '狀況'
+                bicycle_type: '自行車類型'
+                frame_size: '車架尺寸'
+                location: '地點'
+                status: '狀態'
+                year: '年份'
+                model: '型號'
+                frame_material: '車架材質'
+                color: '顏色'
+                is_frameset_only: '僅車架'
+                contact_method: '聯絡方式'
+                user_id: '用戶'
+                brand_id: '品牌'
+                bicycle_model_id: '自行車型號'
+                transmission_id: '變速系統'
+            user:
+                name: '姓名'
+                email: '電子郵件'
+                password: '密碼'
+                admin: '管理員'
+            brand:
+                name: '名稱'
+                description: '描述'
+                country: '國家'
+            bicycle_model:
+                name: '名稱'
+                description: '描述'
+                year: '年份'
+                brand_id: '品牌'
+                frame_material: '車架材質'
+            transmission:
+                name: '名稱'
+                description: '描述'
+                speeds: '檔位數'
+            message:
+                content: '內容'
+                bicycle_id: '自行車'
+                sender_id: '發送者'
+                recipient_id: '接收者'

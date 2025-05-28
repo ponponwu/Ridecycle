@@ -3,10 +3,10 @@
  * 自行車狀態枚舉
  */
 export enum BicycleStatus {
-    AVAILABLE = 'available',
-    SOLD = 'sold',
-    PENDING = 'pending',
-    DRAFT = 'draft',
+    PENDING = 'pending', // 0 - 待審核 (新建立的自行車預設狀態)
+    AVAILABLE = 'available', // 1 - 可購買
+    SOLD = 'sold', // 2 - 已售出
+    DRAFT = 'draft', // 3 - 草稿/被拒絕
 }
 
 /**
@@ -51,17 +51,32 @@ export const BICYCLE_TYPES: { value: BicycleType; translationKey: string }[] = [
 export interface IBicycleUser {
     id: number // Assuming user ID is a number from backend
     name: string
+    full_name?: string // 添加 full_name 屬性
     email?: string // Email might only be present in detailed views
+    avatar_url?: string // 添加頭像 URL 屬性
+    created_at?: string
+    updated_at?: string
 }
 
 /**
  * 品牌介面
  */
 export interface IBrand {
-    id: string
+    id: number // 修正為 number 類型
     name: string
-    createdAt: string
-    updatedAt: string
+    created_at: string
+    updated_at: string
+}
+
+/**
+ * 自行車型號介面
+ */
+export interface IBicycleModel {
+    id: number
+    name: string
+    brand_id: number
+    created_at: string
+    updated_at: string
 }
 
 /**
@@ -73,18 +88,16 @@ export interface IBicycle {
     brandId: string
     transmissionId: string
     bicycleModelId?: string
-    year: string // Consider changing to number if backend sends number
-    bicycleType: string // Was BicycleType enum, backend sends string like "Road Bike"
+    year: string
+    bicycleType: string
     frameSize: string
     description: string
-    condition: BicycleCondition // 使用 BicycleCondition 枚舉
-    price: number // Ensure backend sends number, or parse string if needed
+    condition: BicycleCondition
+    price: number
     location: string
     contactMethod: string
-    photosUrls: string[] // Changed from photos_urls to camelCase
-    user: IBicycleUser // Replaced userId and sellerName
-    sellerRating?: number // This might come from user object or separate calculation
-    status: string // Was BicycleStatus enum, backend sends string
+    photosUrls: string[] // 統一的圖片 URL 陣列
+    status: string
     createdAt: string
     updatedAt: string
     isFavorite?: boolean
@@ -95,16 +108,14 @@ export interface IBicycle {
     suspension?: string
     gears?: number
     weight?: number
-    yearsOfUse?: number // Added optional yearsOfUse
+    yearsOfUse?: number
     specifications?: Record<string, string>
     conversationCount?: number
-    // 增加 sellerInfo 欄位以符合 API 回傳
-    sellerInfo?: {
-        id: number
-        name: string
-    }
-    // 新增 brand 物件以符合後端回傳的資料結構
-    brand?: IBrand
+    // 統一的關聯物件
+    brand?: IBrand // 品牌完整物件
+    bicycle_model?: IBicycleModel // 型號完整物件
+    seller?: IBicycleUser // 賣家完整物件
+    sellerRating?: number
 }
 
 /**
@@ -197,4 +208,11 @@ export interface IBicycleCartItem {
     price: number
     imageUrl: string
     sellerName: string
+}
+
+/**
+ * 帶有擁有者資訊的自行車介面（用於管理員視圖）
+ */
+export interface BicycleWithOwner extends IBicycle {
+    user_id: number // 用戶 ID
 }

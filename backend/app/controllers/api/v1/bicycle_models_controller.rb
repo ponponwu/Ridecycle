@@ -2,6 +2,7 @@
 module Api
   module V1
     class BicycleModelsController < ApplicationController
+      skip_before_action :authenticate_user!, only: [:index, :show, :create]
       # 列出特定品牌的所有型號或搜索型號
       def index
         brand_id = params[:brand_id]
@@ -18,43 +19,50 @@ module Api
         # 按名稱排序
         @models = @models.order(:name)
         
-        render json: BicycleModelSerializer.new(@models).serializable_hash
+        render_jsonapi_collection(@models, serializer: BicycleModelSerializer)
       end
       
       # 獲取單個型號詳情
       def show
         @model = BicycleModel.find(params[:id])
-        render json: BicycleModelSerializer.new(@model).serializable_hash
+        render_jsonapi_resource(@model, serializer: BicycleModelSerializer)
+      rescue ActiveRecord::RecordNotFound
+        render_jsonapi_errors(['Bicycle model not found'], status: :not_found, title: 'Not Found')
       end
       
       # 創建新型號
       def create
-        # 檢查是否已經存在相同的品牌和名稱組合
-        normalized_name = bicycle_model_params[:name].strip.titleize
-        existing_model = BicycleModel.where(
-          brand_id: bicycle_model_params[:brand_id],
-          name: normalized_name
-        ).first
-        
-        if existing_model
-          # 如果已存在，返回現有型號
-          render json: BicycleModelSerializer.new(existing_model).serializable_hash, status: :ok
-        else
-          # 創建新型號
-          @model = BicycleModel.new(bicycle_model_params)
+        begin
+          # 檢查是否已經存在相同的品牌和名稱組合
+          model_params = bicycle_model_params
+          normalized_name = model_params[:name].strip.titleize
+          existing_model = BicycleModel.where(
+            brand_id: model_params[:brand_id],
+            name: normalized_name
+          ).first
           
-          if @model.save
-            render json: BicycleModelSerializer.new(@model).serializable_hash, status: :created
+          if existing_model
+            # 如果已存在，返回現有型號
+            render_jsonapi_resource(existing_model, serializer: BicycleModelSerializer, status: :ok)
           else
-            render json: { errors: @model.errors.full_messages }, status: :unprocessable_entity
+            # 創建新型號，使用正規化的名稱
+            @model = BicycleModel.new(model_params.merge(name: normalized_name))
+            
+            if @model.save
+              render_jsonapi_resource(@model, serializer: BicycleModelSerializer, status: :created)
+            else
+              render_jsonapi_errors(@model.errors.full_messages)
+            end
           end
+        rescue ActionController::ParameterMissing => e
+          render_jsonapi_errors(['Missing required parameters'], status: :bad_request, title: 'Bad Request')
         end
       end
       
       private
       
       def bicycle_model_params
-        params.require(:bicycle_model).permit(:name, :description, :year, :brand_id, specifications: {})
+        params.require(:bicycle_model).permit(:name, :description, :year, :brand_id, :frame_material)
       end
     end
   end

@@ -3,6 +3,7 @@ FactoryBot.define do
   factory :bicycle do
     association :user
     association :brand
+    association :transmission
     
     title { Faker::Vehicle.make_and_model }
     description { Faker::Lorem.paragraph(sentence_count: 3) }
@@ -16,14 +17,7 @@ FactoryBot.define do
     contact_method { %w[phone email message].sample }
     status { 'available' }
     
-    # 可選的規格
-    specifications do
-      {
-        'weight' => "#{Faker::Number.between(from: 8, to: 15)}kg",
-        'material' => %w[aluminum carbon steel titanium].sample,
-        'gears' => Faker::Number.between(from: 1, to: 30).to_s
-      }
-    end
+    # 移除 specifications，因為 Bicycle 模型沒有這個屬性
     
     trait :with_photos do
       after(:build) do |bicycle|
