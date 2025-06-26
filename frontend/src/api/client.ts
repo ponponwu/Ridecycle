@@ -32,7 +32,19 @@ interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
 interface ErrorResponseData {
     message?: string
     error?: string
-    errors?: string[] | { [key: string]: string[] }
+    errors?: string[] | { [key: string]: string[] } | JSONAPIError[]
+}
+
+// 添加 JSON:API 錯誤格式類型
+interface JSONAPIError {
+    id?: string
+    status?: string
+    title?: string
+    detail?: string
+    source?: {
+        pointer?: string
+        parameter?: string
+    }
 }
 
 // 定義 JSON:API 相關的類型
@@ -84,6 +96,55 @@ export interface PaginationMeta {
     perPage: number
 }
 
+// Snake case to camel case 轉換函數
+function toCamelCase(str: string): string {
+    return str.replace(/_([a-z])/g, (match, char) => char.toUpperCase())
+}
+
+// 遞歸轉換物件的所有鍵從 snake_case 到 camelCase
+function convertKeysToCamelCase(obj: any): any {
+    if (obj === null || obj === undefined) {
+        return obj
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(convertKeysToCamelCase)
+    }
+
+    if (typeof obj === 'object' && obj.constructor === Object) {
+        const converted: any = {}
+        for (const [key, value] of Object.entries(obj)) {
+            const camelKey = toCamelCase(key)
+            let convertedValue = convertKeysToCamelCase(value)
+
+            // 處理數字類型轉換
+            if (
+                typeof convertedValue === 'string' &&
+                !isNaN(Number(convertedValue)) &&
+                convertedValue.trim() !== '' &&
+                (camelKey.includes('price') ||
+                    camelKey.includes('Price') ||
+                    camelKey.includes('cost') ||
+                    camelKey.includes('Cost') ||
+                    camelKey.includes('amount') ||
+                    camelKey.includes('Amount') ||
+                    camelKey === 'totalPrice' ||
+                    camelKey === 'shippingCost' ||
+                    camelKey === 'subtotal' ||
+                    camelKey === 'tax' ||
+                    camelKey === 'total')
+            ) {
+                convertedValue = parseFloat(convertedValue)
+            }
+
+            converted[camelKey] = convertedValue
+        }
+        return converted
+    }
+
+    return obj
+}
+
 function processJSONAPIResponse<T>(response: unknown): JSONAPIResponse<T> | T {
     // 如果不是物件，直接返回
     if (!response || typeof response !== 'object') {
@@ -103,31 +164,41 @@ function processJSONAPIResponse<T>(response: unknown): JSONAPIResponse<T> | T {
         if (Array.isArray(apiResponse.data)) {
             result.data = apiResponse.data.map((item) => {
                 const { id, attributes } = item
+                const convertedAttributes = convertKeysToCamelCase(attributes)
                 return {
                     id,
-                    ...processAttributes(attributes),
+                    ...convertedAttributes,
                 } as unknown as T
             })
         }
         // 處理單一資源
         else if ('attributes' in apiResponse.data) {
             const { id, attributes } = apiResponse.data
+            const convertedAttributes = convertKeysToCamelCase(attributes)
             result.data = {
                 id,
-                ...processAttributes(attributes),
+                ...convertedAttributes,
             } as unknown as T
         }
 
-        // 如果有 included 資源，保留它們
+        // 如果有 included 資源，也要轉換
         if (apiResponse.included) {
-            result.included = apiResponse.included
+            result.included = apiResponse.included.map((item) => {
+                const { id, type, attributes } = item
+                const convertedAttributes = convertKeysToCamelCase(attributes)
+                return {
+                    id,
+                    type,
+                    ...convertedAttributes,
+                }
+            })
         }
 
         return result
     }
 
-    // 不是 JSON:API 格式，返回原始資料
-    return response as T
+    // 不是 JSON:API 格式，直接轉換鍵名然後返回
+    return convertKeysToCamelCase(response) as T
 }
 
 // 處理屬性的輔助函數
@@ -154,10 +225,10 @@ export function extractPaginationMeta(response: JSONAPIResponse<any>): Paginatio
     if (!response.meta) return null
 
     return {
-        currentPage: (response.meta.currentPage as number) || 1,
-        totalPages: (response.meta.totalPages as number) || 0,
-        totalCount: (response.meta.totalCount as number) || 0,
-        perPage: (response.meta.perPage as number) || 10,
+        currentPage: (response.meta.currentPage as number) || (response.meta.current_page as number) || 1,
+        totalPages: (response.meta.totalPages as number) || (response.meta.total_pages as number) || 0,
+        totalCount: (response.meta.totalCount as number) || (response.meta.total_count as number) || 0,
+        perPage: (response.meta.perPage as number) || (response.meta.per_page as number) || 10,
     }
 }
 
@@ -186,19 +257,22 @@ class ApiClient {
         }
 
         // 確保 API_URL 以斜線結尾
-        const baseURL = API_URL.endsWith('/') ? API_URL : `${API_URL}/`
+        const baseURL = API_URL.endsWith('/') ? API_URL : API_URL + '/'
 
-        const baseInstance = axios.create({
-            baseURL,
-            timeout: API_TIMEOUT,
-            headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-            } as AxiosRequestHeaders,
-            withCredentials: true, // 始終發送憑證（cookies）
-        })
+        // 創建 axios 實例並應用 case 轉換中間件
+        this.instance = applyCaseMiddleware(
+            axios.create({
+                baseURL,
+                timeout: API_TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                withCredentials: true,
+            }),
+            options
+        )
 
-        this.instance = applyCaseMiddleware(baseInstance, options)
         this.setupRequestInterceptor()
         this.setupResponseInterceptor()
     }
@@ -427,62 +501,69 @@ class ApiClient {
     }
 
     private handleApiError(error: AxiosError): void {
-        let errorMessage = ERROR_MESSAGES.GENERAL
-        if (error.response) {
-            const status = error.response.status
-            const responseData = error.response.data as ErrorResponseData | string | undefined
-            let serverMessage: string | undefined
+        let serverMessage = ERROR_MESSAGES.GENERAL
 
-            if (typeof responseData === 'object' && responseData !== null) {
-                if (responseData.message) {
-                    serverMessage = responseData.message
-                } else if (responseData.error) {
-                    serverMessage = responseData.error
-                } else if (responseData.errors) {
-                    if (Array.isArray(responseData.errors)) {
-                        serverMessage = responseData.errors.join(', ')
-                    } else if (typeof responseData.errors === 'object') {
-                        serverMessage = Object.values(responseData.errors).flat().join(', ')
+        // 從響應中提取錯誤消息
+        if (error.response?.data) {
+            const responseData = error.response.data as ErrorResponseData
+
+            if (responseData.message) {
+                serverMessage = responseData.message
+            } else if (responseData.error) {
+                serverMessage = responseData.error
+            } else if (responseData.errors) {
+                // 處理 JSON:API 錯誤格式
+                if (Array.isArray(responseData.errors)) {
+                    // 檢查是否為 JSON:API 錯誤格式
+                    const firstError = responseData.errors[0]
+                    if (firstError && typeof firstError === 'object' && 'detail' in firstError) {
+                        // JSON:API 錯誤格式：{ errors: [{ detail: "錯誤訊息" }] }
+                        serverMessage = (responseData.errors as JSONAPIError[])
+                            .map((err) => err.detail || err.title || 'Unknown error')
+                            .join(', ')
+                    } else {
+                        // 傳統錯誤格式：{ errors: ["錯誤訊息"] }
+                        serverMessage = (responseData.errors as string[]).join(', ')
                     }
+                } else if (typeof responseData.errors === 'object') {
+                    serverMessage = Object.values(responseData.errors).flat().join(', ')
                 }
-            } else if (typeof responseData === 'string') {
-                serverMessage = responseData
-            }
-
-            switch (status) {
-                case 400:
-                    errorMessage = serverMessage || '無效的請求'
-                    break
-                case 401:
-                    errorMessage = serverMessage || ERROR_MESSAGES.UNAUTHORIZED
-                    break
-                case 403:
-                    errorMessage = serverMessage || ERROR_MESSAGES.FORBIDDEN
-                    break
-                case 404:
-                    errorMessage = serverMessage || ERROR_MESSAGES.NOT_FOUND
-                    break
-                case 500:
-                case 502:
-                case 503:
-                case 504:
-                    errorMessage = serverMessage || ERROR_MESSAGES.SERVER
-                    break
-                default:
-                    errorMessage = serverMessage || `伺服器回傳錯誤: ${status}`
-            }
-        } else if (error.request) {
-            if (error.code === 'ECONNABORTED') {
-                errorMessage = ERROR_MESSAGES.TIMEOUT
-            } else {
-                errorMessage = ERROR_MESSAGES.NETWORK
             }
         }
 
-        toast({
-            variant: 'destructive',
-            title: '錯誤',
-            description: errorMessage,
+        // 根據狀態碼處理不同類型的錯誤
+        switch (error.response?.status) {
+            case 401:
+                this.clearAuthData()
+                this.redirectToLogin()
+                break
+            case 403:
+                serverMessage = ERROR_MESSAGES.FORBIDDEN
+                break
+            case 404:
+                serverMessage = ERROR_MESSAGES.NOT_FOUND
+                break
+            case 500:
+                serverMessage = ERROR_MESSAGES.SERVER
+                break
+            default:
+                // 使用服務器返回的錯誤消息
+                break
+        }
+
+        // 顯示錯誤提示（如果有 toast 功能）
+        if (typeof toast !== 'undefined') {
+            toast({
+                title: '錯誤',
+                description: serverMessage,
+                variant: 'destructive',
+            })
+        }
+
+        console.error('API Error:', {
+            status: error.response?.status,
+            message: serverMessage,
+            originalError: error,
         })
     }
 

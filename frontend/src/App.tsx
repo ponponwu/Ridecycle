@@ -26,6 +26,10 @@ import Search from './pages/Search'
 import Messages from './pages/Messages'
 import Checkout from './pages/Checkout'
 import OrderSuccess from './pages/OrderSuccess'
+import OrderList from './pages/OrderList'
+import OrderListSimple from './pages/OrderListSimple'
+import OrderDetail from './pages/OrderDetail'
+import OrderPayment from './pages/OrderPayment'
 import EditBike from './pages/EditBike'
 import AdminDashboard from './components/admin/AdminDashboard'
 import BicycleManagement from './components/admin/BicycleManagement'
@@ -114,6 +118,39 @@ function AppContent() {
                         </PrivateRoute>
                     }
                 />
+                <Route
+                    path="/orders"
+                    element={
+                        <PrivateRoute>
+                            <OrderList />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/orders-test"
+                    element={
+                        <PrivateRoute>
+                            <OrderListSimple />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/orders/:orderNumber"
+                    element={
+                        <PrivateRoute>
+                            <OrderDetail />
+                        </PrivateRoute>
+                    }
+                />
+                <Route
+                    path="/orders/:orderNumber/payment"
+                    element={
+                        <PrivateRoute>
+                            <OrderPayment />
+                        </PrivateRoute>
+                    }
+                />
+
                 <Route
                     path="/upload/:bicycleId/edit"
                     element={

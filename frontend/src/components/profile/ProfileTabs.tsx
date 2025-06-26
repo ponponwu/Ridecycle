@@ -8,7 +8,7 @@ import PersonalInfo from './PersonalInfo'
 import MyBicycles from './MyBicycles'
 import Messages from './Messages'
 import AccountSettings from './AccountSettings'
-import OrderHistory from './OrderHistory'
+import OrderHistoryFixed from './OrderHistoryFixed'
 
 interface ProfileTabsProps {
     user: IUser
@@ -63,7 +63,7 @@ const ProfileTabs = ({ user, activeTab, setActiveTab, handleSignOut }: ProfileTa
             </TabsContent>
 
             <TabsContent value="order-history" className="focus-visible:outline-none focus-visible:ring-0">
-                <OrderHistory />
+                <OrderHistoryFixed />
             </TabsContent>
 
             <TabsContent value="messages" className="focus-visible:outline-none focus-visible:ring-0">

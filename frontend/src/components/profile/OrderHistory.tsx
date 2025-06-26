@@ -21,8 +21,9 @@ interface MockSaleItem {
 
 const OrderHistory = () => {
     const { t } = useTranslation()
-    const [activeTab, setActiveTab] = useState('orders')
-    const [myOrders, setMyOrders] = useState<IOrder[]>([])
+    const [activeTab, setActiveTab] = useState('purchases')
+    const [purchaseOrders, setPurchaseOrders] = useState<IOrder[]>([])
+    const [salesOrders, setSalesOrders] = useState<IOrder[]>([])
     const [isLoadingOrders, setIsLoadingOrders] = useState(true)
     const [ordersError, setOrdersError] = useState<string | null>(null)
 
@@ -33,8 +34,20 @@ const OrderHistory = () => {
                 // Only fetch if the 'orders' tab is active
                 try {
                     setIsLoadingOrders(true)
-                    const response: IOrderListResponse = await orderService.getMyOrders()
-                    setMyOrders(response.orders || [])
+                    console.log('Fetching purchase orders...')
+
+                    // 使用新的 API 方法
+                    const response = await orderService.getOrders({
+                        type: 'purchases',
+                        page: 1,
+                        limit: 50,
+                    })
+
+                    console.log('Purchase orders response:', response)
+
+                    // 處理回應數據
+                    const orders = response?.orders || []
+                    setMyOrders(Array.isArray(orders) ? orders : [])
                     setOrdersError(null)
                 } catch (err) {
                     console.error('Failed to fetch my orders:', err)
@@ -133,8 +146,8 @@ const OrderHistory = () => {
                                         <div className="flex items-center space-x-3">
                                             <img
                                                 src={
-                                                    order.bicycle.photos_urls && order.bicycle.photos_urls.length > 0
-                                                        ? order.bicycle.photos_urls[0]
+                                                    order.bicycle.photosUrls && order.bicycle.photosUrls.length > 0
+                                                        ? order.bicycle.photosUrls[0]
                                                         : '/placeholder.svg'
                                                 }
                                                 alt={order.bicycle.title}
@@ -152,13 +165,11 @@ const OrderHistory = () => {
                                 <TableCell>{renderStatusBadge(order.status)}</TableCell>
                                 <TableCell className="text-right">${order.total?.toFixed(2) || 'N/A'}</TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" asChild>
-                                        <Link to={`/profile/orders/${order.id}`}>
-                                            {' '}
-                                            {/* Placeholder for order detail page */}
-                                            {t('viewDetails')} <ExternalLink className="ml-1 h-3 w-3" />
-                                        </Link>
-                                    </Button>
+                                    <Link to={`/orders/${order.orderNumber || order.id}`}>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                      {t('viewDetails')}
+                    </Button>
+                  </Link>
                                 </TableCell>
                             </TableRow>
                         ))}

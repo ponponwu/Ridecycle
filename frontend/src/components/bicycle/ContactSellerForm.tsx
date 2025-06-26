@@ -87,7 +87,6 @@ const ContactSellerForm = ({ sellerId, bicycleId }: ContactSellerFormProps) => {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{t('contactSeller')}</DialogTitle>
-                    <DialogDescription>{t('sendMessageToSeller')}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmitMessage}>
                     <div className="grid gap-4 py-4">

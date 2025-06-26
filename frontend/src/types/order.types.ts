@@ -15,44 +15,96 @@ export enum OrderStatus {
 }
 
 /**
- * 訂單詳情介面
+ * 用戶資訊介面（買家或賣家）
+ */
+export interface IOrderUser {
+    id: string
+    name: string
+    fullName: string
+    email: string
+    avatarUrl?: string
+}
+
+/**
+ * 訂單中的自行車資訊介面
+ */
+export interface IOrderBicycle {
+    id: string
+    title: string
+    price: number
+    status: string
+    brand?: string
+    model?: string
+    mainPhotoUrl?: string
+}
+
+/**
+ * 付款狀態類型
+ */
+export type PaymentStatus = 'pending' | 'awaiting_confirmation' | 'paid' | 'failed' | 'refunded'
+
+/**
+ * 訂單詳情介面（與後端 JSON:API 格式匹配）
  */
 export interface IOrder {
-    id: string // Order ID
-    orderNumber: string // Human-readable order number
-    userId: string // Buyer ID
-    // sellerId is part of bicycle.user.id
-    bicycle: IBicycle // The bicycle that was ordered
-    status: string // Was OrderStatus enum, backend likely sends string
-    shippingAddress: IShippingAddress
-    paymentMethod: IPaymentMethod
-    shippingMethod: IShippingMethod
-    subtotal: number
+    id: string
+    orderNumber: string
+    totalPrice: number
+    status: string
+    paymentStatus: PaymentStatus
+    createdAt: string
+    updatedAt: string
+    shippingMethod: string
     shippingCost: number
-    tax: number
-    total: number
+    shippingDistance?: number
+    paymentMethod: string
+    paymentDeadline?: string
+    expiresAt?: string
+    paymentInstructions?: string
+    companyAccountInfo?: string
+
+    // 用戶資訊
+    buyer?: IOrderUser
+    seller?: IOrderUser
+
+    // 自行車資訊
+    bicycle?: IOrderBicycle
+
+    // 配送地址（JSON:API 格式）
+    shippingAddress?: Record<string, unknown>
+
+    // 付款詳情（已過濾敏感資訊）
+    paymentDetails?: Record<string, unknown>
+
+    // 其他資訊
+    estimatedDeliveryDate?: string
     trackingNumber?: string
+    remainingPaymentHours?: number
+    remainingPaymentTimeHumanized?: string
+    expired?: boolean
+
+    // 向後兼容的欄位
+    userId?: string
+    subtotal?: number
+    tax?: number
+    total?: number
     carrier?: string
     notes?: string
     cancelReason?: string
-    paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded' // Keep as string union
     paymentId?: string
     rating?: number
     review?: string
-    createdAt: string
-    updatedAt: string
     estimatedDelivery?: string
-    buyer: {
-        id: string
-        fullName: string
-        email: string
-        avatar?: string
-    }
-    seller: {
-        id: string
-        fullName: string
-        email: string
-        avatar?: string
+
+    // 付款證明資訊 (使用新的 ActiveStorage 架構)
+    paymentProofInfo?: {
+        hasProof: boolean
+        status: 'none' | 'pending' | 'approved' | 'rejected'
+        filename?: string
+        uploadedAt?: string
+        fileSize?: number
+        contentType?: string
+        metadata?: Record<string, unknown>
     }
 }
 
@@ -106,6 +158,41 @@ export interface IOrderCreateData {
     paymentMethodId: string
     shippingMethodId: string
     notes?: string
+}
+
+/**
+ * 後端 API 訂單創建數據介面 (符合後端控制器格式)
+ */
+export interface IOrderCreateRequest {
+    order: {
+        bicycle_id: string
+        total_price: number
+        payment_method: string
+        shipping_method: string
+        shipping_distance?: number
+        shipping_address: {
+            full_name: string
+            phone_number: string
+            county: string
+            district: string
+            address_line1: string
+            address_line2?: string
+            postal_code: string
+            delivery_notes?: string
+        }
+        payment_details: {
+            transfer_note?: string
+            account_last_five_digits?: string
+            transfer_proof_url?: string
+        }
+        delivery_option: {
+            type: string
+            cost: number
+            estimated_days_min: number
+            estimated_days_max: number
+            note?: string
+        }
+    }
 }
 
 /**

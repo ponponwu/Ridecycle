@@ -1,123 +1,291 @@
-
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import CheckoutStepper from '@/components/checkout/CheckoutStepper';
-import ShippingAddressForm from '@/components/checkout/ShippingAddressForm';
-import PaymentForm from '@/components/checkout/PaymentForm';
-import OrderSummary from '@/components/checkout/OrderSummary';
-import CheckoutConfirmation from '@/components/checkout/CheckoutConfirmation';
+import React, { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import MainLayout from '@/components/layout/MainLayout'
+import { Button } from '@/components/ui/button'
+import CheckoutStepper from '@/components/checkout/CheckoutStepper'
+import ShippingAddressForm from '@/components/checkout/ShippingAddressForm'
+import DeliveryOptionsForm from '@/components/checkout/DeliveryOptionsForm'
+import OrderSummary from '@/components/checkout/OrderSummary'
+import CheckoutConfirmation from '@/components/checkout/CheckoutConfirmation'
+import { IShippingInfo, IPaymentInfo, IDeliveryOption } from '@/types/checkout.types'
+import { orderService } from '@/api/services/order.service'
+import { calculateShippingCost, validateOrderData, calculateOrderPrices } from '@/utils/orderCalculations'
 
 const Checkout = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { bicycle } = location.state || {};
-  const [currentStep, setCurrentStep] = useState(0);
-  const [shippingInfo, setShippingInfo] = useState({});
-  const [paymentInfo, setPaymentInfo] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // If no bicycle data is passed, redirect to home
-  React.useEffect(() => {
+    const { t } = useTranslation()
+    const location = useLocation()
+    const navigate = useNavigate()
+    const { bicycle } = location.state || {}
+    const [currentStep, setCurrentStep] = useState(0)
+    const [shippingInfo, setShippingInfo] = useState<IShippingInfo>({} as IShippingInfo)
+    const [deliveryOption, setDeliveryOption] = useState<IDeliveryOption>({
+        type: 'delivery',
+        cost: 100,
+        estimatedDays: { min: 3, max: 5 },
+    })
+    const [paymentInfo] = useState<IPaymentInfo>({} as IPaymentInfo)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [orderError, setOrderError] = useState<string | null>(null)
+    const [createdOrder, setCreatedOrder] = useState<any>(null) // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    // If no bicycle data is passed, redirect to home
+    React.useEffect(() => {
+        if (!bicycle) {
+            navigate('/')
+        }
+    }, [bicycle, navigate])
+
+    const steps = [
+        t('stepTitles.shippingAddress'),
+        t('deliveryOptions'),
+        t('stepTitles.orderReview'),
+        t('stepTitles.paymentInfo'),
+    ]
+
+    // 計算總價
+    const orderCalculation = React.useMemo(() => {
+        if (bicycle) {
+            return calculateOrderPrices(bicycle, deliveryOption.cost)
+        }
+        return { subtotal: 0, shipping: 0, tax: 0, total: 0 }
+    }, [bicycle, deliveryOption.cost])
+
+    const handleNextStep = () => {
+        setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
+    }
+
+    const handlePrevStep = () => {
+        setCurrentStep((prev) => Math.max(prev - 1, 0))
+    }
+
+    const handleShippingSubmit = (data: IShippingInfo) => {
+        setShippingInfo(data)
+
+        // 更新配送選項的運費
+        if (data.county && bicycle?.weight) {
+            const newShippingCost = calculateShippingCost(data.county, bicycle.weight)
+            setDeliveryOption((prev) => ({
+                ...prev,
+                cost: prev.type === 'delivery' ? newShippingCost : 0,
+            }))
+        }
+
+        handleNextStep()
+    }
+
+    const handleDeliveryOptionChange = (option: IDeliveryOption) => {
+        setDeliveryOption(option)
+    }
+
+    const handleDeliverySubmit = () => {
+        handleNextStep()
+    }
+
+    const handleOrderReview = async () => {
+        setIsSubmitting(true)
+        setOrderError(null)
+
+        try {
+            // 驗證訂單資料
+            if (!validateOrderData(bicycle, shippingInfo, paymentInfo)) {
+                throw new Error('訂單資料不完整')
+            }
+
+            // 構建完整的訂單創建資料，符合後端 API 格式
+            const orderRequestData = {
+                order: {
+                    bicycle_id: bicycle.id,
+                    total_price: orderCalculation.total,
+                    payment_method: 'bank_transfer',
+                    shipping_method: deliveryOption.type === 'pickup' ? 'self_pickup' : 'assisted_delivery',
+                    shipping_distance: deliveryOption.type === 'delivery' ? 5 : 0,
+                    shipping_address: {
+                        full_name: shippingInfo.fullName,
+                        phone_number: shippingInfo.phoneNumber,
+                        county: shippingInfo.county,
+                        district: shippingInfo.district,
+                        address_line1: shippingInfo.addressLine1,
+                        address_line2: shippingInfo.addressLine2 || '',
+                        postal_code: shippingInfo.postalCode,
+                        delivery_notes: shippingInfo.deliveryNotes || '',
+                    },
+                    payment_details: {
+                        transfer_note: '',
+                        account_last_five_digits: '',
+                        transfer_proof_url: '',
+                    },
+                    delivery_option: {
+                        type: deliveryOption.type,
+                        cost: deliveryOption.cost,
+                        estimated_days_min: deliveryOption.estimatedDays?.min || 3,
+                        estimated_days_max: deliveryOption.estimatedDays?.max || 5,
+                        note: deliveryOption.note || '',
+                    },
+                },
+            }
+
+            // 使用 orderService 創建訂單
+            const result = await orderService.createOrder(orderRequestData)
+
+            // 處理回傳的訂單資料
+            const orderData = Array.isArray(result) ? result[0] : result
+            setCreatedOrder(orderData)
+
+            // 進入付款資訊步驟
+            handleNextStep()
+        } catch (error: unknown) {
+            console.error('Order creation failed:', error)
+
+            let errorMessage = '訂單創建失敗，請稍後再試'
+
+            if (error instanceof Error) {
+                errorMessage = error.message
+            }
+
+            setOrderError(errorMessage)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    const handlePaymentComplete = () => {
+        // 導航到成功頁面
+        navigate('/order-success', {
+            state: {
+                orderId: createdOrder?.order_number || createdOrder?.id,
+                order: createdOrder,
+                bicycle,
+                shippingInfo,
+                paymentInfo,
+                deliveryOption,
+                orderCalculation,
+            },
+        })
+    }
+
     if (!bicycle) {
-      navigate('/');
+        return null // Will redirect in useEffect
     }
-  }, [bicycle, navigate]);
 
-  const steps = ['Shipping Address', 'Payment', 'Confirmation'];
+    return (
+        <MainLayout>
+            <div className="container max-w-6xl px-4 py-8 mx-auto">
+                <h1 className="mb-6 text-2xl font-bold">{t('checkout')}</h1>
 
-  const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-  };
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                    <div className="md:col-span-2">
+                        <CheckoutStepper steps={steps} activeStep={currentStep} />
 
-  const handlePrevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
-  };
+                        <div className="p-6 mt-6 bg-white rounded-lg shadow">
+                            {currentStep === 0 && (
+                                <ShippingAddressForm initialValues={shippingInfo} onSubmit={handleShippingSubmit} />
+                            )}
 
-  const handleShippingSubmit = (data) => {
-    setShippingInfo(data);
-    handleNextStep();
-  };
+                            {currentStep === 1 && (
+                                <div className="space-y-6">
+                                    <DeliveryOptionsForm
+                                        selectedOption={deliveryOption}
+                                        onOptionChange={handleDeliveryOptionChange}
+                                        county={shippingInfo.county}
+                                        bicycleWeight={bicycle.weight}
+                                    />
+                                    <div className="flex justify-between space-x-4 pt-4">
+                                        <Button type="button" variant="outline" onClick={handlePrevStep}>
+                                            {t('previous')}
+                                        </Button>
+                                        <Button type="button" onClick={handleDeliverySubmit}>
+                                            {t('continueToReview')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
 
-  const handlePaymentSubmit = (data) => {
-    setPaymentInfo(data);
-    handleNextStep();
-  };
+                            {currentStep === 2 && (
+                                <CheckoutConfirmation
+                                    bicycle={bicycle}
+                                    shippingInfo={shippingInfo}
+                                    paymentInfo={paymentInfo}
+                                    deliveryOption={deliveryOption}
+                                    onBack={handlePrevStep}
+                                    onPlaceOrder={handleOrderReview}
+                                    isSubmitting={isSubmitting}
+                                />
+                            )}
 
-  const handlePlaceOrder = async () => {
-    setIsSubmitting(true);
-    try {
-      // In a real app, this would be an API call to process the order
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      // Show success message
-      navigate('/order-success', { 
-        state: { 
-          orderId: `ORD-${Date.now().toString().slice(-8)}`,
-          bicycle,
-          shippingInfo,
-          paymentInfo 
-        } 
-      });
-    } catch (error) {
-      console.error('Order submission failed:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+                            {currentStep === 3 && createdOrder && (
+                                <div className="space-y-6">
+                                    <h3 className="text-lg font-semibold text-green-600">
+                                        {t('orderCreatedSuccessfully')}
+                                    </h3>
 
-  if (!bicycle) {
-    return null; // Will redirect in useEffect
-  }
+                                    <div className="p-4 bg-green-50 rounded-lg">
+                                        <div className="space-y-3">
+                                            <p className="font-medium">
+                                                {t('orderNumber')}: {createdOrder.order_number}
+                                            </p>
+                                            <p className="text-sm text-green-700">{t('paymentDeadlineNotice')}</p>
+                                            {createdOrder.remaining_payment_time_humanized && (
+                                                <p className="text-sm font-medium text-orange-600">
+                                                    {t('remainingTime')}:{' '}
+                                                    {createdOrder.remaining_payment_time_humanized}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
 
-  return (
-    <MainLayout>
-      <div className="container max-w-6xl px-4 py-8 mx-auto">
-        <h1 className="mb-6 text-2xl font-bold">Checkout</h1>
-        
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <CheckoutStepper 
-              steps={steps} 
-              activeStep={currentStep}
-            />
-            
-            <div className="p-6 mt-6 bg-white rounded-lg shadow">
-              {currentStep === 0 && (
-                <ShippingAddressForm 
-                  initialValues={shippingInfo} 
-                  onSubmit={handleShippingSubmit} 
-                />
-              )}
-              
-              {currentStep === 1 && (
-                <PaymentForm 
-                  initialValues={paymentInfo}
-                  onSubmit={handlePaymentSubmit}
-                  onBack={handlePrevStep}
-                />
-              )}
-              
-              {currentStep === 2 && (
-                <CheckoutConfirmation 
-                  bicycle={bicycle}
-                  shippingInfo={shippingInfo}
-                  paymentInfo={paymentInfo}
-                  onBack={handlePrevStep}
-                  onPlaceOrder={handlePlaceOrder}
-                  isSubmitting={isSubmitting}
-                />
-              )}
+                                    <div className="p-4 bg-blue-50 rounded-lg">
+                                        <h4 className="font-medium mb-2">{t('paymentInstructions')}</h4>
+                                        <div className="text-sm space-y-1">
+                                            <p>
+                                                <strong>{t('bankName')}:</strong> 玉山銀行
+                                            </p>
+                                            <p>
+                                                <strong>{t('accountNumber')}:</strong> 1234567890123
+                                            </p>
+                                            <p>
+                                                <strong>{t('accountName')}:</strong> RideCycle 有限公司
+                                            </p>
+                                            <p>
+                                                <strong>{t('amount')}:</strong> NT${' '}
+                                                {orderCalculation.total.toLocaleString()}
+                                            </p>
+                                            <p>
+                                                <strong>{t('orderTransferNote')}:</strong> {createdOrder.order_number}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between space-x-4">
+                                        <Button type="button" variant="outline" onClick={handlePrevStep}>
+                                            {t('previous')}
+                                        </Button>
+                                        <Button onClick={handlePaymentComplete}>
+                                            {t('iUnderstandPaymentInstructions')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {orderError && (
+                                <div className="mt-4 p-4 bg-red-50 rounded-lg">
+                                    <p className="text-sm text-red-700">{orderError}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <OrderSummary
+                            bicycle={bicycle}
+                            shipping={deliveryOption.cost}
+                            deliveryOption={deliveryOption}
+                        />
+                    </div>
+                </div>
             </div>
-          </div>
-          
-          <div>
-            <OrderSummary bicycle={bicycle} />
-          </div>
-        </div>
-      </div>
-    </MainLayout>
-  );
-};
+        </MainLayout>
+    )
+}
 
-export default Checkout;
+export default Checkout

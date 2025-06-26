@@ -43,6 +43,23 @@ export const en = {
         paymentMethod: 'Payment Method',
         shippingAddress: 'Shipping Address',
 
+        // Basic vocabulary
+        awaitingPayment: 'Awaiting Payment',
+        goBack: 'Go Back',
+        back: 'Back',
+        tryAgain: 'Try Again',
+        loading: 'Loading',
+        notAvailable: 'N/A',
+        orderDetails: 'Order Details',
+
+        // Order details related
+        bicycleInfo: 'Bicycle Information',
+        shippingInfo: 'Shipping Information',
+        paymentInfo: 'Payment Information',
+        paymentRequired: 'Payment Required',
+        pleaseCompletePaymentSoon: 'Please complete payment soon',
+        payNow: 'Pay Now',
+
         // Bicycle Details
         location: 'Location',
         condition: 'Condition',
@@ -62,6 +79,7 @@ export const en = {
 
         // Checkout
         buyNow: 'Buy Now',
+        checkout: 'Checkout',
         checkoutProcess: 'Checkout Process',
         shipping: 'Shipping',
         payment: 'Payment',
@@ -76,8 +94,107 @@ export const en = {
         reviewYourOrder: 'Review Your Order',
         orderSummary: 'Order Summary',
         subtotal: 'Subtotal',
+        shippingCost: 'Shipping',
         tax: 'Tax',
         total: 'Total',
+
+        // Shipping Address Form
+        recipientName: 'Recipient Name',
+        fullName: 'Full Name',
+        phoneNumber: 'Phone Number',
+        mobileNumber: 'Mobile Number',
+        county: 'County/City',
+        district: 'District',
+        addressLine1: 'Address',
+        addressLine2: 'Address Line 2',
+        postalCode: 'Postal Code',
+        deliveryNotes: 'Delivery Notes',
+        saveAsDefault: 'Save as default address',
+
+        // Taiwan Counties
+        taiwanCounties: {
+            taipei: 'Taipei City',
+            newTaipei: 'New Taipei City',
+            taoyuan: 'Taoyuan City',
+            taichung: 'Taichung City',
+            tainan: 'Tainan City',
+            kaohsiung: 'Kaohsiung City',
+            keelung: 'Keelung City',
+            hsinchu: 'Hsinchu City',
+            hsinchuCounty: 'Hsinchu County',
+            yilan: 'Yilan County',
+            miaoli: 'Miaoli County',
+            changhua: 'Changhua County',
+            nantou: 'Nantou County',
+            yunlin: 'Yunlin County',
+            chiayi: 'Chiayi City',
+            chiayiCounty: 'Chiayi County',
+            pingtung: 'Pingtung County',
+            taitung: 'Taitung County',
+            hualien: 'Hualien County',
+            penghu: 'Penghu County',
+            kinmen: 'Kinmen County',
+            lienchiang: 'Lienchiang County',
+        },
+
+        // Payment Information
+        cardNumber: 'Card Number',
+        cardHolderName: 'Cardholder Name',
+        expiryDate: 'Expiry Date',
+        expiryMonth: 'Month',
+        expiryYear: 'Year',
+        cvv: 'Security Code',
+        cvvHint: 'CVV',
+        saveCardInfo: 'Save card information for future use',
+        securePayment: 'Secure Payment',
+        paymentSecurityNote: 'All payment information is encrypted and protected',
+
+        // Payment Methods
+        paymentMethods: {
+            creditCard: 'Credit Card',
+            debitCard: 'Debit Card',
+            bankTransfer: 'Bank Transfer',
+            cashOnDelivery: 'Cash on Delivery',
+            linePay: 'LINE Pay',
+            applePay: 'Apple Pay',
+            googlePay: 'Google Pay',
+        },
+
+        // Confirmation Page
+        orderConfirmation: 'Order Confirmation',
+        bicycleDetails: 'Bicycle Details',
+        quantity: 'Quantity',
+        unitPrice: 'Unit Price',
+        deliveryAddress: 'Delivery Address',
+        estimatedDelivery: 'Estimated Delivery',
+        businessDays: 'business days',
+        termsAndConditions: 'Terms and Conditions',
+        privacyPolicy: 'Privacy Policy',
+        agreeToTerms: 'I agree to the',
+        and: 'and',
+
+        // Form Validation Messages
+        validation: {
+            required: 'This field is required',
+            invalidEmail: 'Please enter a valid email address',
+            invalidPhone: 'Please enter a valid phone number',
+            invalidCardNumber: 'Please enter a valid card number',
+            invalidCvv: 'Please enter a valid security code',
+            invalidPostalCode: 'Please enter a valid postal code',
+            nameTooShort: 'Name must be at least 2 characters',
+            addressTooShort: 'Address must be at least 5 characters',
+            cardNumberLength: 'Card number must be 13-19 digits',
+            cvvLength: 'Security code must be 3-4 digits',
+            phoneNumberFormat: 'Please enter a valid Taiwan mobile number format (09xxxxxxxx)',
+            postalCodeFormat: 'Please enter a valid postal code format (e.g., 100)',
+        },
+
+        // Step Titles
+        stepTitles: {
+            shippingAddress: 'Shipping Address',
+            paymentInfo: 'Payment Information',
+            orderReview: 'Order Review',
+        },
 
         // Search
         findPerfectBike: 'Find the perfect bike for your needs',
@@ -102,6 +219,53 @@ export const en = {
         resultsFound: 'results found',
         noBicyclesFound: 'No bicycles match your search criteria',
         loading: 'Loading',
+
+        // Price Range Options
+        priceRangeOptions: {
+            under10k: 'Under NT$ 10,000',
+            '10k-30k': 'NT$ 10,000 - 30,000',
+            '30k-50k': 'NT$ 30,000 - 50,000',
+            '50k-100k': 'NT$ 50,000 - 100,000',
+            '100k-200k': 'NT$ 100,000 - 200,000',
+            '200k-300k': 'NT$ 200,000 - 300,000',
+            over300k: 'Over NT$ 300,000',
+        },
+
+        // Bicycle Type Options - for search
+        bicycleTypeOptions: {
+            roadBike: 'Road Bike',
+            mountainBike: 'Mountain Bike',
+            hybridBike: 'Hybrid Bike',
+            cityBike: 'City Bike',
+            electricBike: 'Electric Bike',
+            foldingBike: 'Folding Bike',
+            gravelbike: 'Gravel Bike',
+            kidsBike: 'Kids Bike',
+        },
+
+        // Taiwan Location Options
+        locationOptions: {
+            taipei: 'Taipei City',
+            newTaipei: 'New Taipei City',
+            taoyuan: 'Taoyuan City',
+            taichung: 'Taichung City',
+            tainan: 'Tainan City',
+            kaohsiung: 'Kaohsiung City',
+            hsinchu: 'Hsinchu City',
+            keelung: 'Keelung City',
+        },
+
+        // Brand Options
+        brandOptions: {
+            giant: 'Giant',
+            merida: 'Merida',
+            specialized: 'Specialized',
+            trek: 'Trek',
+            cannondale: 'Cannondale',
+            scott: 'Scott',
+            bianchi: 'Bianchi',
+            colnago: 'Colnago',
+        },
 
         // Hero Banner
         ride: 'Ride',
@@ -355,6 +519,101 @@ export const en = {
             status: 'Status',
             edit: 'Edit',
             delete: 'Delete',
+        },
+
+        // Orders
+        orders: {
+            title: 'Order Management',
+            list: 'Order List',
+            detail: 'Order Details',
+            create: 'Create Order',
+            history: 'Order History',
+            purchases: 'Purchase History',
+            sales: 'Sales History',
+
+            // Status
+            status: {
+                pending: 'Pending Payment',
+                processing: 'Processing',
+                shipped: 'Shipped',
+                delivered: 'Delivered',
+                completed: 'Completed',
+                cancelled: 'Cancelled',
+                refunded: 'Refunded',
+                expired: 'Expired',
+            },
+
+            // Payment Status
+            paymentStatus: {
+                pending: 'Pending Payment',
+                awaiting_confirmation: 'Awaiting Confirmation',
+                paid: 'Paid',
+                failed: 'Payment Failed',
+                refunded: 'Refunded',
+                expired: 'Payment Expired',
+            },
+
+            // Fields
+            fields: {
+                orderNumber: 'Order Number',
+                status: 'Order Status',
+                paymentStatus: 'Payment Status',
+                totalPrice: 'Total Amount',
+                shippingCost: 'Shipping Cost',
+                paymentMethod: 'Payment Method',
+                shippingMethod: 'Shipping Method',
+                createdAt: 'Created At',
+                updatedAt: 'Updated At',
+                buyer: 'Buyer',
+                seller: 'Seller',
+                bicycle: 'Bicycle',
+                paymentDeadline: 'Payment Deadline',
+                remainingTime: 'Remaining Time',
+                trackingNumber: 'Tracking Number',
+                notes: 'Notes',
+            },
+
+            // Actions
+            actions: {
+                view: 'View Details',
+                cancel: 'Cancel Order',
+                pay: 'Pay Now',
+                confirmDelivery: 'Confirm Delivery',
+                rate: 'Rate',
+                contact: 'Contact',
+                retry: 'Retry',
+            },
+
+            // Messages
+            messages: {
+                noOrders: 'No Orders',
+                noPurchases: 'You have no purchase history',
+                noSales: 'You have no sales history',
+                startShopping: 'Start Shopping',
+                startSelling: 'Sell Your Bicycle',
+                loadingError: 'Failed to load orders',
+                loading: 'Loading...',
+                paymentInstructions: 'Payment Instructions',
+                paymentReminder:
+                    'Please complete payment within the deadline, overdue orders will be automatically cancelled',
+                orderExpired: 'This order has expired',
+                orderCancelled: 'This order has been cancelled',
+            },
+
+            // Payment Methods
+            paymentMethods: {
+                bank_transfer: 'Bank Transfer',
+                credit_card: 'Credit Card',
+                paypal: 'PayPal',
+                cash_on_delivery: 'Cash on Delivery',
+            },
+
+            // Shipping Methods
+            shippingMethods: {
+                home_delivery: 'Home Delivery',
+                convenience_store: 'Convenience Store Pickup',
+                self_pickup: 'Self Pickup',
+            },
         },
     },
 }

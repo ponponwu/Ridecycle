@@ -1,224 +1,292 @@
-
-import React from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { IShippingInfo } from '@/types/checkout.types'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+    taiwanCounties,
+    getDistrictsByCounty,
+    validateTaiwanMobile,
+    validatePostalCode,
+} from '@/utils/taiwanAddressData'
 
-const addressSchema = z.object({
-  fullName: z.string().min(2, { message: "Full name is required" }),
-  addressLine1: z.string().min(2, { message: "Address line 1 is required" }),
-  addressLine2: z.string().optional(),
-  city: z.string().min(2, { message: "City is required" }),
-  state: z.string().min(1, { message: "State is required" }),
-  postalCode: z.string().min(2, { message: "Postal code is required" }),
-  country: z.string().min(2, { message: "Country is required" }),
-  phoneNumber: z.string().min(5, { message: "Phone number is required" }),
-});
+// 台灣地址表單驗證 schema
+const createAddressSchema = (t: any) =>
+    z.object({
+        fullName: z
+            .string()
+            .min(2, { message: t('validation.nameTooShort') })
+            .max(50, { message: '姓名不能超過50個字元' }),
+        phoneNumber: z
+            .string()
+            .min(1, { message: t('validation.required') })
+            .refine(validateTaiwanMobile, { message: t('validation.phoneNumberFormat') }),
+        county: z.string().min(1, { message: t('validation.required') }),
+        district: z.string().min(1, { message: t('validation.required') }),
+        addressLine1: z
+            .string()
+            .min(5, { message: t('validation.addressTooShort') })
+            .max(100, { message: '地址不能超過100個字元' }),
+        addressLine2: z.string().optional(),
+        postalCode: z
+            .string()
+            .min(1, { message: t('validation.required') })
+            .refine(validatePostalCode, { message: t('validation.postalCodeFormat') }),
+        deliveryNotes: z.string().optional(),
+    })
 
 interface ShippingAddressFormProps {
-  initialValues?: any;
-  onSubmit: (data: any) => void;
+    initialValues?: Partial<IShippingInfo>
+    onSubmit: (data: IShippingInfo) => void
 }
 
-const ShippingAddressForm = ({ initialValues = {}, onSubmit }: ShippingAddressFormProps) => {
-  const form = useForm({
-    resolver: zodResolver(addressSchema),
-    defaultValues: {
-      fullName: initialValues.fullName || "",
-      addressLine1: initialValues.addressLine1 || "",
-      addressLine2: initialValues.addressLine2 || "",
-      city: initialValues.city || "",
-      state: initialValues.state || "",
-      postalCode: initialValues.postalCode || "",
-      country: initialValues.country || "US",
-      phoneNumber: initialValues.phoneNumber || "",
+const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues = {}, onSubmit }) => {
+    const { t } = useTranslation()
+    const [selectedCounty, setSelectedCounty] = useState(initialValues.county || '')
+    const [availableDistricts, setAvailableDistricts] = useState<any[]>([])
+
+    const addressSchema = createAddressSchema(t)
+
+    const form = useForm<IShippingInfo>({
+        resolver: zodResolver(addressSchema),
+        defaultValues: {
+            fullName: initialValues.fullName || '',
+            phoneNumber: initialValues.phoneNumber || '',
+            county: initialValues.county || '',
+            district: initialValues.district || '',
+            addressLine1: initialValues.addressLine1 || '',
+            addressLine2: initialValues.addressLine2 || '',
+            postalCode: initialValues.postalCode || '',
+            deliveryNotes: initialValues.deliveryNotes || '',
+        },
+    })
+
+    // 當縣市改變時，更新可用的鄉鎮區列表
+    useEffect(() => {
+        if (selectedCounty) {
+            const districts = getDistrictsByCounty(selectedCounty)
+            setAvailableDistricts(districts)
+
+            // 如果當前選擇的區域不在新的列表中，清空區域選擇
+            const currentDistrict = form.getValues('district')
+            if (currentDistrict && !districts.find((d) => d.code === currentDistrict)) {
+                form.setValue('district', '')
+                form.setValue('postalCode', '')
+            }
+        } else {
+            setAvailableDistricts([])
+        }
+    }, [selectedCounty, form])
+
+    // 當鄉鎮區改變時，自動填入郵遞區號
+    const handleDistrictChange = (districtCode: string) => {
+        form.setValue('district', districtCode)
+
+        const district = availableDistricts.find((d) => d.code === districtCode)
+        if (district && district.postalCodes.length > 0) {
+            form.setValue('postalCode', district.postalCodes[0])
+        }
     }
-  });
 
-  const states = [
-    { value: "AL", label: "Alabama" },
-    { value: "AK", label: "Alaska" },
-    { value: "AZ", label: "Arizona" },
-    { value: "AR", label: "Arkansas" },
-    { value: "CA", label: "California" },
-    { value: "CO", label: "Colorado" },
-    { value: "CT", label: "Connecticut" },
-    // More states...
-  ];
+    // 格式化手機號碼輸入
+    const formatPhoneNumber = (value: string) => {
+        const cleanValue = value.replace(/\D/g, '')
+        if (cleanValue.length <= 10) {
+            return cleanValue.replace(/(\d{4})(\d{3})(\d{3})/, '$1-$2-$3')
+        }
+        return value
+    }
 
-  const countries = [
-    { value: "US", label: "United States" },
-    { value: "CA", label: "Canada" },
-    { value: "UK", label: "United Kingdom" },
-    // More countries...
-  ];
+    return (
+        <div>
+            <h2 className="text-xl font-semibold mb-4">{t('shippingAddress')}</h2>
 
-  return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your full name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {/* 收件人姓名 */}
+                    <FormField
+                        control={form.control}
+                        name="fullName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('recipientName')} *</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="請輸入收件人姓名" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <FormField
-            control={form.control}
-            name="addressLine1"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address Line 1</FormLabel>
-                <FormControl>
-                  <Input placeholder="Street address" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    {/* 聯絡電話 */}
+                    <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('mobileNumber')} *</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        placeholder="09XX-XXX-XXX"
+                                        {...field}
+                                        onChange={(e) => {
+                                            const formatted = formatPhoneNumber(e.target.value)
+                                            field.onChange(formatted.replace(/-/g, ''))
+                                        }}
+                                        maxLength={12}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <FormField
-            control={form.control}
-            name="addressLine2"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address Line 2 (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Apartment, suite, unit, etc." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    {/* 縣市和鄉鎮區 */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="county"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('county')} *</FormLabel>
+                                    <Select
+                                        onValueChange={(value) => {
+                                            field.onChange(value)
+                                            setSelectedCounty(value)
+                                        }}
+                                        value={field.value}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="選擇縣市" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {taiwanCounties.map((county) => (
+                                                <SelectItem key={county.code} value={county.code}>
+                                                    {county.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter city" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="state"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>State/Province</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {states.map(state => (
-                        <SelectItem key={state.value} value={state.value}>
-                          {state.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                        <FormField
+                            control={form.control}
+                            name="district"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('district')} *</FormLabel>
+                                    <Select
+                                        onValueChange={handleDistrictChange}
+                                        value={field.value}
+                                        disabled={!selectedCounty}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="選擇鄉鎮區" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {availableDistricts.map((district) => (
+                                                <SelectItem key={district.code} value={district.code}>
+                                                    {district.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="postalCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Postal Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter postal code" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map(country => (
-                        <SelectItem key={country.value} value={country.value}>
-                          {country.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    {/* 郵遞區號 */}
+                    <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="postalCode"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{t('postalCode')} *</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="100" {...field} maxLength={5} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-          <FormField
-            control={form.control}
-            name="phoneNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter phone number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    {/* 詳細地址 */}
+                    <FormField
+                        control={form.control}
+                        name="addressLine1"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('addressLine1')} *</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="請輸入詳細地址（路、街、巷、弄、號）" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <div className="flex justify-end mt-6">
-            <Button type="submit">Continue to Payment</Button>
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-};
+                    {/* 地址補充 */}
+                    <FormField
+                        control={form.control}
+                        name="addressLine2"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('addressLine2')}</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="樓層、室號等補充資訊（選填）" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-export default ShippingAddressForm;
+                    {/* 配送備註 */}
+                    <FormField
+                        control={form.control}
+                        name="deliveryNotes"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('deliveryNotes')}</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        placeholder="特殊配送需求或備註（選填）"
+                                        className="min-h-20"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* 提交按鈕 */}
+                    <div className="flex justify-end mt-6">
+                        <Button type="submit" className="min-w-40">
+                            {t('continueToPayment')}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </div>
+    )
+}
+
+export default ShippingAddressForm

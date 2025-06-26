@@ -26,10 +26,10 @@ const BicycleTable: React.FC<BicycleTableProps> = ({ bicycles, onApprove, onReje
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>{t('title')}</TableHead>
+                        <TableHead>{t('admin.bicycleTitle')}</TableHead>
                         <TableHead>{t('seller')}</TableHead>
                         <TableHead>{t('admin.price')}</TableHead>
-                        <TableHead>{t('status')}</TableHead>
+                        <TableHead>{t('admin.status')}</TableHead>
                         <TableHead>{t('admin.actions')}</TableHead>
                     </TableRow>
                 </TableHeader>

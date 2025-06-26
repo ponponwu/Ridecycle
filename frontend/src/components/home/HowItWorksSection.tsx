@@ -1,74 +1,141 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
+import { Camera, Users, ShoppingCart, ArrowRight, CheckCircle } from 'lucide-react'
 
 const HowItWorksSection = () => {
-  return (
-    <section className="py-16 bg-white">
-      <div className="container px-4 mx-auto">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 md:text-4xl">
-            How Pedal Palace Works
-          </h2>
-          <p className="mt-4 text-xl text-gray-600">
-            Your trusted platform for buying and selling second-hand bicycles
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-marketplace-blue/10 text-marketplace-blue">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-                <circle cx="12" cy="13" r="3"/>
-              </svg>
-            </div>
-            <h3 className="mb-3 text-xl font-semibold text-gray-900">List Your Bike</h3>
-            <p className="text-gray-600">
-              Take photos and create a detailed listing for your bicycle. Include all relevant details that buyers would want to know.
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-marketplace-green/10 text-marketplace-green">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-            </div>
-            <h3 className="mb-3 text-xl font-semibold text-gray-900">Connect with Buyers</h3>
-            <p className="text-gray-600">
-              Respond to inquiries, answer questions, and arrange meetings with potential buyers interested in your bicycle.
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-marketplace-orange/10 text-marketplace-orange">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="21" r="1" />
-                <circle cx="19" cy="21" r="1" />
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-              </svg>
-            </div>
-            <h3 className="mb-3 text-xl font-semibold text-gray-900">Complete the Sale</h3>
-            <p className="text-gray-600">
-              Meet with the buyer to complete the transaction and hand over the bicycle. Mark your listing as sold in your dashboard.
-            </p>
-          </div>
-        </div>
-        
-        <div className="mt-16 text-center">
-          <Link to="/upload">
-            <Button className="px-8 py-6 text-lg bg-marketplace-blue hover:bg-blue-600">
-              Start Selling
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-};
+    const { t } = useTranslation()
 
-export default HowItWorksSection;
+    const steps = [
+        {
+            icon: Camera,
+            title: t('listYourBike'),
+            description: t('listYourBikeDescription'),
+            color: 'from-emerald-500 to-emerald-600',
+            bgColor: 'bg-emerald-50',
+            iconBg: 'bg-emerald-100',
+            iconColor: 'text-emerald-600',
+            step: '01',
+        },
+        {
+            icon: Users,
+            title: t('connectWithBuyers'),
+            description: t('connectWithBuyersDescription'),
+            color: 'from-teal-500 to-teal-600',
+            bgColor: 'bg-teal-50',
+            iconBg: 'bg-teal-100',
+            iconColor: 'text-teal-600',
+            step: '02',
+        },
+        {
+            icon: ShoppingCart,
+            title: t('completeTheSale'),
+            description: t('completeTheSaleDescription'),
+            color: 'from-amber-500 to-amber-600',
+            bgColor: 'bg-amber-50',
+            iconBg: 'bg-amber-100',
+            iconColor: 'text-amber-600',
+            step: '03',
+        },
+    ]
+
+    return (
+        <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+            {/* 背景裝飾 */}
+            <div className="absolute inset-0">
+                <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-100 rounded-full mix-blend-multiply filter blur-xl opacity-50"></div>
+                <div className="absolute bottom-20 right-10 w-72 h-72 bg-teal-100 rounded-full mix-blend-multiply filter blur-xl opacity-50"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-100 rounded-full mix-blend-multiply filter blur-xl opacity-30"></div>
+            </div>
+
+            <div className="container px-4 mx-auto relative z-10">
+                {/* 標題區域 */}
+                <div className="max-w-4xl mx-auto text-center mb-16">
+                    <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 rounded-full px-4 py-2 text-sm font-medium mb-4">
+                        <CheckCircle className="w-4 h-4" />
+                        簡單三步驟
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">{t('howItWorks')}</h2>
+                    <p className="text-xl text-gray-600 leading-relaxed">{t('howItWorksSubtitle')}</p>
+                    <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 mx-auto mt-6 rounded-full"></div>
+                </div>
+
+                {/* 步驟卡片 */}
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3 mb-16">
+                    {steps.map((step, index) => {
+                        const Icon = step.icon
+                        return (
+                            <div key={index} className="relative group">
+                                {/* 連接線 */}
+                                {index < steps.length - 1 && (
+                                    <div className="hidden md:block absolute top-1/2 left-full w-full h-0.5 bg-gradient-to-r from-gray-300 to-transparent transform -translate-y-1/2 z-0">
+                                        <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
+                                            <ArrowRight className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div
+                                    className={`relative ${step.bgColor} rounded-3xl p-8 h-full border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105`}
+                                >
+                                    {/* 步驟編號 */}
+                                    <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
+                                        <span className="text-lg font-bold text-gray-900">{step.step}</span>
+                                    </div>
+
+                                    {/* 圖標區域 */}
+                                    <div
+                                        className={`w-20 h-20 ${step.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                                    >
+                                        <Icon className={`w-10 h-10 ${step.iconColor}`} />
+                                    </div>
+
+                                    {/* 內容 */}
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-4">{step.title}</h3>
+                                    <p className="text-gray-600 leading-relaxed text-lg">{step.description}</p>
+
+                                    {/* 底部裝飾 */}
+                                    <div
+                                        className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${step.color} rounded-b-3xl`}
+                                    ></div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* 行動呼籲區域 */}
+                <div className="text-center">
+                    <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 max-w-2xl mx-auto">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">準備開始您的自行車之旅嗎？</h3>
+                        <p className="text-gray-600 mb-6 text-lg">立即加入我們的社群，開始買賣您的第一輛自行車</p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link to="/upload">
+                                <Button
+                                    size="lg"
+                                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 px-8 py-4 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                                >
+                                    <Camera className="mr-3 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                                    {t('startSelling')}
+                                    <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </Link>
+                            <Link to="/search">
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-2xl transition-all duration-300"
+                                >
+                                    先瀏覽看看
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+export default HowItWorksSection

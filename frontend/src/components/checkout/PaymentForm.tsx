@@ -1,233 +1,281 @@
+import React, { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Copy, Upload, CreditCard, Clock, AlertCircle } from 'lucide-react'
+import { IPaymentInfo, COMPANY_BANK_ACCOUNT } from '@/types/checkout.types'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
-import React from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CreditCard } from 'lucide-react';
-
-const paymentSchema = z.object({
-  cardName: z.string().min(2, { message: "Cardholder name is required" }),
-  cardNumber: z.string()
-    .min(13, { message: "Card number must have at least 13 digits" })
-    .max(19, { message: "Card number cannot exceed 19 digits" })
-    .refine(val => /^\d+$/.test(val), { message: "Card number must contain only digits" }),
-  expiryMonth: z.string().min(1, { message: "Month is required" }),
-  expiryYear: z.string().min(1, { message: "Year is required" }),
-  cvv: z.string()
-    .min(3, { message: "CVV must be 3-4 digits" })
-    .max(4, { message: "CVV must be 3-4 digits" })
-    .refine(val => /^\d+$/.test(val), { message: "CVV must contain only digits" }),
-  saveCard: z.boolean().optional(),
-});
-
-const months = Array.from({ length: 12 }, (_, i) => {
-  const month = i + 1;
-  return { value: month.toString().padStart(2, '0'), label: month.toString().padStart(2, '0') };
-});
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 10 }, (_, i) => {
-  const year = currentYear + i;
-  return { value: year.toString(), label: year.toString() };
-});
+// 創建動態驗證 schema
+const createPaymentSchema = (t: (key: string) => string) =>
+    z.object({
+        paymentMethod: z.literal('bankTransfer'),
+        transferNote: z.string().min(1, { message: t('validation.required') }),
+        accountLastFiveDigits: z
+            .string()
+            .min(5, { message: '請輸入完整的後五碼' })
+            .max(5, { message: '請輸入完整的後五碼' })
+            .regex(/^\d+$/, { message: '只能輸入數字' }),
+        transferProof: z.instanceof(File).optional(),
+    })
 
 interface PaymentFormProps {
-  initialValues?: any;
-  onSubmit: (data: any) => void;
-  onBack: () => void;
+    initialValues?: Partial<IPaymentInfo>
+    onSubmit: (data: IPaymentInfo) => void
+    onBack: () => void
+    totalAmount: number
 }
 
-const PaymentForm = ({ initialValues = {}, onSubmit, onBack }: PaymentFormProps) => {
-  const form = useForm({
-    resolver: zodResolver(paymentSchema),
-    defaultValues: {
-      cardName: initialValues.cardName || "",
-      cardNumber: initialValues.cardNumber || "",
-      expiryMonth: initialValues.expiryMonth || "",
-      expiryYear: initialValues.expiryYear || "",
-      cvv: initialValues.cvv || "",
-      saveCard: initialValues.saveCard || false,
+const PaymentForm: React.FC<PaymentFormProps> = ({ initialValues = {}, onSubmit, onBack, totalAmount }) => {
+    const { t } = useTranslation()
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+
+    const paymentSchema = createPaymentSchema(t)
+
+    const form = useForm<IPaymentInfo>({
+        resolver: zodResolver(paymentSchema),
+        defaultValues: {
+            paymentMethod: 'bankTransfer',
+            transferNote: initialValues.transferNote || '',
+            accountLastFiveDigits: initialValues.accountLastFiveDigits || '',
+        },
+    })
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text)
+        // 這裡可以添加 toast 通知
     }
-  });
 
-  const formatCardNumber = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{4})(?=\d)/g, '$1 ')
-      .trim();
-  };
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            setUploadedFile(file)
+            form.setValue('transferProof', file)
+        }
+    }
 
-  return (
-    <div>
-      <h2 className="mb-4 text-xl font-semibold">Payment Information</h2>
-      
-      <div className="flex items-center gap-2 p-3 mb-6 text-sm bg-blue-50 rounded-md">
-        <CreditCard className="w-5 h-5 text-blue-500" />
-        <span>All payment information is encrypted and secure</span>
-      </div>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="cardName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name on Card</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter cardholder name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    const handleSubmit = (data: IPaymentInfo) => {
+        onSubmit({
+            ...data,
+            transferProof: uploadedFile || undefined,
+        })
+    }
 
-          <FormField
-            control={form.control}
-            name="cardNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Card Number</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="1234 5678 9012 3456" 
-                    {...field} 
-                    onChange={(e) => {
-                      const formatted = formatCardNumber(e.target.value);
-                      e.target.value = formatted;
-                      field.onChange(formatted.replace(/\s/g, ''));
-                    }}
-                    maxLength={19}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    return (
+        <div className="space-y-6">
+            <h2 className="text-xl font-semibold">{t('paymentInformation')}</h2>
 
-          <div className="grid grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="expiryMonth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Month</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="MM" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {months.map(month => (
-                        <SelectItem key={month.value} value={month.value}>
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="expiryYear"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="YYYY" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {years.map(year => (
-                        <SelectItem key={year.value} value={year.value}>
-                          {year.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="cvv"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CVV</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="123" 
-                      maxLength={4} 
-                      {...field} 
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        e.target.value = value;
-                        field.onChange(value);
-                      }}
+            {/* 轉帳說明卡片 */}
+            <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-800">
+                        <CreditCard className="w-5 h-5" />
+                        {t('transferInstructions')}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-100 p-3 rounded-lg">
+                        <Clock className="w-4 h-4" />
+                        <span>{t('transferDeadline')}</span>
+                    </div>
+
+                    <div>
+                        <h4 className="font-medium text-blue-800 mb-2">{t('transferAmount')}</h4>
+                        <div className="text-2xl font-bold text-blue-900">{formatPriceNTD(totalAmount)}</div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 銀行帳戶資訊 */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('bankAccount')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{t('bankName')}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.bankName}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.bankName)}
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{t('bankCode')}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.bankCode}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.bankCode)}
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{t('accountNumber')}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-mono font-medium">{COMPANY_BANK_ACCOUNT.accountNumber}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.accountNumber)}
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">{t('accountName')}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm">{COMPANY_BANK_ACCOUNT.accountName}</span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.accountName)}
+                                >
+                                    <Copy className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        {COMPANY_BANK_ACCOUNT.branch && (
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">{t('branch')}</span>
+                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.branch}</span>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 轉帳資訊表單 */}
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                    {/* 轉帳備註 */}
+                    <FormField
+                        control={form.control}
+                        name="transferNote"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('transferNote')} *</FormLabel>
+                                <FormControl>
+                                    <Input placeholder={t('transferNotePlaceholder')} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
-          <FormField
-            control={form.control}
-            name="saveCard"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-1">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value} 
-                    onCheckedChange={field.onChange} 
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Save card for future purchases</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
+                    {/* 轉帳帳戶後五碼 */}
+                    <FormField
+                        control={form.control}
+                        name="accountLastFiveDigits"
+                        render={({ field: { onChange, value, ...field } }) => (
+                            <FormItem>
+                                <FormLabel>{t('accountLastFiveDigits')} *</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        {...field}
+                                        value={value}
+                                        onChange={(e) => {
+                                            // 只允許數字輸入，限制5位
+                                            const numericValue = e.target.value.replace(/\D/g, '').slice(0, 5)
+                                            onChange(numericValue)
+                                        }}
+                                        placeholder={t('accountDigitsPlaceholder')}
+                                        className="w-full"
+                                        maxLength={5}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-          <div className="flex justify-between mt-6">
-            <Button type="button" variant="outline" onClick={onBack}>
-              Back
-            </Button>
-            <Button type="submit">
-              Review Order
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
-  );
-};
+                    {/* 轉帳證明上傳 */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">{t('transferProof')}</label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                            <div className="text-center">
+                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                <div className="mt-4">
+                                    <label htmlFor="transfer-proof" className="cursor-pointer">
+                                        <span className="mt-2 block text-sm font-medium text-gray-900">
+                                            {t('uploadTransferProof')}
+                                        </span>
+                                        <span className="mt-1 block text-xs text-gray-500">
+                                            {t('transferProofNote')}
+                                        </span>
+                                    </label>
+                                    <input
+                                        id="transfer-proof"
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/*,.pdf"
+                                        onChange={handleFileUpload}
+                                    />
+                                </div>
+                                {uploadedFile && (
+                                    <div className="mt-2 text-sm text-green-600">✓ 已上傳：{uploadedFile.name}</div>
+                                )}
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500">支援 JPG、PNG、PDF 格式，檔案大小不超過 5MB</p>
+                    </div>
 
-export default PaymentForm;
+                    {/* 注意事項 */}
+                    <Card className="bg-amber-50 border-amber-200">
+                        <CardContent className="pt-4">
+                            <div className="flex items-start gap-2">
+                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm text-amber-800 space-y-1">
+                                    <p className="font-medium">注意事項：</p>
+                                    <ul className="list-disc list-inside space-y-1 ml-2">
+                                        <li>請確保轉帳金額與訂單金額完全一致</li>
+                                        <li>轉帳備註請填寫您的姓名，方便我們核對</li>
+                                        <li>請保留轉帳收據，並上傳作為付款證明</li>
+                                        <li>我們會在收到轉帳後 1-2 個工作日內確認付款</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 操作按鈕 */}
+                    <div className="flex justify-between space-x-4 pt-4">
+                        <Button type="button" variant="outline" onClick={onBack}>
+                            {t('backToShipping')}
+                        </Button>
+                        <Button type="submit" className="min-w-32">
+                            {t('reviewYourOrder')}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </div>
+    )
+}
+
+export default PaymentForm

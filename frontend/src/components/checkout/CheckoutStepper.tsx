@@ -1,47 +1,74 @@
-
-import React from 'react';
-import { Check } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import React from 'react'
+import { useTranslation } from 'react-i18next'
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CheckoutStepperProps {
-  steps: string[];
-  activeStep: number;
+    steps: string[]
+    activeStep: number
 }
 
-const CheckoutStepper = ({ steps, activeStep }: CheckoutStepperProps) => {
-  const { t } = useTranslation();
-  
-  return (
-    <div className="flex w-full">
-      {steps.map((step, index) => {
-        const isActive = index === activeStep;
-        const isCompleted = index < activeStep;
-        
-        return (
-          <div key={index} className="flex flex-1 items-center">
-            <div className={`relative flex flex-col items-center flex-1 ${index !== steps.length - 1 ? 'after:w-full after:h-0.5 after:bg-gray-200 after:absolute after:right-0 after:top-5 after:translate-x-1/2' : ''}`}>
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full transition ${
-                  isCompleted ? 'bg-green-600' : isActive ? 'bg-blue-600' : 'bg-gray-300'
-                } text-white z-10`}
-              >
-                {isCompleted ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <span>{index + 1}</span>
-                )}
-              </div>
-              <span className={`mt-2 text-xs font-medium ${
-                isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-              }`}>
-                {t(step)}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ steps, activeStep }) => {
+    const { t } = useTranslation()
 
-export default CheckoutStepper;
+    return (
+        <div className="w-full">
+            <div className="flex items-center justify-between">
+                {steps.map((step, index) => (
+                    <div key={index} className="flex items-center">
+                        {/* 步驟圓圈 */}
+                        <div
+                            className={cn(
+                                'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors',
+                                {
+                                    'bg-blue-600 text-white border-blue-600': index <= activeStep,
+                                    'bg-gray-100 text-gray-400 border-gray-300': index > activeStep,
+                                }
+                            )}
+                        >
+                            {index < activeStep ? (
+                                <Check className="w-5 h-5" />
+                            ) : (
+                                <span className="text-sm font-medium">{index + 1}</span>
+                            )}
+                        </div>
+
+                        {/* 步驟標題 */}
+                        <div className="ml-3">
+                            <div
+                                className={cn('text-sm font-medium transition-colors', {
+                                    'text-blue-600': index <= activeStep,
+                                    'text-gray-400': index > activeStep,
+                                })}
+                            >
+                                {step}
+                            </div>
+                        </div>
+
+                        {/* 連接線 */}
+                        {index < steps.length - 1 && (
+                            <div
+                                className={cn('flex-1 h-px mx-4 transition-colors', {
+                                    'bg-blue-600': index < activeStep,
+                                    'bg-gray-300': index >= activeStep,
+                                })}
+                            />
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* 進度條 (可選的額外視覺效果) */}
+            <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+                        style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default CheckoutStepper

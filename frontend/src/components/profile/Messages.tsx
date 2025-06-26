@@ -20,8 +20,9 @@ const Messages = () => {
         const fetchConversations = async () => {
             try {
                 setIsLoading(true)
-                const data = await messageService.getConversationPreviews({ limit: 3 }) // Fetch top 3 for preview
-                setConversations(data || [])
+                const data = await messageService.getConversations() // 使用正確的方法名
+                // 只取前3個對話作為預覽
+                setConversations(data?.slice(0, 3) || [])
                 setError(null)
             } catch (err) {
                 console.error('Failed to fetch conversation previews:', err)

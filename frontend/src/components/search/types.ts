@@ -1,3 +1,5 @@
+import { BicycleCondition } from '@/types/bicycle.types'
+
 export interface Bicycle {
     id: string
     title: string
@@ -11,8 +13,7 @@ export interface Bicycle {
 }
 
 export interface SearchFilters {
-    categories: string[]
-    conditions: string[]
+    conditions: BicycleCondition[]
     priceMin: number
     priceMax: number
 }

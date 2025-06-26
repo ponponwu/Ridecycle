@@ -1,78 +1,180 @@
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Search, Upload, ArrowRight, Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const HeroBanner = () => {
-  const { t } = useTranslation();
-  
-  const bikeCategories = [
-    { name: "Mountain Bikes", type: "Mountain Bike" },
-    { name: "Road Bikes", type: "Road Bike" },
-    { name: "Hybrid Bikes", type: "Hybrid Bike" },
-    { name: "City Bikes", type: "City Bike" },
-    { name: "Electric Bikes", type: "Electric Bike" },
-    { name: "Kids Bikes", type: "Kids Bike" },
-    { name: "BMX", type: "BMX" }
-  ];
+    const { t } = useTranslation()
 
-  return (
-    <section className="relative bg-gradient-to-b from-gray-50 to-white">
-      <div className="container px-4 py-12 mx-auto sm:py-16 md:py-20 lg:py-24">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16">
-          <div className="flex flex-col justify-center max-w-lg">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-              {t('findPerfectBike')} <span className="text-marketplace-blue">{t('ride')}</span>
-            </h1>
-            <p className="mt-4 text-xl text-gray-600">
-              {t('heroBannerDescription')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
-              <Link to="/search">
-                <Button className="bg-marketplace-blue hover:bg-blue-600 text-white px-8 py-6 text-lg">
-                  <Search className="mr-2 h-5 w-5" />
-                  {t('browseBikes')}
-                </Button>
-              </Link>
-              <Link to="/upload">
-                <Button variant="outline" className="px-8 py-6 text-lg">
-                  {t('sellYourBike')}
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="relative hidden lg:block">
-            <div className="absolute inset-0 rounded-lg overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-marketplace-blue/30 to-transparent z-10"></div>
-            </div>
-            <img
-              src="https://images.unsplash.com/photo-1578167635648-9e3e439ccb7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
-              alt="Mountain bike on a trail"
-              className="object-cover w-full h-full rounded-lg"
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* Category Pills */}
-      <div className="container px-4 pb-8 mx-auto">
-        <div className="flex flex-nowrap overflow-x-auto gap-2 py-2 pb-4 no-scrollbar">
-          {bikeCategories.map((category) => (
-            <Link 
-              key={category.type} 
-              to={`/search?type=${encodeURIComponent(category.type)}`}
-            >
-              <Button variant="outline" className="rounded-full whitespace-nowrap">
-                {category.name}
-              </Button>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+    const bikeCategories = [
+        { name: t('bikeCategories.mountainBikes'), type: 'mountainbike', icon: '🚵‍♂️' },
+        { name: t('bikeCategories.roadBikes'), type: 'roadbike', icon: '🚴‍♀️' },
+        { name: t('bikeCategories.hybridBikes'), type: 'hybridbike', icon: '🚲' },
+        { name: t('bikeCategories.cityBikes'), type: 'citybike', icon: '🏙️' },
+        { name: t('bikeCategories.electricBikes'), type: 'electricbike', icon: '⚡' },
+        { name: t('bikeCategories.kidsBikes'), type: 'kidsbike', icon: '👶' },
+        { name: t('bikeCategories.bmx'), type: 'bmx', icon: '🤸‍♂️' },
+    ]
 
-export default HeroBanner;
+    const backgroundPattern =
+        "data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='0.05'%3E%3Cpath d='M20 20c0 11.046-8.954 20-20 20s-20-8.954-20-20 8.954-20 20-20 20 8.954 20 20Z'/%3E%3C/g%3E%3C/svg%3E"
+
+    return (
+        <section className="relative min-h-[80vh] bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 overflow-hidden">
+            {/* 裝飾性背景元素 */}
+            <div className="absolute inset-0">
+                <div
+                    className="absolute top-0 left-0 w-full h-full"
+                    style={{ backgroundImage: `url("${backgroundPattern}")` }}
+                ></div>
+                <div className="absolute top-20 right-20 w-32 h-32 bg-white/5 rounded-full blur-xl"></div>
+                <div className="absolute bottom-40 left-10 w-24 h-24 bg-orange-300/10 rounded-full blur-lg"></div>
+                <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-amber-400/10 rounded-full blur-md"></div>
+            </div>
+
+            <div className="container relative px-4 py-16 mx-auto sm:py-20 md:py-24 lg:py-28">
+                <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
+                    <div className="flex flex-col justify-center space-y-8">
+                        {/* 徽章 */}
+                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white w-fit">
+                            <Star className="w-4 h-4 text-amber-300 fill-current" />
+                            <span className="text-sm font-medium">台灣第一自行車交易平台</span>
+                        </div>
+
+                        {/* 主標題 */}
+                        <div className="space-y-4">
+                            <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl leading-tight">
+                                {t('findPerfectBike')}
+                            </h1>
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
+                                    {t('ride')}
+                                </span>
+                                <div className="w-12 h-1 bg-gradient-to-r from-amber-300 to-orange-400 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        {/* 描述 */}
+                        <p className="text-xl text-emerald-100 leading-relaxed max-w-xl">
+                            {t('heroBannerDescription')}
+                        </p>
+
+                        {/* 行動按鈕 */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Link to="/search">
+                                <Button
+                                    size="lg"
+                                    className="bg-white text-emerald-700 hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group"
+                                >
+                                    <Search className="mr-3 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                                    {t('browseBikes')}
+                                    <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </Link>
+                            <Link to="/upload">
+                                <Button
+                                    size="lg"
+                                    className="bg-white/20 border-2 border-white text-white hover:bg-white hover:text-emerald-700 px-8 py-4 text-lg font-semibold rounded-2xl backdrop-blur-sm transition-all duration-300 group shadow-lg"
+                                >
+                                    <Upload className="mr-3 h-5 w-5 group-hover:-translate-y-1 transition-transform" />
+                                    {t('sellYourBike')}
+                                </Button>
+                            </Link>
+                        </div>
+
+                        {/* 統計數據 */}
+                        <div className="flex items-center gap-8 pt-4">
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-white">1000+</div>
+                                <div className="text-sm text-emerald-200">活躍會員</div>
+                            </div>
+                            <div className="w-px h-12 bg-white/20"></div>
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-white">500+</div>
+                                <div className="text-sm text-emerald-200">成功交易</div>
+                            </div>
+                            <div className="w-px h-12 bg-white/20"></div>
+                            <div className="text-center">
+                                <div className="text-3xl font-bold text-white">4.8★</div>
+                                <div className="text-sm text-emerald-200">用戶評分</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 右側視覺區域 */}
+                    <div className="relative hidden lg:block">
+                        <div className="relative">
+                            {/* 背景漸層 */}
+                            <div className="w-full h-[600px] bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 rounded-3xl shadow-2xl relative overflow-hidden">
+                                {/* 裝飾圖案 */}
+                                <div className="absolute inset-0">
+                                    <div className="absolute top-10 left-10 w-32 h-32 bg-white/20 rounded-full"></div>
+                                    <div className="absolute top-20 right-20 w-20 h-20 bg-amber-300/30 rounded-full"></div>
+                                    <div className="absolute bottom-20 left-20 w-24 h-24 bg-orange-300/30 rounded-full"></div>
+                                    <div className="absolute bottom-10 right-10 w-28 h-28 bg-white/15 rounded-full"></div>
+                                </div>
+
+                                {/* 自行車圖標 */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-white/80 text-9xl">🚴‍♀️</div>
+                                </div>
+
+                                {/* 裝飾文字 */}
+                                <div className="absolute bottom-16 left-8 text-white">
+                                    <div className="text-3xl font-bold mb-2">騎行台灣</div>
+                                    <div className="text-lg opacity-80">探索無限可能</div>
+                                </div>
+                            </div>
+
+                            {/* 浮動卡片 */}
+                            <div className="absolute top-8 left-8 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl z-30 transform rotate-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                                        <span className="text-2xl">✓</span>
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-gray-900">安全交易</div>
+                                        <div className="text-sm text-gray-600">平台保障</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="absolute bottom-8 right-8 bg-emerald-600 text-white rounded-2xl p-4 shadow-xl z-30 transform -rotate-2">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold">NT$ 15,000</div>
+                                    <div className="text-sm opacity-90">平均售價</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 分類標籤 */}
+            <div className="container px-4 pb-8 mx-auto relative z-20">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {bikeCategories.map((category) => (
+                            <Link
+                                key={category.type}
+                                to={`/search?type=${encodeURIComponent(category.type)}`}
+                                className="group"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    className="bg-white/20 hover:bg-white hover:text-emerald-700 text-white rounded-full px-4 py-2 transition-all duration-300 group-hover:scale-105 border border-white/30"
+                                >
+                                    <span className="mr-2">{category.icon}</span>
+                                    {category.name}
+                                </Button>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
+export default HeroBanner

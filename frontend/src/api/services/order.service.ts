@@ -3,6 +3,7 @@ import apiClient from '../client'
 import {
     IOrder,
     IOrderCreateData,
+    IOrderCreateRequest,
     IOrderListParams,
     IOrderListResponse,
     IOrderStatusUpdate,
@@ -13,6 +14,7 @@ import {
     IPaymentResult,
     IOrderStats,
 } from '@/types/order.types'
+import { JSONAPIResponse } from '../client'
 
 /**
  * 訂單相關 API 服務
@@ -20,10 +22,12 @@ import {
 export class OrderService {
     /**
      * 獲取訂單列表
-     * @param {IOrderListParams} params - 列表參數
+     * @param {IOrderListParams & { type?: 'purchases' | 'sales' }} params - 列表參數
      * @returns {Promise<IOrderListResponse>} 訂單列表響應
      */
-    public async getOrders(params?: IOrderListParams): Promise<IOrderListResponse> {
+    public async getOrders(
+        params?: IOrderListParams & { type?: 'purchases' | 'sales'; status?: string }
+    ): Promise<IOrderListResponse> {
         return apiClient.get<IOrderListResponse>('/orders', { params })
     }
 
@@ -32,16 +36,16 @@ export class OrderService {
      * @param {string} id - 訂單 ID
      * @returns {Promise<IOrder>} 訂單詳情
      */
-    public async getOrderById(id: string): Promise<IOrder> {
-        return apiClient.get<IOrder>(`/orders/${id}`)
+    public async getOrderById(orderNumber: string): Promise<IOrder> {
+        return apiClient.get<IOrder>(`/orders/${orderNumber}`)
     }
 
     /**
      * 創建新訂單
-     * @param {IOrderCreateData} data - 訂單創建數據
-     * @returns {Promise<IOrder>} 創建的訂單
+     * @param {IOrderCreateRequest} data - 訂單創建數據
+     * @returns {Promise<JSONAPIResponse<IOrder>>} 創建的訂單
      */
-    public async createOrder(data: IOrderCreateData): Promise<IOrder> {
+    public async createOrder(data: IOrderCreateRequest): Promise<JSONAPIResponse<IOrder>> {
         return apiClient.post<IOrder>('/orders', data)
     }
 
@@ -66,22 +70,43 @@ export class OrderService {
     }
 
     /**
-     * 獲取買家訂單列表
+     * 獲取購買訂單列表（作為買家）
      * @param {IOrderListParams} params - 列表參數
      * @returns {Promise<IOrderListResponse>} 訂單列表響應
      */
+    public async getPurchaseOrders(params?: IOrderListParams & { status?: string }): Promise<IOrderListResponse> {
+        const queryParams = { ...params, type: 'purchases' }
+        return apiClient.get<IOrderListResponse>('/orders', { params: queryParams })
+    }
+
+    /**
+     * 獲取銷售訂單列表（作為賣家）
+     * @param {IOrderListParams} params - 列表參數
+     * @returns {Promise<IOrderListResponse>} 訂單列表響應
+     */
+    public async getSalesOrders(params?: IOrderListParams & { status?: string }): Promise<IOrderListResponse> {
+        const queryParams = { ...params, type: 'sales' }
+        return apiClient.get<IOrderListResponse>('/orders', { params: queryParams })
+    }
+
+    /**
+     * 獲取買家訂單列表
+     * @param {IOrderListParams} params - 列表參數
+     * @returns {Promise<IOrderListResponse>} 訂單列表響應
+     * @deprecated 使用 getPurchaseOrders 替代
+     */
     public async getMyOrders(params?: IOrderListParams): Promise<IOrderListResponse> {
-        // Renamed from getBuyerOrders
-        return apiClient.get<IOrderListResponse>('orders/me', { params }) // Changed path to 'orders/me'
+        return this.getPurchaseOrders(params)
     }
 
     /**
      * 獲取賣家訂單列表
      * @param {IOrderListParams} params - 列表參數
      * @returns {Promise<IOrderListResponse>} 訂單列表響應
+     * @deprecated 使用 getSalesOrders 替代
      */
     public async getSellerOrders(params?: IOrderListParams): Promise<IOrderListResponse> {
-        return apiClient.get<IOrderListResponse>('/orders/seller', { params })
+        return this.getSalesOrders(params)
     }
 
     /**
@@ -169,6 +194,23 @@ export class OrderService {
         return apiClient.post<IPaymentResult>(`/orders/${orderId}/payment`, {
             payment_method_id: paymentMethodId,
             payment_details: paymentDetails,
+        })
+    }
+
+    /**
+     * 上傳付款證明
+     * @param {string} orderId - 訂單 ID
+     * @param {File} proofFile - 付款證明檔案
+     * @returns {Promise<{ success: boolean; message: string }>} 上傳結果
+     */
+    public async uploadPaymentProof(orderId: string, proofFile: File): Promise<{ success: boolean; message: string }> {
+        const formData = new FormData()
+        formData.append('payment_proof', proofFile)
+
+        return apiClient.post<{ success: boolean; message: string }>(`/orders/${orderId}/payment_proof`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
         })
     }
 

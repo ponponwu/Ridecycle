@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { adminService } from '@/services/admin.service'
 import { BicycleWithOwner } from '@/types/bicycle.types'
 import { toast } from '@/hooks/use-toast'
+import { useBicycleActions } from './useBicycleActions'
 
 export type BicycleStatus = 'pending' | 'available' | 'draft' | 'sold'
 
@@ -10,6 +11,7 @@ export const useBicycleManagement = (initialStatus: BicycleStatus = 'pending') =
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<BicycleStatus>(initialStatus)
     const [meta, setMeta] = useState<Record<string, unknown>>({})
+    const { approveBicycle, rejectBicycle, deleteBicycle } = useBicycleActions()
 
     useEffect(() => {
         fetchBicycles(activeTab)
@@ -39,72 +41,25 @@ export const useBicycleManagement = (initialStatus: BicycleStatus = 'pending') =
     }
 
     const handleApprove = async (id: string): Promise<void> => {
-        try {
-            await adminService.approveBicycle(Number(id))
+        await approveBicycle(id)
 
-            toast({
-                title: '成功',
-                description: '自行車已審核通過',
-            })
-
-            // Update the UI - remove from current list if it's pending
-            if (activeTab === 'pending') {
-                setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
-            }
-        } catch (error) {
-            console.error('Error approving bicycle:', error)
-            toast({
-                variant: 'destructive',
-                title: '錯誤',
-                description: '審核通過失敗，請稍後再試',
-            })
-            throw error // Re-throw to allow component to handle loading state
+        if (activeTab === 'pending') {
+            setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
         }
     }
 
     const handleReject = async (id: string, reason?: string): Promise<void> => {
-        try {
-            await adminService.rejectBicycle(Number(id), reason)
+        await rejectBicycle(id, reason)
 
-            toast({
-                title: '成功',
-                description: '自行車已被拒絕',
-            })
-
-            // Update the UI - remove from current list if it's pending
-            if (activeTab === 'pending') {
-                setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
-            }
-        } catch (error) {
-            console.error('Error rejecting bicycle:', error)
-            toast({
-                variant: 'destructive',
-                title: '錯誤',
-                description: '拒絕操作失敗，請稍後再試',
-            })
-            throw error // Re-throw to allow component to handle loading state
+        if (activeTab === 'pending') {
+            setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
         }
     }
 
     const handleDelete = async (id: string) => {
-        try {
-            await adminService.deleteBicycle(Number(id))
+        await deleteBicycle(id)
 
-            toast({
-                title: 'Success',
-                description: 'Bicycle has been deleted',
-            })
-
-            // Update the UI
-            setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
-        } catch (error) {
-            console.error('Error deleting bicycle:', error)
-            toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Failed to delete bicycle',
-            })
-        }
+        setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
     }
 
     const refreshBicycles = () => {

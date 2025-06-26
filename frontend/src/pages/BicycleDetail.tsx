@@ -131,7 +131,9 @@ const BicycleDetail = () => {
                                 <MakeOfferDialog
                                     bicycleTitle={bicycle.title}
                                     bicycleId={id || ''}
-                                    currentUser={currentUser} // 傳遞 currentUser
+                                    currentUser={currentUser}
+                                    sellerId={bicycle.seller?.id.toString()}
+                                    bicycleStatus={bicycle.status}
                                 />
                             </div>
                         )}

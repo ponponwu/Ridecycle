@@ -118,3 +118,59 @@ export interface IVerificationResponse {
     message: string
     isVerified: boolean
 }
+
+/**
+ * 銀行帳戶資訊介面
+ */
+export interface IBankAccount {
+    accountName: string
+    accountNumber: string
+    bankCode: string
+    bankBranch: string
+    createdAt?: string
+    updatedAt?: string
+}
+
+/**
+ * 更新銀行帳戶請求介面
+ */
+export interface IUpdateBankAccountRequest {
+    bank_account_name: string
+    bank_account_number: string
+    bank_code: string
+    bank_branch: string
+}
+
+/**
+ * 用戶個人檔案響應介面（包括銀行帳戶）
+ */
+export interface IUserProfileResponse {
+    success: boolean
+    data: {
+        user: IUser
+        bank_account: IBankAccount | null
+    }
+    message?: string
+}
+
+/**
+ * 銀行帳戶更新響應介面
+ */
+export interface IBankAccountUpdateResponse {
+    success: boolean
+    data: {
+        bank_account: IBankAccount
+        message: string
+    }
+}
+
+/**
+ * 用戶資料更新響應介面
+ */
+export interface IUpdateProfileResponse {
+    success: boolean
+    data: {
+        user: IUser
+        message: string
+    }
+}

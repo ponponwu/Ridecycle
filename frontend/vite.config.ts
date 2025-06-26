@@ -12,17 +12,17 @@ export default defineConfig(({ mode }) => ({
         headers: {
             // Content Security Policy
             'Content-Security-Policy': `
-        default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://apis.google.com https://accounts.google.com;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' data: https: blob: http://localhost:3000;
-        connect-src 'self' http://localhost:3000 https://localhost:3000 https://accounts.google.com ws://localhost:8080;
-        frame-src 'self' https://accounts.google.com;
-        object-src 'none';
-        base-uri 'self';
-        form-action 'self';
-      `
+                default-src 'self';
+                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://apis.google.com https://accounts.google.com;
+                style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                font-src 'self' https://fonts.gstatic.com;
+                img-src 'self' data: https: blob: http://localhost:3000;
+                connect-src 'self' http://localhost:3000 https://localhost:3000 https://accounts.google.com ws://localhost:8080;
+                frame-src 'self' https://accounts.google.com;
+                object-src 'none';
+                base-uri 'self';
+                form-action 'self';
+            `
                 .replace(/\s+/g, ' ')
                 .trim(),
 

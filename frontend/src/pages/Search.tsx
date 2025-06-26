@@ -14,7 +14,7 @@ const SearchPage = () => {
     const [filters, setFilters] = useState({
         priceRange: searchParams.get('price') || '',
         type: searchParams.get('type') || '',
-        brandId: searchParams.get('brandId') || '',
+        brand: searchParams.get('brand') || '',
         location: searchParams.get('location') || '',
     })
 
@@ -95,10 +95,13 @@ const SearchPage = () => {
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
                                     >
                                         <option value="">{t('anyPrice')}</option>
-                                        <option value="0-500">$0 - $500</option>
-                                        <option value="500-1000">$500 - $1000</option>
-                                        <option value="1000-2500">$1000 - $2500</option>
-                                        <option value="2500-10000">$2500+</option>
+                                        <option value="0-10000">{t('priceRangeOptions.under10k')}</option>
+                                        <option value="10000-30000">{t('priceRangeOptions.10k-30k')}</option>
+                                        <option value="30000-50000">{t('priceRangeOptions.30k-50k')}</option>
+                                        <option value="50000-100000">{t('priceRangeOptions.50k-100k')}</option>
+                                        <option value="100000-200000">{t('priceRangeOptions.100k-200k')}</option>
+                                        <option value="200000-300000">{t('priceRangeOptions.200k-300k')}</option>
+                                        <option value="300000+">{t('priceRangeOptions.over300k')}</option>
                                     </select>
                                 </div>
 
@@ -113,28 +116,26 @@ const SearchPage = () => {
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
                                     >
                                         <option value="">{t('allTypes')}</option>
-                                        <option value="Mountain Bike">Mountain</option>
-                                        <option value="Road Bike">Road</option>
-                                        <option value="Hybrid Bike">Hybrid</option>
-                                        <option value="City Bike">City</option>
-                                        <option value="Electric Bike">Electric</option>
+                                        <option value="roadbike">{t('bicycleTypeOptions.roadBike')}</option>
+                                        <option value="mountainbike">{t('bicycleTypeOptions.mountainBike')}</option>
                                     </select>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{t('brand')}</label>
                                     <select
-                                        name="brandId"
-                                        value={filters.brandId}
+                                        name="brand"
+                                        value={filters.brand}
                                         onChange={handleFilterChange}
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
                                     >
                                         <option value="">{t('allBrands')}</option>
-                                        <option value="specialized">Specialized</option>
-                                        <option value="trek">Trek</option>
-                                        <option value="giant">Giant</option>
-                                        <option value="cannondale">Cannondale</option>
-                                        <option value="scott">Scott</option>
+                                        <option value="giant">{t('brandOptions.giant')}</option>
+                                        <option value="merida">{t('brandOptions.merida')}</option>
+                                        <option value="specialized">{t('brandOptions.specialized')}</option>
+                                        <option value="trek">{t('brandOptions.trek')}</option>
+                                        <option value="cannondale">{t('brandOptions.cannondale')}</option>
+                                        <option value="scott">{t('brandOptions.scott')}</option>
                                     </select>
                                 </div>
 
@@ -149,11 +150,12 @@ const SearchPage = () => {
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
                                     >
                                         <option value="">{t('allLocations')}</option>
-                                        <option value="New York">New York</option>
-                                        <option value="Los Angeles">Los Angeles</option>
-                                        <option value="Chicago">Chicago</option>
-                                        <option value="Austin">Austin</option>
-                                        <option value="Seattle">Seattle</option>
+                                        <option value="taipei">{t('locationOptions.taipei')}</option>
+                                        <option value="newTaipei">{t('locationOptions.newTaipei')}</option>
+                                        <option value="taoyuan">{t('locationOptions.taoyuan')}</option>
+                                        <option value="taichung">{t('locationOptions.taichung')}</option>
+                                        <option value="tainan">{t('locationOptions.tainan')}</option>
+                                        <option value="kaohsiung">{t('locationOptions.kaohsiung')}</option>
                                     </select>
                                 </div>
                             </div>

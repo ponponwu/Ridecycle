@@ -8,13 +8,12 @@ export const useSearchResults = () => {
     const [searchParams] = useSearchParams()
     const [bicycles, setBicycles] = useState<Bicycle[]>([])
     const [loading, setLoading] = useState(true)
-    const [priceRange, setPriceRange] = useState<number[]>([0, 100000])
+    const [priceRange, setPriceRange] = useState<number[]>([0, 300000])
     const [filterVisible, setFilterVisible] = useState(false)
     const [selectedFilters, setSelectedFilters] = useState<SearchFilters>({
-        categories: [],
         conditions: [],
         priceMin: 0,
-        priceMax: 100000,
+        priceMax: 300000,
     })
 
     // Toggle filter visibility on mobile
@@ -22,25 +21,8 @@ export const useSearchResults = () => {
         setFilterVisible((prev) => !prev)
     }
 
-    // Toggle category filter
-    const toggleCategoryFilter = (category: string) => {
-        setSelectedFilters((prev) => {
-            if (prev.categories.includes(category)) {
-                return {
-                    ...prev,
-                    categories: prev.categories.filter((c) => c !== category),
-                }
-            } else {
-                return {
-                    ...prev,
-                    categories: [...prev.categories, category],
-                }
-            }
-        })
-    }
-
     // Toggle condition filter
-    const toggleConditionFilter = (condition: string) => {
+    const toggleConditionFilter = (condition: BicycleCondition) => {
         setSelectedFilters((prev) => {
             if (prev.conditions.includes(condition)) {
                 return {
@@ -59,12 +41,11 @@ export const useSearchResults = () => {
     // Reset all filters
     const resetFilters = () => {
         setSelectedFilters({
-            categories: [],
             conditions: [],
             priceMin: 0,
-            priceMax: 100000,
+            priceMax: 300000,
         })
-        setPriceRange([0, 100000])
+        setPriceRange([0, 300000])
     }
 
     // Update price range when slider value changes
@@ -87,15 +68,13 @@ export const useSearchResults = () => {
                     page: 1, // TODO: Implement actual pagination
                     limit: 20, // TODO: Make limit configurable or part of pagination
                     search: searchParams.get('q') || undefined,
-                    // Ensure that the values passed for bicycleType and condition match what the backend expects
-                    // If backend expects BicycleType/BicycleCondition enum string values, ensure they are passed correctly.
-                    // The current IBicycleListParams uses string[] for these.
-                    bicycleType: selectedFilters.categories.length > 0 ? selectedFilters.categories : undefined,
+                    // 從 URL 參數獲取自行車類型，而不是從分類篩選器
+                    bicycleType: searchParams.get('type') ? [searchParams.get('type') as string] : undefined,
                     condition: selectedFilters.conditions.length > 0 ? selectedFilters.conditions : undefined,
                     priceMin: selectedFilters.priceMin > 0 ? selectedFilters.priceMin : undefined,
                     // Ensure priceMax is only sent if it's a meaningful filter (e.g., not the default max)
                     priceMax:
-                        selectedFilters.priceMax > 0 && selectedFilters.priceMax < 100000
+                        selectedFilters.priceMax > 0 && selectedFilters.priceMax < 300000
                             ? selectedFilters.priceMax
                             : undefined,
                     location: searchParams.get('location') || undefined,
@@ -147,7 +126,6 @@ export const useSearchResults = () => {
         filterVisible,
         toggleFilterVisibility,
         selectedFilters,
-        toggleCategoryFilter,
         toggleConditionFilter,
         resetFilters,
     }

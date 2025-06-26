@@ -46,36 +46,76 @@ export const formatPrice = (price: number | string, options: PriceFormatOptions 
 }
 
 /**
- * 簡化的價錢格式化（預設使用 NT$ 符號）
- * @param price 價錢數值
- * @returns NT$ 格式的價錢字串
+ * 格式化台幣價格
+ * @param price 價格數字
+ * @param showCurrency 是否顯示貨幣符號
+ * @returns 格式化後的價格字串
  */
-export const formatPriceNTD = (price: number | string): string => {
-    return formatPrice(price, { showSymbol: true })
+export const formatPriceNTD = (price: number, showCurrency: boolean = true): string => {
+    if (typeof price !== 'number' || isNaN(price)) {
+        return showCurrency ? 'NT$ 0' : '0'
+    }
+
+    // 將數字格式化為千位分隔符
+    const formattedNumber = new Intl.NumberFormat('zh-TW', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(price)
+
+    return showCurrency ? `NT$ ${formattedNumber}` : formattedNumber
 }
 
 /**
- * 格式化價錢範圍
- * @param minPrice 最低價錢
- * @param maxPrice 最高價錢
- * @returns 格式化後的價錢範圍字串
+ * 格式化價格範圍
+ * @param minPrice 最低價格
+ * @param maxPrice 最高價格
+ * @returns 格式化後的價格範圍字串
  */
-export const formatPriceRange = (minPrice: number | string, maxPrice: number | string): string => {
-    const min = formatPriceNTD(minPrice)
-    const max = formatPriceNTD(maxPrice)
-    return `${min} - ${max}`
+export const formatPriceRange = (minPrice: number, maxPrice: number): string => {
+    return `${formatPriceNTD(minPrice)} - ${formatPriceNTD(maxPrice)}`
 }
 
 /**
- * 解析價錢字串為數字
- * @param priceString 價錢字串
- * @returns 數字價錢
+ * 解析價格字串為數字
+ * @param priceString 價格字串
+ * @returns 數字價格
  */
-export const parsePrice = (priceString: string): number => {
+export const parsePriceString = (priceString: string): number => {
     // 移除所有非數字字符（除了小數點）
     const cleanString = priceString.replace(/[^\d.]/g, '')
     const parsed = parseFloat(cleanString)
     return isNaN(parsed) ? 0 : parsed
+}
+
+/**
+ * 計算折扣後價格
+ * @param originalPrice 原價
+ * @param discountPercentage 折扣百分比 (0-100)
+ * @returns 折扣後價格
+ */
+export const calculateDiscountPrice = (originalPrice: number, discountPercentage: number): number => {
+    if (discountPercentage < 0 || discountPercentage > 100) {
+        throw new Error('折扣百分比必須在 0-100 之間')
+    }
+    return originalPrice * (1 - discountPercentage / 100)
+}
+
+/**
+ * 格式化折扣顯示
+ * @param originalPrice 原價
+ * @param discountedPrice 折扣價
+ * @returns 格式化的折扣顯示
+ */
+export const formatDiscountDisplay = (originalPrice: number, discountedPrice: number) => {
+    const discountAmount = originalPrice - discountedPrice
+    const discountPercentage = Math.round((discountAmount / originalPrice) * 100)
+
+    return {
+        originalPrice: formatPriceNTD(originalPrice),
+        discountedPrice: formatPriceNTD(discountedPrice),
+        discountAmount: formatPriceNTD(discountAmount),
+        discountPercentage: `${discountPercentage}%`,
+    }
 }
 
 /**
