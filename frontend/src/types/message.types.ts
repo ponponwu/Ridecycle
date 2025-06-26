@@ -13,15 +13,26 @@ export interface IUserSimple {
 export interface IMessage {
     id: string
     // conversationId might not be directly available if messages are fetched per user pair
-    sender: IUserSimple // Changed from senderId to match backend's likely output from .as_json(include: :sender)
+    sender: {
+        id: string
+        name: string
+        full_name?: string
+        email?: string
+        avatar_url?: string
+    }
     receiver?: IUserSimple // Optional, if backend includes it
     senderId?: string // Can keep if backend also provides flat senderId
     receiverId?: string // Can keep if backend also provides flat receiverId
     content: string
-    isOffer?: boolean
-    offerAmount?: number
-    offerAccepted?: boolean
-    createdAt: string // Reverted to camelCase
+    createdAt: string
+    readAt?: string
+    isOffer?: boolean // 是否為出價訊息
+    offerAmount?: number // 出價金額
+    formattedOfferAmount?: string // 格式化的出價金額（從後端回傳）
+    offerStatus?: 'pending' | 'accepted' | 'rejected' | 'expired' // 出價狀態
+    offerStatusText?: string // 出價狀態的中文顯示
+    offerActive?: boolean // 出價是否仍有效
+    offerAccepted?: boolean // 出價是否被接受（向後兼容）
     isRead?: boolean
     attachments?: IMessageAttachment[]
     bicycleId?: string // Reverted to camelCase
@@ -65,7 +76,9 @@ export interface ICreateMessageRequest {
     recipientId: string // Changed from recipient_id
     content: string
     bicycleId?: string // Changed from bicycle_id
-    // isOffer, offerAmount, attachments can be added if supported by backend create
+    isOffer?: boolean // 是否為出價訊息
+    offerAmount?: number // 出價金額
+    // attachments can be added if supported by backend create
 }
 
 // The IConversation, IConversationListParams, IConversationListResponse,
@@ -87,4 +100,34 @@ export interface IMarkAsReadRequest {
  */
 export interface IAcceptOfferRequest {
     messageId: string
+}
+
+/**
+ * 訂單介面
+ */
+export interface IOrder {
+    id: string
+    order_number: string
+    total_price: number
+    status: string
+    payment_status: string
+    created_at: string
+    updated_at: string
+}
+
+/**
+ * 接受出價回應介面
+ */
+export interface IAcceptOfferResponse {
+    acceptedOffer: IMessage
+    responseMessage: IMessage
+    order?: IOrder // 訂單資訊
+}
+
+/**
+ * 拒絕出價回應介面
+ */
+export interface IRejectOfferResponse {
+    rejectedOffer: IMessage
+    responseMessage: IMessage
 }

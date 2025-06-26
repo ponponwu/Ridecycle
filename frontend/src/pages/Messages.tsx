@@ -15,6 +15,8 @@ import { IConversationPreview, IMessage, IUserSimple } from '@/types/message.typ
 import { IBicycle, BicycleCondition } from '@/types/bicycle.types'
 import { bicycleService } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { translateBicycleCondition } from '@/utils/bicycleTranslations'
+import { formatPriceNTD } from '@/utils/priceFormatter'
 
 const Messages = () => {
     const { t } = useTranslation()
@@ -46,20 +48,21 @@ const Messages = () => {
     }, [paramConversationId])
 
     useEffect(() => {
-        const fetchConversations = async () => {
-            setIsLoadingConversations(true)
+        const loadConversations = async () => {
             try {
-                const data = await messageService.getConversationPreviews({})
-                setConversations(data || [])
-                setErrorConversations(null)
-            } catch (err) {
-                console.error('Failed to fetch conversation previews:', err)
-                setErrorConversations(err instanceof Error ? err.message : t('unknownErrorOccurred'))
-            } finally {
-                setIsLoadingConversations(false)
+                const conversations = await messageService.getConversations()
+                setConversations(conversations)
+            } catch (error) {
+                console.error('Failed to load conversations:', error)
+                toast({
+                    title: t('error'),
+                    description: t('failedToLoadConversations'),
+                    variant: 'destructive',
+                })
             }
         }
-        fetchConversations()
+
+        loadConversations()
     }, [t])
 
     useEffect(() => {
@@ -97,10 +100,10 @@ const Messages = () => {
             setIsLoadingMessages(true)
             setErrorMessages(null)
             try {
-                const messagesData = await messageService.getMessagesWithUser(activeConversationUserId, {})
-                setCurrentConversationMessages(messagesData || [])
+                const messages = await messageService.getConversation(activeConversationUserId)
+                setCurrentConversationMessages(messages)
 
-                if (currentConvoPreview?.bicycleId) {
+                if (currentConvoPreview?.bicycleId && messages.length > 0) {
                     try {
                         const bicycleData = await bicycleService.getBicycleById(
                             currentConvoPreview.bicycleId.toString()
@@ -126,7 +129,7 @@ const Messages = () => {
                         condition: BicycleCondition.BRAND_NEW,
                         location: 'Unknown',
                         contactMethod: '',
-                        user: { id: parseInt(withUser.id, 10) || 0, name: withUser.name, email: undefined },
+                        seller: { id: parseInt(withUser.id, 10) || 0, name: withUser.name, email: undefined },
                         status: 'available',
                         createdAt: '',
                         updatedAt: '',
@@ -207,6 +210,77 @@ const Messages = () => {
         }
     }
 
+    const handleAcceptOffer = async (messageId: string) => {
+        try {
+            const result = await messageService.acceptOffer(messageId)
+
+            // 更新當前對話的訊息列表
+            setCurrentConversationMessages((prev) => [
+                ...prev.map((msg) =>
+                    msg.id === messageId ? { ...msg, offerStatus: 'accepted' as const, offerActive: false } : msg
+                ),
+                result.responseMessage, // 添加回應訊息
+            ])
+
+            // 檢查是否有訂單資訊
+            if (result.order && result.order.order_number) {
+                toast({
+                    title: '出價已接受',
+                    description: `您已經接受了這個出價！訂單編號：${result.order.order_number}。請聯繫買家完成交易。`,
+                    duration: 8000, // 顯示較長時間
+                })
+            } else {
+                toast({
+                    title: '出價已接受',
+                    description: '您已經接受了這個出價，請聯繫買家完成交易。',
+                })
+            }
+
+            // 重新載入腳踏車資訊以更新狀態
+            if (currentConvoPreview?.bicycleId) {
+                try {
+                    const updatedBicycle = await bicycleService.getBicycleById(currentConvoPreview.bicycleId.toString())
+                    setCurrentBicycle(updatedBicycle)
+                } catch (error) {
+                    console.error('Failed to reload bicycle data:', error)
+                }
+            }
+        } catch (error) {
+            console.error('Failed to accept offer:', error)
+            toast({
+                title: t('error'),
+                description: '接受出價失敗，請稍後再試',
+                variant: 'destructive',
+            })
+        }
+    }
+
+    const handleRejectOffer = async (messageId: string) => {
+        try {
+            const result = await messageService.rejectOffer(messageId)
+
+            // 更新當前對話的訊息列表
+            setCurrentConversationMessages((prev) => [
+                ...prev.map((msg) =>
+                    msg.id === messageId ? { ...msg, offerStatus: 'rejected' as const, offerActive: false } : msg
+                ),
+                result.responseMessage, // 添加回應訊息
+            ])
+
+            toast({
+                title: '出價已拒絕',
+                description: '您已經拒絕了這個出價。',
+            })
+        } catch (error) {
+            console.error('Failed to reject offer:', error)
+            toast({
+                title: t('error'),
+                description: '拒絕出價失敗，請稍後再試',
+                variant: 'destructive',
+            })
+        }
+    }
+
     const toggleOfferPopover = () => {
         setShowOfferPopover(!showOfferPopover)
     }
@@ -220,16 +294,45 @@ const Messages = () => {
             toast({ title: t('error'), description: t('cannotMakeOfferNoBicycleContext'), variant: 'destructive' })
             return
         }
+
         const recipientId = activeConversationUserId
         const bicycleId = currentConvoPreview.bicycleId
-        const currencySymbol = '$'
+
+        // 檢查是否對自己的腳踏車出價
+        // 檢查腳踏車是否屬於當前用戶
+        const isOwnBicycle =
+            currentBicycle &&
+            currentUser &&
+            currentBicycle.seller &&
+            currentBicycle.seller.id.toString() === currentUser.id.toString()
+
+        if (isOwnBicycle) {
+            toast({
+                title: t('error'),
+                description: '您不能對自己的腳踏車進行出價',
+                variant: 'destructive',
+            })
+            return
+        }
+
+        // 檢查腳踏車是否仍然可用
+        if (currentBicycle && currentBicycle.status !== 'available') {
+            toast({
+                title: t('error'),
+                description: '此腳踏車已不可購買',
+                variant: 'destructive',
+            })
+            return
+        }
 
         try {
-            const offerContent = `${t('offer')}: ${currencySymbol}${amount.toLocaleString()}`
+            const offerContent = `${t('offer')}: ${formatPriceNTD(amount)}`
             const offerMessage = await messageService.sendMessage({
                 recipientId: recipientId,
                 content: offerContent,
                 bicycleId: bicycleId,
+                isOffer: true,
+                offerAmount: amount,
             })
             const uiOfferMessage = { ...offerMessage, isOffer: true, offerAmount: amount }
             setCurrentConversationMessages((prev) => [...prev, uiOfferMessage])
@@ -251,16 +354,48 @@ const Messages = () => {
             )
             toast({
                 title: t('offerSent'),
-                description: `${t('yourOfferFor')} ${currencySymbol}${amount.toLocaleString()} ${t('hasBeenSent')}`,
+                description: `${t('yourOfferFor')} ${formatPriceNTD(amount)} ${t('hasBeenSent')}`,
             })
             setShowOfferPopover(false)
         } catch (err) {
             console.error('Failed to make offer:', err)
-            toast({
-                title: t('errorSendingOffer'),
-                description: err instanceof Error ? err.message : t('unknownErrorOccurred'),
-                variant: 'destructive',
-            })
+
+            // 處理後端錯誤訊息
+            if (err && typeof err === 'object' && 'response' in err) {
+                const axiosError = err as {
+                    response?: {
+                        status?: number
+                        data?: {
+                            errors?: string[] | Array<{ detail?: string; title?: string }>
+                        }
+                    }
+                }
+
+                let errorMessage = t('unknownErrorOccurred')
+
+                if (axiosError.response?.data?.errors?.[0]) {
+                    const firstError = axiosError.response.data.errors[0]
+                    if (typeof firstError === 'string') {
+                        // 傳統錯誤格式
+                        errorMessage = firstError
+                    } else if (typeof firstError === 'object' && firstError.detail) {
+                        // JSON:API 錯誤格式
+                        errorMessage = firstError.detail
+                    }
+                }
+
+                toast({
+                    title: t('errorSendingOffer'),
+                    description: errorMessage,
+                    variant: 'destructive',
+                })
+            } else {
+                toast({
+                    title: t('errorSendingOffer'),
+                    description: err instanceof Error ? err.message : t('unknownErrorOccurred'),
+                    variant: 'destructive',
+                })
+            }
         }
     }
 
@@ -278,6 +413,25 @@ const Messages = () => {
 
     const otherUser = currentConvoPreview?.withUser
 
+    // 檢查腳踏車是否屬於當前用戶
+    const isOwnBicycle =
+        currentBicycle &&
+        currentUser &&
+        currentBicycle.seller &&
+        currentBicycle.seller.id.toString() === currentUser.id.toString()
+
+    // 調試信息（開發時使用）
+    if (currentBicycle && currentUser) {
+        console.log('Debug isOwnBicycle check:', {
+            currentUserId: currentUser.id,
+            currentUserIdType: typeof currentUser.id,
+            bicycleSellerId: currentBicycle.seller?.id,
+            bicycleSellerIdType: typeof currentBicycle.seller?.id,
+            sellerName: currentBicycle.seller?.name,
+            isOwnBicycle: isOwnBicycle,
+        })
+    }
+
     const displayBicycleData = currentBicycle || {
         id: '',
         title: otherUser ? t('chatWith', { name: otherUser.name }) : t('loadingBicycleInfo'),
@@ -292,7 +446,7 @@ const Messages = () => {
         condition: '',
         location: 'N/A',
         contactMethod: '',
-        user: { id: 0, name: otherUser?.name || t('seller'), email: undefined },
+        seller: { id: 0, name: otherUser?.name || t('seller'), email: undefined },
         status: 'available',
         createdAt: '',
         updatedAt: '',
@@ -366,6 +520,7 @@ const Messages = () => {
                                 bicycleName={displayBicycleData.title}
                                 bicycleImage={displayBicycleData.photosUrls[0]}
                                 bicyclePrice={displayBicycleData.price}
+                                bicycleId={currentBicycle?.id || currentConvoPreview?.bicycleId}
                                 currency="$"
                                 onBack={() => {
                                     setActiveConversationUserId(null)
@@ -405,16 +560,20 @@ const Messages = () => {
                                             }
                                             return {
                                                 id: msg.id.toString(),
-                                                sender: msg.sender.id === currentUserId ? 'buyer' : 'seller',
+                                                sender: msg.sender.id.toString(),
                                                 message: msg.content,
                                                 timestamp: timestamp,
                                                 isOffer: msg.isOffer,
                                                 offerAmount: msg.offerAmount,
+                                                offerStatus: msg.offerStatus,
+                                                offerActive: msg.offerActive,
                                                 accepted: msg.offerAccepted,
                                             }
                                         })}
-                                        currentUserId={currentUserId || ''}
+                                        currentUserId={currentUserId?.toString() || ''}
                                         otherUserName={otherUserNameForList}
+                                        onAcceptOffer={handleAcceptOffer}
+                                        onRejectOffer={handleRejectOffer}
                                     />
                                 )}
                             </div>
@@ -425,6 +584,8 @@ const Messages = () => {
                                 showOfferPopover={showOfferPopover}
                                 toggleOfferPopover={toggleOfferPopover}
                                 originalPrice={displayBicycleData.price}
+                                isOwnBicycle={isOwnBicycle}
+                                bicycleStatus={currentBicycle?.status || 'available'}
                             />
                         </>
                     ) : (

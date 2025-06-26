@@ -1,123 +1,139 @@
+# frozen_string_literal: true
+
+# API controller for message management
+# Handles messaging operations between users
+#
+# @author RideCycle Team
+# @since 1.0.0
 module Api
   module V1
     class MessagesController < ApplicationController
-      before_action :authenticate_user!, only: [:index, :show, :create] # Added create
-      # before_action :set_conversation, only: [:show] # If :id in show refers to a conversation
+      before_action :authenticate_user!
+      before_action :set_message, only: [:accept_offer, :reject_offer]
+      before_action :validate_offer_message, only: [:accept_offer, :reject_offer]
+      before_action :validate_offer_permissions, only: [:accept_offer, :reject_offer]
 
-      # GET /api/v1/messages
-      # Fetches a list of conversations for the current user
+      # Gets conversation list for current user
+      # 
+      # @api public
+      # @example GET /api/v1/messages
+      # @return [JSON] Conversations list in JSON:API format
       def index
-        # This query needs to be more sophisticated to get conversations.
-        # A conversation involves two users. We need to find all messages
-        # where the current user is either a sender or receiver, group them by
-        # the other participant, and then get the latest message for each group.
-
-        # For simplicity, let's assume a Conversation model exists that links two users
-        # and has_many messages. If not, the query is more complex.
-        # conversations = Conversation.participating(@current_user).includes(:messages, :participants)
-
-        # Simplified: Get all messages sent or received by the current user,
-        # then group them by the other user involved. This is not ideal for a "conversation list".
-        # A proper Conversation model would be better.
-
-        # Placeholder: This will just fetch all messages involving the current user, not grouped into conversations.
-        # This needs to be adapted based on the actual data model for conversations.
-        # For now, let's assume we want to list distinct users the current user has messaged with.
-        
-        # Get all users current_user has had a message with
-        # Using recipient_id instead of receiver_id based on User model associations
-        user_ids_sent_to = Message.where(sender_id: @current_user.id).select(:recipient_id).distinct.pluck(:recipient_id)
-        user_ids_received_from = Message.where(recipient_id: @current_user.id).select(:sender_id).distinct.pluck(:sender_id)
-        
-        other_user_ids = (user_ids_sent_to + user_ids_received_from).uniq.reject { |id| id == @current_user.id } # Exclude self
-
-        conversations_preview = other_user_ids.map do |other_user_id|
-          other_user = User.find_by(id: other_user_id)
-          next if other_user.nil?
-
-          last_message = Message.where(
-            "(sender_id = :current_user_id AND recipient_id = :other_user_id) OR (sender_id = :other_user_id AND recipient_id = :current_user_id)",
-            current_user_id: @current_user.id, other_user_id: other_user_id
-          ).includes(:bicycle, :sender, :recipient, bicycle: { photos_attachments: :blob }).order(created_at: :desc).first # Added includes
-
-          # Ensure User model has an avatar_url method or similar if you want to use it.
-          # For now, assuming it might not exist and relying on frontend fallback for avatar.
-          avatar_url = other_user.try(:avatar_url) # Safely try to get avatar_url
-
-          {
-            with_user: {
-              id: other_user.id,
-              name: other_user.name,
-              avatar: avatar_url # Use the fetched avatar_url
-            },
-            last_message: last_message ? {
-              content: last_message.content.truncate(50),
-              created_at: last_message.created_at,
-              is_read: last_message.sender_id == @current_user.id || (last_message.recipient_id == @current_user.id && last_message.is_read),
-              sender_id: last_message.sender_id
-            } : nil,
-            updated_at: last_message&.created_at,
-            bicycle_id: last_message&.bicycle_id,
-            bicycle_title: last_message&.bicycle&.title,
-            # Ensure photos.first exists before calling url_for
-            bicycle_image_url: (last_message&.bicycle&.photos&.attached? && last_message.bicycle.photos.first) ? url_for(last_message.bicycle.photos.first) : nil
-          }
-        end.compact.sort_by { |c| c[:updated_at] || Time.at(0) }.reverse
-
-        render json: conversations_preview
+        conversations = MessageService.get_conversations(current_user)
+        render_jsonapi_custom(
+          type: 'conversations',
+          id: current_user.id,
+          attributes: { conversations: conversations }
+        )
       end
 
-      # GET /api/v1/messages/:other_user_id 
-      # Fetches all messages between current user and other_user_id
-      # The route for this might need to be /api/v1/users/:other_user_id/messages or /api/v1/conversations/:other_user_id
-      # Assuming the :id param here is other_user_id for simplicity with existing routes.
+      # Gets conversation messages with specific user
+      # 
+      # @api public
+      # @example GET /api/v1/messages/:other_user_id
+      # @param [String] id Other user ID
+      # @return [JSON] Messages collection in JSON:API format
       def show
         other_user_id = params[:id]
-        messages = Message.where(
-          "(sender_id = :current_user_id AND recipient_id = :other_user_id) OR (sender_id = :other_user_id AND recipient_id = :current_user_id)",
-          current_user_id: @current_user.id, other_user_id: other_user_id
-        ).order(created_at: :asc).includes(:sender, :recipient, :bicycle) # Eager load associations
-
-        # Mark messages sent by the other user to the current user as read
-        messages.where(sender_id: other_user_id, recipient_id: @current_user.id, is_read: false).update_all(is_read: true, read_at: Time.current)
-
-        # 使用 MessageSerializer 進行序列化
-        options = {}
-        options[:include] = [:sender, :recipient, :bicycle] # 包含關聯資源
-        
-        render json: MessageSerializer.new(messages, options).serializable_hash
+        messages = MessageService.get_conversation_messages(current_user, other_user_id)
+        render_jsonapi_collection(messages, serializer: MessageSerializer)
       end
 
-      # POST /api/v1/messages
+      # Creates a new message
+      # 
+      # @api public
+      # @example POST /api/v1/messages
+      # @param [Hash] message The message parameters
+      # @option message [String] :recipient_id Recipient user ID
+      # @option message [String] :content Message content
+      # @option message [String] :bicycle_id Bicycle ID (optional)
+      # @option message [Boolean] :is_offer Whether this is an offer (optional)
+      # @option message [Decimal] :offer_amount Offer amount (optional)
+      # @return [JSON] Created message in JSON:API format
+      # @return [JSON] Error messages if validation fails
       def create
-        if message_params[:recipient_id].to_i == @current_user.id
-          render json: { errors: ["Cannot send a message to yourself."] }, status: :unprocessable_entity
-          return
-        end
-
-        message = @current_user.sent_messages.build(message_params)
-        # recipient_id must be in message_params
-        if message.save
-          # Here you might want to broadcast the message via ActionCable if using WebSockets
-          # 使用 MessageSerializer 進行序列化
-          options = {}
-          options[:include] = [:sender] # 只包含發送者
-          
-          render json: MessageSerializer.new(message, options).serializable_hash, status: :created
+        result = MessageService.create_message(current_user, message_params)
+        
+        if result.success?
+          render_jsonapi_resource(result.data, serializer: MessageSerializer, status: :created)
         else
-          render json: { errors: message.errors.full_messages }, status: :unprocessable_entity
+          render_jsonapi_errors(result.errors, status: result.status)
+        end
+      end
+
+      # Accepts an offer message
+      # 
+      # @api public
+      # @example POST /api/v1/messages/:id/accept_offer
+      # @param [String] id Message ID
+      # @return [JSON] Accepted offer details in JSON:API format
+      # @return [JSON] Error messages if operation fails
+      def accept_offer
+        result = OfferService.accept_offer(@message, current_user)
+        
+        if result.success?
+          render_jsonapi_custom(
+            type: 'offer_acceptance',
+            id: @message.id,
+            attributes: {
+              accepted_offer: MessageSerializer.new(result.data[:accepted_offer]).serializable_hash,
+              response_message: MessageSerializer.new(result.data[:response_message]).serializable_hash,
+              order: result.data[:order] ? OrderSerializer.new(result.data[:order]).serializable_hash : nil
+            }
+          )
+        else
+          render_jsonapi_errors(result.errors, status: result.status)
+        end
+      end
+      
+      # Rejects an offer message
+      # 
+      # @api public
+      # @example POST /api/v1/messages/:id/reject_offer
+      # @param [String] id Message ID
+      # @return [JSON] Rejected offer details in JSON:API format
+      # @return [JSON] Error messages if operation fails
+      def reject_offer
+        result = OfferService.reject_offer(@message, current_user)
+        
+        if result.success?
+          render_jsonapi_custom(
+            type: 'offer_rejection',
+            id: @message.id,
+            attributes: {
+              rejected_offer: MessageSerializer.new(result.data[:rejected_offer]).serializable_hash,
+              response_message: MessageSerializer.new(result.data[:response_message]).serializable_hash
+            }
+          )
+        else
+          render_jsonapi_errors(result.errors, status: result.status)
         end
       end
 
       private
 
       def message_params
-        params.require(:message).permit(:recipient_id, :content, :bicycle_id) # bicycle_id is optional, if message is about a specific bike
+        params.require(:message).permit(:recipient_id, :content, :bicycle_id, :is_offer, :offer_amount)
       end
 
-      # def set_conversation
-      #   # Logic to set @conversation based on params[:id] if it's a conversation ID
-      # end
+      def set_message
+        @message = Message.includes(:sender, :recipient, :bicycle).find(params[:id])
+      rescue ActiveRecord::RecordNotFound
+        render_jsonapi_errors(['出價訊息不存在'], status: :not_found)
+      end
+
+      def validate_offer_message
+        return if @message&.is_offer? && @message&.offer_pending?
+        
+        render_jsonapi_errors(['這個出價無法處理'], status: :unprocessable_entity)
+      end
+
+      def validate_offer_permissions
+        return if @message&.recipient_id == current_user.id
+        
+        action_text = action_name == 'accept_offer' ? '接受' : '拒絕'
+        render_jsonapi_errors(["您沒有權限#{action_text}這個出價"], status: :forbidden)
+      end
     end
   end
 end

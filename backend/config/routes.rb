@@ -16,6 +16,11 @@ Rails.application.routes.draw do
       match '/auth/:provider/callback', to: 'sessions#omniauth', via: [:get, :post]
       get '/auth/failure', to: 'sessions#auth_failure'
       
+      # 用戶路由
+      get '/users/profile', to: 'users#show'
+      put '/users/profile', to: 'users#update'
+      put '/users/bank_account', to: 'users#update_bank_account'
+      
       # 自行車路由
       resources :bicycles do
         collection do
@@ -27,7 +32,12 @@ Rails.application.routes.draw do
       end
       
       # 訊息路由
-      resources :messages, only: [:index, :show, :create]
+      resources :messages, only: [:index, :show, :create] do
+        member do
+          post :accept_offer
+          post :reject_offer
+        end
+      end
 
       # 品牌路由
       resources :brands, only: [:index, :show, :create]
@@ -48,10 +58,16 @@ Rails.application.routes.draw do
         get '/violations/stats', to: 'security#violation_stats'
       end
 
-      # Order routes
-      resources :orders, only: [:create] do # Assuming create for now, add others if needed
+      # 訂單路由
+      resources :orders, only: [:index, :show, :create, :update] do
+        member do
+          put :complete
+          put :cancel
+          post :payment_proof  # 添加付款證明上傳路由
+          get :payment_proof_file  # 添加付款證明檔案查看路由
+        end
         collection do
-          get :me # Route for /api/v1/orders/me
+          get :me # 保持向後兼容
         end
       end
 

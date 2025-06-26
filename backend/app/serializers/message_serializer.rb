@@ -1,7 +1,7 @@
 class MessageSerializer
   include JSONAPI::Serializer
   
-  attributes :id, :content, :read_at, :created_at, :updated_at
+  attributes :id, :content, :read_at, :created_at, :updated_at, :is_offer, :offer_amount, :offer_status
   
   # 統一的關聯物件
   attribute :bicycle do |object|
@@ -37,6 +37,21 @@ class MessageSerializer
         avatar_url: object.recipient.avatar_url
       }
     end
+  end
+  
+  # 格式化的出價金額
+  attribute :formatted_offer_amount do |object|
+    object.formatted_offer_amount if object.is_offer?
+  end
+  
+  # 出價狀態的中文顯示
+  attribute :offer_status_text do |object|
+    object.offer_status_text if object.is_offer?
+  end
+  
+  # 出價是否仍有效
+  attribute :offer_active do |object|
+    object.offer_active? if object.is_offer?
   end
   
   # 如果有附件
