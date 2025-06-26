@@ -1,6 +1,53 @@
 zh-TW:
     hello: '您好，世界'
 
+    # 配送相關翻譯
+    shipping:
+        methods:
+            self_pickup: '自行運送'
+            assisted_delivery: '我們協助運送'
+        cost_calculation: '根據距離決定運費'
+        pickup_notice: '請聯絡賣家安排取貨時間地點'
+        delivery_notice: '我們將根據距離計算運費，並在確認訂單時通知您'
+
+    # 付款相關翻譯
+    payment:
+        methods:
+            bank_transfer: '銀行匯款'
+        bank_transfer_notice: '請先匯款至公司指定帳戶'
+        confirmation_notice: '如果使用者確認車況無誤，便會撥款到指定帳戶'
+        instructions: |
+            付款流程：
+            1. 請先匯款至我們的公司帳戶
+            2. 賣家將準備商品並安排交付
+            3. 買家確認收到商品且車況無誤後
+            4. 我們會將款項撥付到賣家指定的銀行帳戶
+        company_account_info: |
+            公司收款帳戶：
+            銀行：台灣銀行
+            戶名：Ride Cycle 有限公司
+            帳號：123-456-789-000
+            請在匯款備註欄填寫訂單編號
+
+    # 銀行戶頭相關翻譯
+    bank_account:
+        setup_required: '請先設定銀行戶頭以接收款項'
+        info: '銀行戶頭資訊'
+        update_success: '銀行戶頭資訊更新成功'
+        update_failed: '銀行戶頭資訊更新失敗'
+
+    # 訂單相關翻譯
+    orders:
+        payment_expired: '付款已逾期'
+        remaining_days:
+            one: '剩餘 %{count} 天'
+            other: '剩餘 %{count} 天'
+        remaining_hours:
+            one: '剩餘 %{count} 小時'
+            other: '剩餘 %{count} 小時'
+        payment_deadline_notice: '請於期限內完成付款，逾期訂單將自動取消'
+        auto_cancelled: '訂單因付款逾期而自動取消'
+
     activerecord:
         models:
             bicycle: '自行車'
@@ -9,6 +56,7 @@ zh-TW:
             bicycle_model: '自行車型號'
             transmission: '變速系統'
             message: '訊息'
+            order: '訂單'
         attributes:
             bicycle:
                 title: '標題'
@@ -34,6 +82,10 @@ zh-TW:
                 email: '電子郵件'
                 password: '密碼'
                 admin: '管理員'
+                bank_account_name: '銀行戶名'
+                bank_account_number: '銀行帳號'
+                bank_code: '銀行代碼'
+                bank_branch: '分行名稱'
             brand:
                 name: '名稱'
                 description: '描述'
@@ -53,3 +105,34 @@ zh-TW:
                 bicycle_id: '自行車'
                 sender_id: '發送者'
                 recipient_id: '接收者'
+            order:
+                order_number: '訂單編號'
+                status: '狀態'
+                total_price: '總金額'
+                shipping_method: '配送方式'
+                shipping_cost: '運費'
+                shipping_distance: '配送距離'
+                payment_method: '付款方式'
+                payment_status: '付款狀態'
+                company_account_info: '公司帳戶資訊'
+                payment_instructions: '付款說明'
+                estimated_delivery_at: '預計送達時間'
+                tracking_number: '追蹤號碼'
+                carrier: '承運商'
+                notes: '備註'
+                cancel_reason: '取消原因'
+        enums:
+            order:
+                status:
+                    pending: '待處理'
+                    processing: '處理中'
+                    shipped: '已出貨'
+                    delivered: '已送達'
+                    completed: '已完成'
+                    cancelled: '已取消'
+                    refunded: '已退款'
+                payment_status:
+                    pending: '待付款'
+                    paid: '已付款'
+                    failed: '付款失敗'
+                    refunded: '已退款'

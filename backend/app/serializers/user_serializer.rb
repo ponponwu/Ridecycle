@@ -8,6 +8,16 @@ class UserSerializer
     object.name
   end
 
+  # 銀行帳戶完成狀態
+  attribute :bank_account_complete do |object|
+    object.bank_account_complete?
+  end
+
+  # 銀行帳戶資訊
+  attribute :bank_account_info do |object|
+    object.bank_account_info
+  end
+
   # 不返回敏感屬性，如 password_digest, provider, uid
   
   # 如果有頭像或個人資料圖片

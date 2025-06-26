@@ -35,7 +35,7 @@ class Bicycle < ApplicationRecord
   belongs_to :user
   
   # @return [User] Alias for user (seller) - more semantic naming
-  alias_attribute :seller, :user
+  alias_method :seller, :user
   
   # @return [Transmission, nil] The transmission type (optional)
   belongs_to :transmission, optional: true

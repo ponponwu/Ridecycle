@@ -1,6 +1,12 @@
 class User < ApplicationRecord
   has_secure_password
   
+  # 加密敏感的銀行帳戶資訊
+  encrypts :bank_account_name, deterministic: false
+  encrypts :bank_account_number, deterministic: false  
+  encrypts :bank_code, deterministic: false
+  encrypts :bank_branch, deterministic: false
+  
   has_many :bicycles, dependent: :destroy
   has_many :sent_messages, class_name: 'Message', foreign_key: 'sender_id', dependent: :destroy
   has_many :received_messages, class_name: 'Message', foreign_key: 'recipient_id', dependent: :destroy
@@ -9,6 +15,18 @@ class User < ApplicationRecord
   
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
+  
+  # 銀行戶頭驗證
+  with_options if: :bank_account_required? do |user|
+    user.validates :bank_account_name, presence: true
+    user.validates :bank_account_number, 
+      presence: true, 
+      format: { with: /\A[\d\-]+\z/, message: '只能包含數字和連字符' }
+    user.validates :bank_code, 
+      presence: true, 
+      format: { with: /\A\d{3}\z/, message: '必須為3位數字' }
+    user.validates :bank_branch, presence: true
+  end
   
   # 添加 full_name 方法，與前端期望的介面一致
   def full_name
@@ -26,6 +44,58 @@ class User < ApplicationRecord
   
   def remove_admin!
     update!(admin: false)
+  end
+
+  # 銀行戶頭相關方法
+  def bank_account_complete?
+    bank_account_name.present? && 
+    bank_account_number.present? && 
+    bank_code.present? && 
+    bank_branch.present?
+  end
+
+  def bank_account_info
+    return nil unless bank_account_complete?
+    
+    {
+      account_name: bank_account_name,
+      account_number: bank_account_number_masked, # 使用遮罩版本確保安全
+      bank_code: bank_code,
+      bank_branch: bank_branch,
+      created_at: created_at&.iso8601,
+      updated_at: updated_at&.iso8601
+    }
+  end
+
+  # 提供完整的銀行帳號（用於確認更新操作）
+  def bank_account_info_unmasked
+    return nil unless bank_account_complete?
+    
+    {
+      account_name: bank_account_name,
+      account_number: bank_account_number, # 完整版本
+      bank_code: bank_code,
+      bank_branch: bank_branch,
+      created_at: created_at&.iso8601,
+      updated_at: updated_at&.iso8601
+    }
+  end
+
+  # 提供遮罩的銀行帳號（僅顯示後5碼）
+  def bank_account_number_masked
+    return nil unless bank_account_number.present?
+    return bank_account_number if bank_account_number.length <= 5
+    
+    '*' * (bank_account_number.length - 5) + bank_account_number.last(5)
+  end
+
+  def update_bank_account(params)
+    update!(
+      bank_account_name: params[:bank_account_name],
+      bank_account_number: params[:bank_account_number],
+      bank_code: params[:bank_code],
+      bank_branch: params[:bank_branch]
+    )
   end
 
   # Finds an existing user or creates a new one from OmniAuth data
@@ -100,5 +170,17 @@ class User < ApplicationRecord
       Rails.logger.error "Errors: #{new_user.errors.full_messages.join(', ')}"
       return new_user # Return user object with errors for controller to handle
     end
+  end
+
+  private
+
+  def bank_account_required?
+    # 當用戶有出售中的腳踏車時，需要銀行戶頭資訊
+    bicycles.exists?(status: 'available') || 
+    # 或者用戶有已接受的出價需要收款時
+    Message.joins(:bicycle)
+           .where(bicycles: { user_id: id })
+           .where(is_offer: true, offer_status: 'accepted')
+           .exists?
   end
 end

@@ -30,6 +30,53 @@
 en:
     hello: 'Hello world'
 
+    # Shipping related translations
+    shipping:
+        methods:
+            self_pickup: 'Self Pickup'
+            assisted_delivery: 'Assisted Delivery'
+        cost_calculation: 'Shipping cost calculated by distance'
+        pickup_notice: 'Please contact seller to arrange pickup time and location'
+        delivery_notice: 'We will calculate shipping cost based on distance and notify you when confirming the order'
+
+    # Payment related translations
+    payment:
+        methods:
+            bank_transfer: 'Bank Transfer'
+        bank_transfer_notice: 'Please transfer to company designated account first'
+        confirmation_notice: 'If buyer confirms the bicycle condition is satisfactory, payment will be transferred to designated account'
+        instructions: |
+            Payment Process:
+            1. Please transfer payment to our company account first
+            2. Seller will prepare the item and arrange delivery
+            3. After buyer confirms receipt and bicycle condition is satisfactory
+            4. We will transfer the payment to seller's designated bank account
+        company_account_info: |
+            Company Account Information:
+            Bank: Bank of Taiwan
+            Account Name: Ride Cycle Co., Ltd.
+            Account Number: 123-456-789-000
+            Please include order number: order number in transfer memo
+
+    # Bank account related translations
+    bank_account:
+        setup_required: 'Please set up bank account information to receive payments'
+        info: 'Bank Account Information'
+        update_success: 'Bank account information updated successfully'
+        update_failed: 'Failed to update bank account information'
+
+    # Order related translations
+    orders:
+        payment_expired: 'Payment expired'
+        remaining_days:
+            one: '%{count} day remaining'
+            other: '%{count} days remaining'
+        remaining_hours:
+            one: '%{count} hour remaining'
+            other: '%{count} hours remaining'
+        payment_deadline_notice: 'Please complete payment within the deadline, overdue orders will be automatically cancelled'
+        auto_cancelled: 'Order automatically cancelled due to payment overdue'
+
     activerecord:
         models:
             bicycle: 'Bicycle'
@@ -38,6 +85,7 @@ en:
             bicycle_model: 'Bicycle Model'
             transmission: 'Transmission'
             message: 'Message'
+            order: 'Order'
         attributes:
             bicycle:
                 title: 'Title'
@@ -63,6 +111,10 @@ en:
                 email: 'Email'
                 password: 'Password'
                 admin: 'Admin'
+                bank_account_name: 'Bank Account Name'
+                bank_account_number: 'Bank Account Number'
+                bank_code: 'Bank Code'
+                bank_branch: 'Bank Branch'
             brand:
                 name: 'Name'
                 description: 'Description'
@@ -82,3 +134,34 @@ en:
                 bicycle_id: 'Bicycle'
                 sender_id: 'Sender'
                 recipient_id: 'Recipient'
+            order:
+                order_number: 'Order Number'
+                status: 'Status'
+                total_price: 'Total Price'
+                shipping_method: 'Shipping Method'
+                shipping_cost: 'Shipping Cost'
+                shipping_distance: 'Shipping Distance'
+                payment_method: 'Payment Method'
+                payment_status: 'Payment Status'
+                company_account_info: 'Company Account Info'
+                payment_instructions: 'Payment Instructions'
+                estimated_delivery_at: 'Estimated Delivery Time'
+                tracking_number: 'Tracking Number'
+                carrier: 'Carrier'
+                notes: 'Notes'
+                cancel_reason: 'Cancel Reason'
+        enums:
+            order:
+                status:
+                    pending: 'Pending'
+                    processing: 'Processing'
+                    shipped: 'Shipped'
+                    delivered: 'Delivered'
+                    completed: 'Completed'
+                    cancelled: 'Cancelled'
+                    refunded: 'Refunded'
+                payment_status:
+                    pending: 'Pending'
+                    paid: 'Paid'
+                    failed: 'Failed'
+                    refunded: 'Refunded'

@@ -19,5 +19,26 @@ FactoryBot.define do
         create_list(:bicycle, 3, user: user)
       end
     end
+    
+    trait :with_bank_account do
+      after(:create) do |user|
+        # 使用 update 而不是直接設定，確保加密正常工作
+        user.update!(
+          bank_account_name: '王小明',
+          bank_account_number: '1234567890123',
+          bank_code: '808',
+          bank_branch: '台北分行'
+        )
+      end
+    end
+
+    # For semantic clarity in tests
+    trait :seller do
+      # No specific attributes needed, just for role identification
+    end
+
+    trait :buyer do
+      # No specific attributes needed, just for role identification
+    end
   end
 end 

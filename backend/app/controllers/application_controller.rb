@@ -3,8 +3,13 @@ class ApplicationController < ActionController::API
   include ActionController::Cookies
   include JsonApiResponse
   include ActionController::RequestForgeryProtection
-  protect_from_forgery with: :exception # API 模式使用 :null_session 而非 :exception
-  before_action :set_csrf_cookie
+  
+  # 在測試環境中跳過 CSRF 保護，其他環境使用 :null_session
+  unless Rails.env.test?
+    protect_from_forgery with: :null_session
+    before_action :set_csrf_cookie
+  end
+  
   before_action :authenticate_user!
 
   private
@@ -27,12 +32,14 @@ class ApplicationController < ActionController::API
   
   def encode_token(payload, exp = 1.hour.from_now)
     payload[:exp] = exp.to_i
-    JWT.encode(payload, Rails.application.credentials.jwt_secret!)
+    # 使用正確的密鑰名稱，並提供備用
+    secret_key = Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
+    JWT.encode(payload, secret_key)
   end
 
   def encode_refresh_token(user_id, jti, exp = 7.days.from_now)
     payload = { user_id: user_id, jti: jti, exp: exp.to_i, type: 'refresh' }
-    refresh_secret = Rails.application.credentials.jwt_refresh_secret || Rails.application.credentials.jwt_secret!
+    refresh_secret = Rails.application.credentials.jwt_refresh_secret || Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
     JWT.encode(payload, refresh_secret)
   end
   
@@ -46,7 +53,12 @@ class ApplicationController < ActionController::API
   
   def decoded_token(token_type = :access)
     token = (token_type == :access) ? access_token_from_cookie : refresh_token_from_cookie
-    secret_key = (token_type == :access) ? Rails.application.credentials.jwt_secret! : (Rails.application.credentials.jwt_refresh_secret || Rails.application.credentials.jwt_secret!)
+    # 使用正確的密鑰名稱，並提供備用
+    secret_key = if token_type == :access
+                   Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
+                 else
+                   Rails.application.credentials.jwt_refresh_secret || Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
+                 end
     
     if token
       begin

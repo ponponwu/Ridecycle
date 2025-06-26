@@ -4,6 +4,8 @@
 # @author RideCycle Team
 # @since 1.0.0
 class Api::V1::Admin::BicyclesController < ApplicationController
+  include BicyclePreloader # 引入共享的預載邏輯
+
   before_action :authenticate_user!
   before_action :ensure_admin!
   before_action :set_bicycle, only: [:show, :update, :destroy, :approve, :reject]
@@ -22,8 +24,8 @@ class Api::V1::Admin::BicyclesController < ApplicationController
     limit = params.fetch(:limit, 20).to_i
     offset = (page - 1) * limit
 
-    # 建立查詢，預載入關聯以避免 N+1 查詢
-    query = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+    # 建立查詢，使用共享的預載邏輯
+    query = Bicycle.includes(standard_bicycle_includes)
 
     # 狀態過濾
     if params[:status].present?
@@ -150,7 +152,7 @@ class Api::V1::Admin::BicyclesController < ApplicationController
   # Sets the bicycle for actions that require it
   # @return [void]
   def set_bicycle
-    @bicycle = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+    @bicycle = Bicycle.includes(standard_bicycle_includes)
                      .find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_jsonapi_errors(['Bicycle not found'], status: :not_found, title: 'Not Found')

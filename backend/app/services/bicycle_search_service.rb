@@ -4,9 +4,12 @@
 # Follows Single Responsibility Principle by handling only search logic
 class BicycleSearchService
   # @param params [Hash] Search parameters
-  def initialize(params = {})
+  # @param includes [Array] Associations to preload
+  def initialize(params = {}, includes: [])
     @params = params
-    @query = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+    # 使用傳入的 includes，如果為空則使用一個基礎的預載
+    base_includes = includes.empty? ? [:user, :brand, { photos_attachments: :blob }] : includes
+    @query = Bicycle.includes(base_includes)
   end
 
   # Executes the search and returns paginated results

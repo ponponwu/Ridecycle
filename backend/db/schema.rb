@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
+ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -89,9 +89,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "contact_method"
-    t.bigint "brand_id", null: false
+    t.bigint "brand_id"
     t.bigint "bicycle_model_id"
-    t.bigint "transmission_id", null: false
+    t.bigint "transmission_id"
     t.integer "bicycle_type"
     t.integer "frame_material"
     t.integer "color"
@@ -165,7 +165,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "read_at"
+    t.boolean "is_offer", default: false, null: false
+    t.decimal "offer_amount", precision: 10, scale: 2
+    t.integer "offer_status", default: 0
+    t.index ["bicycle_id", "offer_status"], name: "index_messages_on_bicycle_and_offer_status"
     t.index ["bicycle_id"], name: "index_messages_on_bicycle_id"
+    t.index ["sender_id", "bicycle_id", "offer_status"], name: "index_messages_on_sender_bicycle_offer_status"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -188,8 +193,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
     t.datetime "estimated_delivery_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "shipping_distance", precision: 10, scale: 2
+    t.text "company_account_info"
+    t.text "payment_instructions"
+    t.integer "shipping_method", default: 0
+    t.integer "payment_method", default: 0
+    t.datetime "payment_deadline", comment: "付款期限"
+    t.datetime "expires_at", comment: "訂單過期時間（用於索引查詢）"
     t.index ["bicycle_id"], name: "index_orders_on_bicycle_id"
+    t.index ["expires_at"], name: "index_orders_on_expires_at"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
+    t.index ["status", "expires_at"], name: "index_orders_on_status_and_expires_at"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
@@ -226,6 +240,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_05_27_170012) do
     t.string "provider"
     t.string "uid"
     t.boolean "admin", default: false, null: false
+    t.text "bank_account_name"
+    t.text "bank_account_number"
+    t.text "bank_code"
+    t.text "bank_branch"
     t.index ["admin"], name: "index_users_on_admin"
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
   end

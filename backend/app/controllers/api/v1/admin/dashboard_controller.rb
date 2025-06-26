@@ -4,6 +4,8 @@
 # @author RideCycle Team
 # @since 1.0.0
 class Api::V1::Admin::DashboardController < ApplicationController
+  include BicyclePreloader # 引入共享的預載邏輯
+
   before_action :authenticate_user!
   before_action :ensure_admin!
 
@@ -54,8 +56,8 @@ class Api::V1::Admin::DashboardController < ApplicationController
   # @return [JSON] Recent bicycles and users
   def recent_activity
     begin
-      # 預載入關聯以避免 N+1 查詢
-      recent_bicycles = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+      # 使用共享的預載邏輯
+      recent_bicycles = Bicycle.includes(standard_bicycle_includes)
                               .order(created_at: :desc)
                               .limit(10)
       
@@ -77,7 +79,7 @@ class Api::V1::Admin::DashboardController < ApplicationController
             email: user.email,
             admin: user.admin?,
             created_at: user.created_at.iso8601,
-            bicycles_count: user.bicycles.count
+            bicycles_count: user.bicycles.size # 使用 size 避免 N+1
           }
         }
       end

@@ -4,6 +4,8 @@
 # @author RideCycle Team
 # @since 1.0.0
 class Api::V1::BicyclesController < ApplicationController
+  include BicyclePreloader # 引入共享的預載邏輯
+
   # Authentication required for creating, viewing own bicycles, updating, and deleting
   before_action :authenticate_user!, only: [:create, :me, :update, :destroy]
   
@@ -134,7 +136,8 @@ class Api::V1::BicyclesController < ApplicationController
   # @return [JSON] Paginated list of bicycles in JSON:API format with metadata
   def index
     # Use BicycleSearchService to handle complex search logic
-    search_service = BicycleSearchService.new(params.to_unsafe_h)
+    # 將 standard_includes 傳遞給 service
+    search_service = BicycleSearchService.new(params.to_unsafe_h, includes: standard_bicycle_includes)
     result = search_service.call
     
     # Return standard JSON:API format with pagination metadata
@@ -154,8 +157,8 @@ class Api::V1::BicyclesController < ApplicationController
     limit = params.fetch(:limit, 8).to_i
     offset = (page - 1) * limit
 
-    # 確保預先載入 User、Brand 和 Photos
-    all_user_bicycles = current_user.bicycles.includes(:user, :brand, photos_attachments: :blob).order(created_at: :desc)
+    # 使用標準 includes
+    all_user_bicycles = current_user.bicycles.includes(standard_bicycle_includes).order(created_at: :desc)
     @user_bicycles = all_user_bicycles.offset(offset).limit(limit)
     total_count = all_user_bicycles.count
 
@@ -178,8 +181,8 @@ class Api::V1::BicyclesController < ApplicationController
   def featured
     limit = params.fetch(:limit, 4).to_i
     
-    # 特色自行車的邏輯：只顯示已審核通過的自行車，狀況為 'excellent' 或 'like_new' 且價格較高
-    @featured_bicycles = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+    # 特色自行車的邏輯：使用標準 includes
+    @featured_bicycles = Bicycle.includes(standard_bicycle_includes)
                                 .available  # 只顯示可購買的自行車
                                 .where(condition: ['brand_new', 'like_new'])
                                 .order(price: :desc, created_at: :desc)
@@ -192,8 +195,8 @@ class Api::V1::BicyclesController < ApplicationController
   def recently_added
     limit = params.fetch(:limit, 4).to_i
     
-    # 最近新增的自行車：只顯示已審核通過的自行車，按創建時間排序
-    @recent_bicycles = Bicycle.includes(:user, :brand, photos_attachments: :blob)
+    # 最近新增的自行車：使用標準 includes
+    @recent_bicycles = Bicycle.includes(standard_bicycle_includes)
                               .available  # 只顯示可購買的自行車
                               .order(created_at: :desc)
                               .limit(limit)
@@ -204,9 +207,8 @@ class Api::V1::BicyclesController < ApplicationController
   private
 
   def set_bicycle
-    # 預先載入附件和關聯的 user (seller)
-    # 假設您的 Bicycle model 中有關聯: belongs_to :user 或 belongs_to :seller, class_name: 'User'
-    @bicycle = Bicycle.includes(:user, :brand, photos_attachments: :blob).find(params[:id])
+    # 使用標準 includes
+    @bicycle = Bicycle.includes(standard_bicycle_includes).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_jsonapi_errors(['Bicycle not found'], status: :not_found, title: 'Not Found')
   end

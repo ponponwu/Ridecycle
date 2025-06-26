@@ -1,10 +1,12 @@
 class OrderSerializer
   include JSONAPI::Serializer
   
-  attributes :id, :order_number, :total_price, :status, :payment_status, :created_at, :updated_at
+  attributes :id, :order_number, :total_price, :status, :payment_status, :created_at, :updated_at,
+             :shipping_method, :shipping_cost, :shipping_distance, :payment_method,
+             :payment_deadline, :expires_at, :payment_instructions, :company_account_info
   
-  # 統一的買家資訊
-  attribute :user do |object|
+  # 買家資訊
+  attribute :buyer do |object|
     if object.user
       {
         id: object.user.id,
@@ -12,6 +14,19 @@ class OrderSerializer
         full_name: object.user.full_name,
         email: object.user.email,
         avatar_url: object.user.avatar_url
+      }
+    end
+  end
+
+  # 賣家資訊
+  attribute :seller do |object|
+    if object.bicycle&.user
+      {
+        id: object.bicycle.user.id,
+        name: object.bicycle.user.name,
+        full_name: object.bicycle.user.full_name,
+        email: object.bicycle.user.email,
+        avatar_url: object.bicycle.user.avatar_url
       }
     end
   end
@@ -59,5 +74,39 @@ class OrderSerializer
   
   attribute :tracking_number do |object|
     object.tracking_number if object.respond_to?(:tracking_number)
+  end
+
+  # 付款期限相關資訊
+  attribute :remaining_payment_hours do |object|
+    object.remaining_payment_hours if object.respond_to?(:remaining_payment_hours)
+  end
+
+  attribute :remaining_payment_time_humanized do |object|
+    object.remaining_payment_time_humanized if object.respond_to?(:remaining_payment_time_humanized)
+  end
+
+  attribute :expired do |object|
+    object.expired? if object.respond_to?(:expired?)
+  end
+
+  # 付款證明相關資訊
+  attribute :payment_proof_info do |object|
+    if object.has_payment_proof?
+      latest_proof = object.latest_payment_proof
+      {
+        has_proof: true,
+        status: object.payment_proof_status,
+        filename: latest_proof.filename.to_s,
+        uploaded_at: latest_proof.created_at.iso8601,
+        file_size: latest_proof.byte_size,
+        content_type: latest_proof.content_type,
+        metadata: latest_proof.metadata || {}
+      }
+    else
+      {
+        has_proof: false,
+        status: 'none'
+      }
+    end
   end
 end 

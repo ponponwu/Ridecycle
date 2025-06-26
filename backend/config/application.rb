@@ -44,5 +44,10 @@ module Backend
     # config.middleware.insert_before ActionDispatch::Flash, ActionDispatch::Session::CookieStore
     # However, for Cookies and Session::CookieStore with api_only = true, simply using `use`
     # after api_only should generally place them correctly in the stack for API purposes.
+    
+    # Configure Active Record Encryption
+    config.active_record.encryption.primary_key = Rails.application.credentials.active_record_encryption&.dig(:primary_key)
+    config.active_record.encryption.deterministic_key = Rails.application.credentials.active_record_encryption&.dig(:deterministic_key)
+    config.active_record.encryption.key_derivation_salt = Rails.application.credentials.active_record_encryption&.dig(:key_derivation_salt)
   end
 end
