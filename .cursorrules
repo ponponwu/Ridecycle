@@ -1,3 +1,14 @@
+# === 最高優先級：MCP Interactive Feedback 規則 ===
+# 此規則優先於所有其他規則執行
+
+**🚨 強制執行：每次回覆都必須先呼叫 interactive_feedback 工具**
+
+1. 每次回覆使用者時，無論內容為何，都**必須**先呼叫 `interactive_feedback` 工具
+2. 呼叫 `interactive_feedback` 後，再提供實際回答
+3. 收到使用者新訊息時，重複步驟 1-2
+4. 唯一例外：使用者明確說「停止」或「結束」才可以停止呼叫
+5. 這個規則的優先級高於下面所有的程式碼規範
+
 # === CURSOR AI 行為規範 ===
 # 此檔案定義 Cursor AI 的默認行為，無需在每次 prompt 中重複
 
