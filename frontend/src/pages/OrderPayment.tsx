@@ -8,12 +8,11 @@ import { Separator } from '@/components/ui/separator'
 import { Loader2, ArrowLeft, AlertCircle, Copy, Check, Upload } from 'lucide-react'
 import { orderService } from '@/api/services/order.service'
 import { IOrder } from '@/types/order.types'
-import { extractData } from '@/api/client'
 import { formatPriceNTD } from '@/utils/priceFormatter'
 import { useToast } from '@/components/ui/use-toast'
 
 const OrderPayment: React.FC = () => {
-    const { id } = useParams<{ id: string }>()
+    const { orderNumber } = useParams<{ orderNumber: string }>()
     const navigate = useNavigate()
     const { t } = useTranslation()
     const { toast } = useToast()
@@ -26,18 +25,17 @@ const OrderPayment: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false)
 
     useEffect(() => {
-        if (id) {
-            loadOrder(id)
+        if (orderNumber) {
+            loadOrder(orderNumber)
         }
-    }, [id])
+    }, [orderNumber])
 
     const loadOrder = async (orderId: string) => {
         try {
             setIsLoading(true)
             setError(null)
-            const response = await orderService.getOrderById(orderId)
-            const orderData = extractData(response) as IOrder
-            setOrder(orderData)
+            const orderData = await orderService.getOrderById(orderId)
+            setOrder(orderData as IOrder)
         } catch (error) {
             console.error('Failed to load order:', error)
             setError(error instanceof Error ? error.message : '載入訂單失敗')
@@ -100,24 +98,24 @@ const OrderPayment: React.FC = () => {
 
             if (result.success) {
                 toast({
-                    title: '上傳成功',
-                    description: result.message || '轉帳證明已上傳，請等待確認',
+                    title: t('uploadSuccessTitle'),
+                    description: result.message || t('uploadSuccessMessage'),
                 })
 
                 // 返回訂單詳情頁面
                 navigate(`/orders/${order.id}`)
             } else {
                 toast({
-                    title: '上傳失敗',
-                    description: result.message || '上傳轉帳證明時發生錯誤',
+                    title: t('uploadFailedTitle'),
+                    description: result.message || t('uploadFailedMessage'),
                     variant: 'destructive',
                 })
             }
         } catch (error) {
             console.error('Upload payment proof error:', error)
             toast({
-                title: '上傳失敗',
-                description: error instanceof Error ? error.message : '上傳轉帳證明時發生錯誤',
+                title: t('uploadFailedTitle'),
+                description: error instanceof Error ? error.message : t('uploadFailedMessage'),
                 variant: 'destructive',
             })
         } finally {
@@ -131,7 +129,7 @@ const OrderPayment: React.FC = () => {
                 <div className="container max-w-4xl mx-auto px-4 py-8">
                     <div className="flex justify-center items-center py-12">
                         <Loader2 className="w-8 h-8 animate-spin" />
-                        <span className="ml-2">{t('loading')}</span>
+                        <span className="ml-2">{t('loadingText')}</span>
                     </div>
                 </div>
             </MainLayout>
@@ -143,12 +141,12 @@ const OrderPayment: React.FC = () => {
             <MainLayout>
                 <div className="container max-w-4xl mx-auto px-4 py-8">
                     <div className="text-center py-12">
-                        <div className="text-red-500 mb-4">{error || '訂單未找到'}</div>
+                        <div className="text-red-500 mb-4">{error || t('orderNotFoundMessage')}</div>
                         <div className="space-x-4">
                             <Button onClick={() => navigate(-1)} variant="outline">
-                                {t('goBack')}
+                                {t('goBackBtn')}
                             </Button>
-                            <Button onClick={() => id && loadOrder(id)}>{t('tryAgain')}</Button>
+                            <Button onClick={() => orderNumber && loadOrder(orderNumber)}>{t('tryAgainBtn')}</Button>
                         </div>
                     </div>
                 </div>
@@ -198,11 +196,11 @@ const OrderPayment: React.FC = () => {
                 <div className="flex items-center gap-4 mb-6">
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order.id}`)}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
-                        返回訂單詳情
+                        {t('returnToOrderDetails')}
                     </Button>
                     <div className="flex-1">
-                        <h1 className="text-2xl font-bold">完成付款</h1>
-                        <p className="text-gray-500">訂單編號: {order.orderNumber || order.id}</p>
+                        <h1 className="text-2xl font-bold">{t('completePayment')}</h1>
+                        <p className="text-gray-500">{t('orderNumberLabel')}: {order.orderNumber || order.id}</p>
                     </div>
                 </div>
 
@@ -214,21 +212,21 @@ const OrderPayment: React.FC = () => {
                             <div>
                                 <h4 className="font-medium text-blue-800 mb-1">
                                     {order.paymentProofInfo?.status === 'approved'
-                                        ? '付款已確認'
+                                        ? t('paymentConfirmed')
                                         : order.paymentProofInfo?.status === 'rejected'
-                                        ? '付款證明被拒絕，請重新上傳'
+                                        ? t('paymentRejected')
                                         : order.paymentStatus === 'awaiting_confirmation'
-                                        ? '付款待確認'
-                                        : '付款證明已上傳'}
+                                        ? t('paymentPending')
+                                        : t('proofUploaded')}
                                 </h4>
                                 <p className="text-sm text-blue-700">
                                     {order.paymentProofInfo?.status === 'approved'
-                                        ? '您的付款已確認，我們將盡快安排出貨。'
+                                        ? t('paymentConfirmedDesc')
                                         : order.paymentProofInfo?.status === 'rejected'
-                                        ? '您的付款證明未通過審核，請重新上傳清晰的轉帳證明。'
+                                        ? t('paymentRejectedDesc')
                                         : order.paymentStatus === 'awaiting_confirmation'
-                                        ? '我們已收到您的轉帳資訊，正在確認付款。一般在24小時內完成確認。'
-                                        : '我們已收到您的付款證明，正在進行確認。一般在24小時內完成審核。'}
+                                        ? t('paymentPendingDesc')
+                                        : t('proofUploadedDesc')}
                                 </p>
                                 {order.paymentProofInfo?.uploadedAt && (
                                     <p className="text-xs text-blue-600 mt-2">
@@ -257,12 +255,12 @@ const OrderPayment: React.FC = () => {
                     {/* Bank Transfer Information */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>銀行轉帳資訊</CardTitle>
+                            <CardTitle>{t('bankTransferInfo')}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">銀行名稱</span>
+                                    <span className="text-sm text-gray-600">{t('bankNameLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{bankInfo.bankName}</span>
                                         <Button
@@ -280,7 +278,7 @@ const OrderPayment: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">銀行代碼</span>
+                                    <span className="text-sm text-gray-600">{t('bankCodeLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{bankInfo.bankCode}</span>
                                         <Button
@@ -298,7 +296,7 @@ const OrderPayment: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">帳號</span>
+                                    <span className="text-sm text-gray-600">{t('accountNumberLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{bankInfo.accountNumber}</span>
                                         <Button
@@ -316,7 +314,7 @@ const OrderPayment: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">戶名</span>
+                                    <span className="text-sm text-gray-600">{t('accountNameLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{bankInfo.accountName}</span>
                                         <Button
@@ -334,7 +332,7 @@ const OrderPayment: React.FC = () => {
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">分行</span>
+                                    <span className="text-sm text-gray-600">{t('branchLabel')}</span>
                                     <span className="font-medium">{bankInfo.branch}</span>
                                 </div>
                             </div>
@@ -343,7 +341,7 @@ const OrderPayment: React.FC = () => {
 
                             <div className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">轉帳金額</span>
+                                    <span className="text-sm text-gray-600">{t('transferAmountLabel')}</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-xl font-bold text-green-600">
                                             {formatPriceNTD(order.totalPrice)}
