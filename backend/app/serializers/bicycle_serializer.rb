@@ -31,34 +31,63 @@ class BicycleSerializer
     end
   end
 
-  # 主圖 WebP URL (通常用於詳情頁)
-  attribute :main_webp_urls do |object|
-    object.all_main_webp_photo_variants.map do |variant|
-      begin
-        Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
-      rescue NoMethodError
-        Rails.logger.error "BicycleSerializer: Failed to generate main_webp_urls. Ensure default_url_options[:host] is set."
-        nil
-      rescue StandardError => e
-        Rails.logger.error "BicycleSerializer: Error generating main_webp_urls for variant: #{e.message}"
-        nil
-      end
-    end.compact
+  # 主圖 WebP URL (通常用於詳情頁) - 只在需要時生成
+  attribute :main_webp_urls do |object, params|
+    # 只有在詳細視圖時才生成所有變體，否則為空陣列以節省資源
+    if params && params[:detailed_view]
+      object.all_main_webp_photo_variants.map do |variant|
+        begin
+          Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
+        rescue NoMethodError
+          Rails.logger.error "BicycleSerializer: Failed to generate main_webp_urls. Ensure default_url_options[:host] is set."
+          nil
+        rescue StandardError => e
+          Rails.logger.error "BicycleSerializer: Error generating main_webp_urls for variant: #{e.message}"
+          nil
+        end
+      end.compact
+    else
+      []
+    end
   end
 
-  # 縮圖 WebP URL (通常用於列表頁)
-  attribute :thumbnail_webp_urls do |object|
-    object.all_thumbnail_webp_photo_variants.map do |variant|
-      begin
-        Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
-      rescue NoMethodError
-        Rails.logger.error "BicycleSerializer: Failed to generate thumbnail_webp_urls. Ensure default_url_options[:host] is set."
-        nil
-      rescue StandardError => e
-        Rails.logger.error "BicycleSerializer: Error generating thumbnail_webp_urls for variant: #{e.message}"
-        nil
+  # 縮圖 WebP URL (通常用於列表頁) - 智能生成策略
+  attribute :thumbnail_webp_urls do |object, params|
+    # 對於列表頁面，只生成第一張圖片的縮圖以優化性能
+    if object.photos.attached? && object.photos.first.present?
+      # 檢查是否已有預載的變體（詳細頁面），如果有就使用
+      if object.photos.first.variant_records.loaded? && object.photos.first.variant_records.any?
+        # 使用預載的變體中的縮圖變體
+        thumbnail_variant = object.photos.first.variant_records.find { |vr| vr.variation_digest&.include?('resize_to_fill') }
+        if thumbnail_variant
+          begin
+            url = Rails.application.routes.url_helpers.rails_representation_url(thumbnail_variant, only_path: false)
+            return [url]
+          rescue StandardError => e
+            Rails.logger.error "BicycleSerializer: Error using preloaded variant: #{e.message}"
+          end
+        end
       end
-    end.compact
+      
+      # 沒有預載變體時，按需生成（列表頁面）
+      variant = object.thumbnail_webp_photo_variant(0)
+      if variant
+        begin
+          url = Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
+          [url]
+        rescue NoMethodError
+          Rails.logger.error "BicycleSerializer: Failed to generate thumbnail_webp_urls. Ensure default_url_options[:host] is set."
+          []
+        rescue StandardError => e
+          Rails.logger.error "BicycleSerializer: Error generating thumbnail_webp_urls for variant: #{e.message}"
+          []
+        end
+      else
+        []
+      end
+    else
+      []
+    end
   end
 
   # 單獨提供第一張圖片的各種版本，方便前端直接使用
@@ -129,9 +158,8 @@ class BicycleSerializer
       {
         id: object.bicycle_model.id,
         name: object.bicycle_model.name,
-        brand_id: object.bicycle_model.brand_id,
-        created_at: object.bicycle_model.created_at,
-        updated_at: object.bicycle_model.updated_at
+        year: object.bicycle_model.year,
+        original_msrp: object.bicycle_model.original_msrp&.to_f
       }
     end
   end
@@ -169,5 +197,92 @@ class BicycleSerializer
       # 未登入用戶不返回訊息
       []
     end
+  end
+
+  # 統一的變速系統資訊
+  attribute :transmission do |object|
+    if object.transmission
+      {
+        id: object.transmission.id,
+        name: object.transmission.name
+      }
+    end
+  end
+
+  # 主圖 WebP URL (通常用於詳情頁)
+  attribute :main_webp_photo_url do |object|
+    variant = object.main_webp_photo_variant
+    if variant
+      begin
+        Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
+      rescue NoMethodError
+        Rails.logger.error "BicycleSerializer: Failed to generate main_webp_photo_url. Ensure default_url_options[:host] is set."
+        nil
+      rescue StandardError => e
+        Rails.logger.error "BicycleSerializer: Error generating main_webp_photo_url for Bicycle ##{object.id}: #{e.message}"
+        nil
+      end
+    end
+  end
+
+  # 縮圖 WebP URL (通常用於列表頁)
+  attribute :thumbnail_webp_photo_url do |object|
+    variant = object.thumbnail_webp_photo_variant
+    if variant
+      begin
+        Rails.application.routes.url_helpers.rails_representation_url(variant, only_path: false)
+      rescue NoMethodError
+        Rails.logger.error "BicycleSerializer: Failed to generate thumbnail_webp_photo_url. Ensure default_url_options[:host] is set."
+        nil
+      rescue StandardError => e
+        Rails.logger.error "BicycleSerializer: Error generating thumbnail_webp_photo_url for Bicycle ##{object.id}: #{e.message}"
+        nil
+      end
+    end
+  end
+
+  # 顯示名稱
+  attribute :full_display_name do |object|
+    object.full_display_name
+  end
+
+  # 格式化的價格
+  attribute :display_price do |object|
+    object.display_price
+  end
+
+  # 是否可用
+  attribute :available do |object|
+    object.available?
+  end
+
+  # 格式化的年份 (確保是字串)
+  attribute :year do |object|
+    object.year&.to_s
+  end
+
+  # 格式化的尺寸 (統一大寫顯示)
+  attribute :frame_size do |object|
+    object.frame_size&.upcase
+  end
+
+  # 變速系統名稱 (便利方法)
+  attribute :transmission_name do |object|
+    object.transmission&.name
+  end
+
+  # 品牌名稱 (便利方法)
+  attribute :brand_name do |object|
+    object.brand&.name
+  end
+
+  # 型號名稱 (便利方法)
+  attribute :model_name do |object|
+    object.bicycle_model&.name || object.model
+  end
+
+  # 原價 (來自型號資訊)
+  attribute :original_price do |object|
+    object.bicycle_model&.original_msrp&.to_f
   end
 end 

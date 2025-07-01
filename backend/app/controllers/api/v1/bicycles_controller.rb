@@ -7,7 +7,7 @@ class Api::V1::BicyclesController < ApplicationController
   include BicyclePreloader # 引入共享的預載邏輯
 
   # Authentication required for creating, viewing own bicycles, updating, and deleting
-  before_action :authenticate_user!, only: [:create, :me, :update, :destroy]
+  before_action :authenticate_user!, except: [:index, :show, :featured, :recently_added]
   
   # Set bicycle instance for actions that need a specific bicycle
   before_action :set_bicycle, only: [:show, :update, :destroy]
@@ -102,18 +102,18 @@ class Api::V1::BicyclesController < ApplicationController
 
     if @bicycle.destroy
       head :no_content # 成功刪除，回傳 204 No Content
-          else
-        # 理論上，如果 set_bicycle 成功，destroy 失敗的情況較少見，除非有回呼阻止
-        render_jsonapi_errors(@bicycle.errors.full_messages)
-      end
+    else
+      # 理論上，如果 set_bicycle 成功，destroy 失敗的情況較少見，除非有回呼阻止
+      render_jsonapi_errors(@bicycle.errors.full_messages)
+    end
   end
 
   def show
     # @bicycle 由 set_bicycle before_action 設定
-    # 設定 jsonapi-serializer 的選項 (如果需要)
-    options = {}
-    # options[:include] = [:seller_info] # 如果您想包含賣家資訊 (前提是 Serializer 中有 seller_info 且 Bicycle model 有 seller 關聯)
-    # options[:fields] = { bicycle: [:id, :title, :main_photo_webp_url] } # 如果只想回傳特定欄位
+    # 設定 jsonapi-serializer 的選項，包含詳細視圖參數
+    options = {
+      params: { detailed_view: true }
+    }
 
     # 回傳標準的 JSON:API 格式
     render_jsonapi_resource(@bicycle, serializer: BicycleSerializer, options: options)
@@ -135,9 +135,8 @@ class Api::V1::BicyclesController < ApplicationController
   # @param [Integer] limit Items per page (default: 20)
   # @return [JSON] Paginated list of bicycles in JSON:API format with metadata
   def index
-    # Use BicycleSearchService to handle complex search logic
-    # 將 standard_includes 傳遞給 service
-    search_service = BicycleSearchService.new(params.to_unsafe_h, includes: standard_bicycle_includes)
+    # 使用列表上下文的輕量級預載策略
+    search_service = BicycleSearchService.new(search_params, [], 'list')
     result = search_service.call
     
     # Return standard JSON:API format with pagination metadata
@@ -153,62 +152,37 @@ class Api::V1::BicyclesController < ApplicationController
 
   # GET /api/v1/bicycles/me
   def me
-    page = params.fetch(:page, 1).to_i
-    limit = params.fetch(:limit, 8).to_i
-    offset = (page - 1) * limit
-
-    # 使用標準 includes
-    all_user_bicycles = current_user.bicycles.includes(standard_bicycle_includes).order(created_at: :desc)
-    @user_bicycles = all_user_bicycles.offset(offset).limit(limit)
-    total_count = all_user_bicycles.count
-
-    options = {}
-    # options[:include] = [:seller_info] # current_user 的 bicycles，seller_info 就是 current_user 自己
-    # options[:meta] = { total_count: total_count, current_page: page, limit: limit, total_pages: (total_count.to_f / limit).ceil }
-    
-    # 回傳標準的 JSON:API 格式
-    meta = {
-      total_count: total_count,
-      current_page: page,
-      per_page: limit,
-      total_pages: (total_count.to_f / limit).ceil
-    }
-
-    render_jsonapi_collection(@user_bicycles, serializer: BicycleSerializer, meta: meta, options: options)
+    bicycles = current_user.bicycles.includes(list_bicycle_includes)
+    render_jsonapi_collection(bicycles, serializer: BicycleSerializer)
   end
 
   # GET /api/v1/bicycles/featured
   def featured
-    limit = params.fetch(:limit, 4).to_i
+    limit = params[:limit]&.to_i || 4
+    bicycles = Bicycle.includes(list_bicycle_includes)
+                      .available
+                      .order(created_at: :desc)
+                      .limit(limit)
     
-    # 特色自行車的邏輯：使用標準 includes
-    @featured_bicycles = Bicycle.includes(standard_bicycle_includes)
-                                .available  # 只顯示可購買的自行車
-                                .where(condition: ['brand_new', 'like_new'])
-                                .order(price: :desc, created_at: :desc)
-                                .limit(limit)
-    
-    render_jsonapi_collection(@featured_bicycles, serializer: BicycleSerializer)
+    render_jsonapi_collection(bicycles, serializer: BicycleSerializer)
   end
 
   # GET /api/v1/bicycles/recently_added
   def recently_added
-    limit = params.fetch(:limit, 4).to_i
+    limit = params[:limit]&.to_i || 4
+    bicycles = Bicycle.includes(list_bicycle_includes)
+                      .available
+                      .order(created_at: :desc)
+                      .limit(limit)
     
-    # 最近新增的自行車：使用標準 includes
-    @recent_bicycles = Bicycle.includes(standard_bicycle_includes)
-                              .available  # 只顯示可購買的自行車
-                              .order(created_at: :desc)
-                              .limit(limit)
-    
-    render_jsonapi_collection(@recent_bicycles, serializer: BicycleSerializer)
+    render_jsonapi_collection(bicycles, serializer: BicycleSerializer)
   end
 
   private
 
   def set_bicycle
-    # 使用標準 includes
-    @bicycle = Bicycle.includes(standard_bicycle_includes).find(params[:id])
+    # 使用詳細頁面的完整預載策略
+    @bicycle = Bicycle.includes(detail_bicycle_includes).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_jsonapi_errors(['Bicycle not found'], status: :not_found, title: 'Not Found')
   end
@@ -234,6 +208,13 @@ class Api::V1::BicyclesController < ApplicationController
       specifications: {},
       photos: [] # 允許 photos 以便可以更新或添加圖片
     )
+  end
+
+  def search_params
+    params.permit(:search, :page, :limit, :sort, :bicycle_type, :condition,
+                 :price_min, :price_max, :location, :brand_id, :transmission_id,
+                 :frame_material, :year_min, :year_max, :color, :frameset_only,
+                 bicycle_type: [], condition: [], brand: [], status: [])
   end
 
   # Add other actions (index, show, update, destroy, etc.) here as needed

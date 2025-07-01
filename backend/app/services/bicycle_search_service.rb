@@ -5,10 +5,37 @@
 class BicycleSearchService
   # @param params [Hash] Search parameters
   # @param includes [Array] Associations to preload
-  def initialize(params = {}, includes: [])
+  # @param context [String] Context for loading strategy ('list', 'detail')
+  def initialize(params = {}, includes = [], context = 'list')
     @params = params
-    # 使用傳入的 includes，如果為空則使用一個基礎的預載
-    base_includes = includes.empty? ? [:user, :brand, { photos_attachments: :blob }] : includes
+    @context = context
+    
+    # 使用傳入的 includes，如果為空則根據上下文決定預載策略
+    if includes.empty?
+      base_includes = case @context
+      when 'detail'
+        # 詳細頁面：預載所有變體
+        [
+          :user, 
+          :brand, 
+          :bicycle_model, 
+          :transmission, 
+          { photos_attachments: { blob: :variant_records } }
+        ]
+      else # 'list' or default
+        # 列表頁面：只預載 attachments 和 blobs，不預載變體
+        [
+          :user, 
+          :brand, 
+          :bicycle_model, 
+          :transmission, 
+          { photos_attachments: :blob }
+        ]
+      end
+    else
+      base_includes = includes
+    end
+    
     @query = Bicycle.includes(base_includes)
   end
 
@@ -34,15 +61,24 @@ class BicycleSearchService
     filter_by_status
   end
 
-  # Filters by search term in title and description
+  # Filters by search term in title, description, brand name, model name, and bicycle model name
   # @return [void]
   def filter_by_search_term
     return unless @params[:search].present?
     
     search_term = "%#{@params[:search]}%"
+    
+    # 使用子查詢來搜尋關聯資料，避免 JOIN 產生的重複記錄問題
+    brand_search = Bicycle.joins(:brand).where("brands.name ILIKE ?", search_term).select(:id)
+    model_search = Bicycle.joins(:bicycle_model).where("bicycle_models.name ILIKE ?", search_term).select(:id)
+    transmission_search = Bicycle.joins(:transmission).where("transmissions.name ILIKE ?", search_term).select(:id)
+    
     @query = @query.where(
-      "title ILIKE :search OR description ILIKE :search", 
-      search: search_term
+      "title ILIKE :search OR description ILIKE :search OR bicycles.model ILIKE :search OR id IN (:brand_ids) OR id IN (:model_ids) OR id IN (:transmission_ids)", 
+      search: search_term,
+      brand_ids: brand_search,
+      model_ids: model_search,
+      transmission_ids: transmission_search
     )
   end
 
