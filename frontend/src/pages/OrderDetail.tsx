@@ -8,11 +8,10 @@ import { ArrowLeft, Package, MapPin, CreditCard, Truck, Check, Loader2, AlertCir
 import { useTranslation } from 'react-i18next';
 import { orderService } from '@/api/services/order.service';
 import { IOrder } from '@/types/order.types';
-import { extractData } from '@/api/client';
 import { formatPriceNTD } from '@/utils/priceFormatter';
 
 const OrderDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { orderNumber } = useParams<{ orderNumber: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -30,8 +29,7 @@ const OrderDetail: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await orderService.getOrderById(orderId);
-      const orderData = extractData(response) as IOrder;
+      const orderData = await orderService.getOrderById(orderId);
       setOrder(orderData);
     } catch (error) {
       console.error('Failed to load order:', error);
@@ -196,7 +194,7 @@ const OrderDetail: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{order.bicycle.title}</h3>
                     <p className="text-gray-600">{order.bicycle.brand} {order.bicycle.model}</p>
-                    <p className="text-sm text-gray-500">狀況: {order.bicycle.condition}</p>
+                    <p className="text-sm text-gray-500">狀態: {order.bicycle.status}</p>
                     <p className="text-xl font-bold text-blue-600 mt-2">{formatPriceNTD(order.totalPrice)}</p>
                   </div>
                 </div>

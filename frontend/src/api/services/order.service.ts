@@ -37,7 +37,8 @@ export class OrderService {
      * @returns {Promise<IOrder>} 訂單詳情
      */
     public async getOrderById(orderNumber: string): Promise<IOrder> {
-        return apiClient.get<IOrder>(`/orders/${orderNumber}`)
+        const result = await apiClient.getData<IOrder>(`/orders/${orderNumber}`)
+        return Array.isArray(result) ? result[0] : result
     }
 
     /**
@@ -151,7 +152,7 @@ export class OrderService {
      * @returns {Promise<IPaymentMethod[]>} 付款方式列表
      */
     public async getPaymentMethods(): Promise<IPaymentMethod[]> {
-        return apiClient.get<IPaymentMethod[]>('/orders/payment-methods')
+        return apiClient.getData<IPaymentMethod[]>('/orders/payment-methods')
     }
 
     /**
@@ -159,7 +160,7 @@ export class OrderService {
      * @returns {Promise<IShippingMethod[]>} 物流方式列表
      */
     public async getShippingMethods(): Promise<IShippingMethod[]> {
-        return apiClient.get<IShippingMethod[]>('/orders/shipping-methods')
+        return apiClient.getData<IShippingMethod[]>('/orders/shipping-methods')
     }
 
     /**
@@ -176,7 +177,7 @@ export class OrderService {
      * @returns {Promise<IShippingAddress[]>} 配送地址列表
      */
     public async getShippingAddresses(): Promise<IShippingAddress[]> {
-        return apiClient.get<IShippingAddress[]>('/orders/shipping-addresses')
+        return apiClient.getData<IShippingAddress[]>('/orders/shipping-addresses')
     }
 
     /**

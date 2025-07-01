@@ -246,7 +246,11 @@ class Api::V1::OrdersController < ApplicationController
     # Find by order_number first, then fall back to ID for backward compatibility
     identifier = params[:id]
     query_field = :id
-    if identifier.to_s.match?(/^R-\d{6}-/) # Check for new order number format
+    
+    # Check for order number formats:
+    # New format: R-YYMMDD-XXXXXX (e.g., R-250627-A1B2C3)
+    # Legacy format: ORD-YYYYMMDD-XXXXXXXX (e.g., ORD-20250609-ACF5F4E5)
+    if identifier.to_s.match?(/^(R-\d{6}-|ORD-\d{8}-)/)
       query_field = :order_number
     elsif identifier.to_s.match?(/^\d+$/) # Check if it's a numeric ID
       query_field = :id

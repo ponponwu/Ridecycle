@@ -102,20 +102,32 @@ function toCamelCase(str: string): string {
 }
 
 // 遞歸轉換物件的所有鍵從 snake_case 到 camelCase
-function convertKeysToCamelCase(obj: any): any {
+function convertKeysToCamelCase(obj: any, seen = new WeakMap()): any {
     if (obj === null || obj === undefined) {
         return obj
     }
 
+    if (typeof obj === 'object') {
+        if (seen.has(obj)) {
+            return seen.get(obj)
+        }
+    }
+
     if (Array.isArray(obj)) {
-        return obj.map(convertKeysToCamelCase)
+        const newArr = []
+        seen.set(obj, newArr)
+        obj.forEach((item) => {
+            newArr.push(convertKeysToCamelCase(item, seen))
+        })
+        return newArr
     }
 
     if (typeof obj === 'object' && obj.constructor === Object) {
         const converted: any = {}
+        seen.set(obj, converted)
         for (const [key, value] of Object.entries(obj)) {
             const camelKey = toCamelCase(key)
-            let convertedValue = convertKeysToCamelCase(value)
+            let convertedValue = convertKeysToCamelCase(value, seen)
 
             // 處理數字類型轉換
             if (
