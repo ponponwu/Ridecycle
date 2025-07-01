@@ -6,12 +6,44 @@ export const en = {
         register: 'Register',
         logout: 'Logout',
         profile: 'Profile',
+        browse: 'Browse',
+        favorites: 'Favorites',
+        myOrders: 'Orders',
+        adminArea: 'Admin',
+        sellBicycle: 'Sell Bicycle',
+        addBicycle: 'Add Bicycle',
 
         // Profile
         personalCenter: 'Personal Center',
         personalInfo: 'Personal Info',
         myBicycles: 'My Bicycles',
         messages: 'Messages',
+        messagesPage: {
+            offerAccepted: 'Offer Accepted',
+            offerAcceptedWithOrder:
+                'You have accepted this offer! Order number: {{orderNumber}}. Please contact the buyer to complete the transaction.',
+            offerAcceptedMessage: 'You have accepted this offer, please contact the buyer to complete the transaction.',
+            acceptOfferFailed: 'Failed to accept offer, please try again later',
+            offerRejected: 'Offer Rejected',
+            offerRejectedMessage: 'You have rejected this offer.',
+            rejectOfferFailed: 'Failed to reject offer, please try again later',
+            cannotOfferOnOwnBicycle: 'You cannot make an offer on your own bicycle',
+            bicycleNotAvailable: 'This bicycle is no longer available for purchase',
+            failedToLoadConversations: 'Failed to load conversations',
+            cannotSendMessageNoBicycleContext: 'Cannot send message without bicycle context',
+            errorSendingOffer: 'Error sending offer',
+            acceptOffer: 'Accept Offer',
+            rejectOffer: 'Reject Offer',
+            thisIsYourBicycle: 'This is your bicycle',
+            soldOut: 'Sold Out',
+            pending: 'Pending',
+            accepted: 'Accepted',
+            rejected: 'Rejected',
+            expired: 'Expired',
+            useNotificationError: 'useNotification must be used within NotificationProvider',
+            recommended: 'Recommended',
+            me: 'Me',
+        },
         accountSettings: 'Account Settings',
         youHaveNoMessages: "You don't have any messages",
         messagesWillAppearHere: 'New messages will appear here',
@@ -23,7 +55,6 @@ export const en = {
 
         // Order related
         orderHistory: 'Order History',
-        myOrders: 'My Orders',
         mySales: 'My Sales',
         orderDetails: 'Order Details',
         orderDate: 'Order Date',
@@ -50,7 +81,6 @@ export const en = {
         tryAgain: 'Try Again',
         loading: 'Loading',
         notAvailable: 'N/A',
-        orderDetails: 'Order Details',
 
         // Order details related
         bicycleInfo: 'Bicycle Information',
@@ -173,6 +203,148 @@ export const en = {
         agreeToTerms: 'I agree to the',
         and: 'and',
 
+        unknown: 'Unknown',
+        available: 'Available',
+
+        // Bicycle Detail Page
+        bicycleNotFound: 'Bicycle not found.',
+        generalInformation: 'General information',
+        conditionLabel: 'Condition:',
+        frameSizeLabel: 'Frame size:',
+        yearLabel: 'Year:',
+        fitsToHeight: 'Fits to height:',
+        contactSellerForDetails: 'Contact seller for details',
+        bikeDetails: 'Bike details',
+        informationFromSeller: 'Information from the seller:',
+        noAdditionalDetails: 'No additional details provided',
+        showOriginal: 'Show original',
+        comfirmAndCheckout: 'Confirm and Checkout',
+        buyerProtection:
+            "With buycycle's Buyer Protection, your payment is safe. The seller is not paid until you have received and approved your item.",
+        learnMoreBuyerProtection: 'Learn more',
+        soldBy: 'Sold by',
+        anonymousSeller: 'Anonymous Seller',
+        locationNotSpecified: 'Location not specified',
+        ownOneLikeThis: 'Own one like this? Sell it fast. Start now',
+        reportSuspicious: 'Report this product as suspicious',
+        makeAnOffer: 'Make an offer',
+
+        // Order Payment Page
+        returnToOrderDetails: 'Return to Order Details',
+        completePayment: 'Complete Payment',
+        orderNumberLabel: 'Order Number',
+        bankTransferInfo: 'Bank Transfer Information',
+        bankNameLabel: 'Bank Name',
+        bankCodeLabel: 'Bank Code',
+        accountNumberLabel: 'Account Number',
+        accountNameLabel: 'Account Name',
+        branchLabel: 'Branch',
+        transferAmountLabel: 'Transfer Amount',
+        transferInstructions: 'Transfer Instructions',
+        paymentProofUpload: 'Payment Proof Upload',
+        uploadTransferProof: 'Upload Transfer Proof',
+        chooseFileLabel: 'Choose File',
+        uploadProofBtn: 'Upload Proof',
+        uploadingStatus: 'Uploading...',
+        paymentConfirmed: 'Payment Confirmed',
+        paymentPending: 'Payment Pending',
+        paymentRejected: 'Payment proof rejected, please re-upload',
+        proofUploaded: 'Payment proof uploaded',
+        paymentConfirmedDesc: 'Your payment has been confirmed, we will arrange shipping as soon as possible.',
+        paymentRejectedDesc: 'Your payment proof did not pass verification, please re-upload a clear transfer proof.',
+        paymentPendingDesc: 'We have received your transfer information and are confirming payment. Confirmation is usually completed within 24 hours.',
+        proofUploadedDesc: 'We have received your payment proof and are reviewing it. Review is usually completed within 24 hours.',
+        transferDeadline: 'Please complete the transfer within 24 hours',
+        transferInstructionsList: {
+            step1: '1. Use online banking or visit a bank counter to transfer',
+            step2: '2. Enter the bank account information provided above',
+            step3: '3. Use the order number as the transfer note',
+            step4: '4. Upload the transfer receipt or screenshot',
+            step5: '5. We will confirm your payment within 24 hours'
+        },
+        orderTotalLabel: 'Order Total',
+        uploadSuccessTitle: 'Upload Successful',
+        uploadFailedTitle: 'Upload Failed',
+        uploadSuccessMessage: 'Transfer proof uploaded, please wait for confirmation',
+        uploadFailedMessage: 'Error occurred while uploading transfer proof',
+        orderNotFoundMessage: 'Order not found',
+        loadingText: 'Loading',
+        goBackBtn: 'Go Back',
+        tryAgainBtn: 'Try Again',
+
+        // Sell Bike Form
+        sellYourBike: 'Sell Your Bike',
+        completeFormToList: 'Complete the form below to list your bike for sale.',
+        stepXOfY: 'Step {{current}} of {{total}}',
+        percentComplete: '{{percent}}% Complete',
+
+        // Sell bike step titles
+        sellStepTitles: {
+            bikeDetails: 'Bike Details',
+            photos: 'Photos',
+            pricing: 'Pricing',
+            review: 'Review',
+        },
+
+        // Form validation
+        fillRequiredFields: 'Please fill in all required fields',
+        fillRequiredFieldsDescription: 'You need to fill in all fields marked as required to continue',
+        fillRequiredFieldsSubmit: 'You need to fill in all fields marked as required to submit',
+
+        // Photo messages
+        noPhotosWillBeShown: 'No photos will be shown',
+        bikePhoto: 'Bike photo',
+        photosAndCondition: 'Photos and Condition',
+        photosUpTo10: 'Photos (up to 10)',
+        clickToUploadPhotos: 'Click to upload photos',
+        photoFormatsAndSize: 'JPG, PNG, WEBP up to 10MB each',
+        browseFiles: 'Browse Files',
+        mainPhoto: 'Main Photo',
+        managePhotosAndCondition: 'Manage photos and condition',
+        uploadPhotosAndCondition: 'Upload photos and set condition',
+        selectCondition: 'Select condition',
+
+        // Sell form fields
+        provideBasicBikeInfo: 'Provide basic information about your bike',
+        listingTitle: 'Listing Title',
+        titlePlaceholder: 'Enter a descriptive title for your bike',
+        brandPlaceholder: 'Search for brand...',
+        transmissionSystem: 'Transmission System',
+        selectTransmissionSystem: 'Select transmission system...',
+        selectYear: 'Select year',
+        selectFrameSize: 'Select frame size',
+        descriptionPlaceholder: "Describe your bike's condition, modifications, and any other relevant details...",
+        pricingAndLocation: 'Pricing and Location',
+        setAskingPriceAndLocation: 'Set your asking price and location',
+        askingPrice: 'Asking Price',
+        pricePlaceholder: 'Enter price in NTD',
+        priceDescription: 'Set a competitive price for your bike',
+        originalPrice: 'Original Price (Optional)',
+        originalPricePlaceholder: 'Enter original retail price',
+        originalPriceDescription: 'The original retail price when new (for reference)',
+        salePrice: 'Sale Price',
+        salePriceDescription: 'Your asking price must not exceed the original price',
+        locationLabel: 'Location',
+        locationPlaceholder: 'Enter your location',
+        locationDescription: 'City or region where the bike is located',
+        contactMethodLabel: 'Preferred Contact Method',
+        inAppMessagingOption: 'In-app messaging',
+        emailOption: 'Email',
+        phoneCallOption: 'Phone call',
+        textMessageOption: 'Text message',
+
+        // Bicycle types
+        roadbike: 'Road Bike',
+        mountainbike: 'Mountain Bike',
+
+        // Edit mode translations
+        bicycleIdMissing: 'Bicycle ID is missing',
+        failedToLoadBicycleData: 'Failed to load bicycle data',
+        bicycleUpdatedSuccessfully: 'Bicycle updated successfully',
+        failedToUpdateBicycle: 'Failed to update bicycle',
+        loadingBicycleData: 'Loading bicycle data...',
+        ensureAllFieldsFilledOut: 'Please ensure all required fields are filled out',
+
         // Form Validation Messages
         validation: {
             required: 'This field is required',
@@ -209,7 +381,6 @@ export const en = {
         advancedSearchOptions: 'Advanced Search Options',
 
         // Search Results
-        searchResults: 'Search Results',
         hideFilters: 'Hide Filters',
         showFilters: 'Show Filters',
         categories: 'Categories',
@@ -218,7 +389,6 @@ export const en = {
         list: 'List',
         resultsFound: 'results found',
         noBicyclesFound: 'No bicycles match your search criteria',
-        loading: 'Loading',
 
         // Price Range Options
         priceRangeOptions: {
@@ -272,7 +442,6 @@ export const en = {
         heroBannerDescription:
             'Buy and sell second-hand bicycles with our cycling enthusiast community. Find the perfect ride or give your bike a new home.',
         browseBikes: 'Browse Bikes',
-        sellYourBike: 'Sell Your Bike',
         featuredBicycles: 'Featured Bicycles',
         recentlyAdded: 'Recently Added',
 
@@ -301,6 +470,9 @@ export const en = {
         loadingMessages: 'Loading messages',
         viewAll: 'View All',
         relatedTo: 'Related to',
+        searchResults: 'Search Results',
+        ratingNotAvailable: 'Rating not available',
+        unknownBrand: 'Unknown Brand',
         loadingBicycleInfo: 'Loading bicycle info',
         chatWith: 'Chat with {{name}}',
         unknownLocation: 'Unknown location',
@@ -321,47 +493,6 @@ export const en = {
         retractOffer: 'Retract Offer', // If user can retract their own offer
         seller: 'Seller',
 
-        // BasicDetailsStep form
-        bikeDetails: 'Bike Details',
-        provideBasicBikeInfo: 'Provide the basic information about your bike.',
-        listingTitle: 'Listing Title',
-        transmissionSystem: 'Transmission System',
-        titlePlaceholder: 'e.g., 2021 Trek Domane SL5 - Excellent Condition',
-        brandPlaceholder: 'e.g., Trek, Specialized, Giant',
-        modelPlaceholder: 'e.g., Domane SL5, Stumpjumper',
-        selectTransmissionSystem: 'Select transmission system',
-        selectYear: 'Select year',
-        selectbicycleType: 'Select bicycle type',
-        selectFrameSize: 'Select frame size',
-        descriptionPlaceholder:
-            'Describe your bike in detail. Include information about components, upgrades, maintenance history, and any issues.',
-
-        // Bike types
-        roadbike: 'Road Bike',
-        mountainbike: 'Mountain Bike',
-        hybridbike: 'Hybrid Bike',
-        citybike: 'City Bike',
-        cruiserbike: 'Cruiser Bike',
-        electricbike: 'Electric Bike',
-        foldingbike: 'Folding Bike',
-        gravelbike: 'Gravel Bike',
-        fixedgear: 'Fixed Gear / Single Speed',
-        bmx: 'BMX',
-        kidsbike: 'Kids Bike',
-        other: 'Other',
-
-        // Photo upload and editing
-        photosAndCondition: 'Photos & Condition',
-        managePhotosAndCondition: 'Manage photos of your bike and update its condition.',
-        uploadPhotosAndCondition: 'Upload photos of your bike and describe its condition.',
-        photosUpTo10: 'Photos (up to 10)',
-        clickToUploadPhotos: 'Click to upload photos',
-        photoFormatsAndSize: 'JPG, PNG or GIF, up to 5MB each',
-        browseFiles: 'Browse Files',
-        bikePhoto: 'Bike photo',
-        mainPhoto: 'Main photo',
-        selectCondition: 'Select condition',
-
         // Bike conditions
         conditionOptions: {
             brandNew: 'New - Never Used',
@@ -380,62 +511,31 @@ export const en = {
             draft: 'Draft',
         },
 
-        // Pricing and Location
-        pricingAndLocation: 'Pricing & Location',
-        setAskingPriceAndLocation: 'Set your asking price and where the bike is located.',
-        askingPrice: 'Asking Price (NT$)',
-        pricePlaceholder: '12,000',
-        priceDescription: 'Research similar bikes to set a competitive price',
-        locationLabel: 'Location',
-        locationPlaceholder: 'City, State',
-        locationDescription: 'Enter the city and state where the bike is located',
-        contactMethodLabel: 'Preferred Contact Method',
-        inAppMessagingOption: 'In-App Messaging',
-        emailOption: 'Email',
-        phoneCallOption: 'Phone Call',
-        textMessageOption: 'Text Message',
-
-        // Review Step
-        reviewYourListing: 'Review Your Listing',
+        // Review step
+        photos: 'Photos',
         reviewYourChanges: 'Review Your Changes',
-        reviewBeforeText: 'Please review all the information before',
-        savingChanges: 'saving changes',
-        submittingListing: 'submitting your listing',
+        reviewYourListing: 'Review Your Listing',
+        reviewBeforeText: 'Please review the information below before',
+        savingChanges: 'Saving changes...',
+        submittingListing: 'Submitting listing...',
         bikeDetailsHeading: 'Bike Details',
         titleLabel: 'Title',
-        brandLabel: 'Brand',
-        modelLabel: 'Model',
-        yearLabel: 'Year',
-        bicycleTypeLabel: 'Type',
-        frameSizeLabel: 'Frame Size',
-        descriptionLabel: 'Description',
-        photosLabel: 'Photos',
-        conditionLabel: 'Condition',
-        notAvailable: 'N/A',
+        conditionField: 'Condition',
         notProvided: 'Not provided',
-        readyToListBike: 'Ready to list your bike',
-        readyToSaveChanges: 'Ready to save changes',
+        readyToSaveChanges: 'Ready to save your changes?',
+        readyToListBike: 'Ready to list your bike?',
         clickThe: 'Click the',
-        buttonToComplete: 'button below to complete.',
-        listBikeForSale: 'List Bike for Sale',
         saveChanges: 'Save Changes',
-        changesAppliedImmediately: ' Your changes will be applied immediately.',
-        bikeVisibleImmediately: ' Your bike will be visible to potential buyers immediately.',
+        listBikeForSale: 'List Bike for Sale',
+        buttonToComplete: 'button to complete',
+        changesAppliedImmediately: 'Your changes will be applied immediately',
+        bikeVisibleImmediately: 'Your bike will be visible to buyers immediately',
 
         // Step navigation
         previous: 'Previous',
         continue: 'Continue',
         submitting: 'Submitting...',
         updateBike: 'Update Bike',
-
-        // Edit page messages
-        bicycleIdMissing: 'Bicycle ID is missing.',
-        failedToLoadBicycleData: 'Failed to load bicycle data for editing.',
-        fillRequiredFields: 'Please fill in all required fields for this step.',
-        ensureAllFieldsFilledOut: 'Please ensure all fields are correctly filled out.',
-        bicycleUpdatedSuccessfully: 'Bicycle updated successfully!',
-        failedToUpdateBicycle: 'Failed to update bicycle. Please try again.',
-        loadingBicycleData: 'Loading bicycle data...',
 
         // Zod validation errors (new section)
         zodErrors: {
@@ -450,13 +550,13 @@ export const en = {
             photosMinRequired: 'At least one photo is required (either new or existing)',
             conditionRequired: 'Condition is required',
             priceRequired: 'Price is required',
+            salePriceExceedsOriginal: 'Sale price cannot exceed original price',
             locationRequired: 'Location is required',
             contactMethodRequired: 'Contact method is required',
         },
 
         // Common translations
         cancel: 'Cancel',
-        back: 'Back',
         approve: 'Approve',
         reject: 'Reject',
 
