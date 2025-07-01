@@ -359,6 +359,32 @@ export const zh = {
         previous: '上一步',
         continue: '繼續',
 
+        // Checkout 步驟標題
+        stepTitles: {
+            shippingAddress: '運送地址',
+            paymentInfo: '付款資訊',
+            orderReview: '訂單確認',
+        },
+
+        // 表單驗證訊息
+        validation: {
+            required: '此欄位為必填',
+            invalidEmail: '請輸入有效的電子郵件地址',
+            invalidPhone: '請輸入有效的電話號碼',
+            invalidCardNumber: '請輸入有效的信用卡號碼',
+            invalidCvv: '請輸入有效的安全碼',
+            invalidPostalCode: '請輸入有效的郵遞區號',
+            nameTooShort: '姓名至少需要2個字元',
+            addressTooShort: '地址至少需要5個字元',
+            cardNumberLength: '信用卡號碼必須為13-19位數字',
+            cvvLength: '安全碼必須為3-4位數字',
+            phoneNumberFormat: '請輸入有效的台灣手機號碼格式 (09xxxxxxxx)',
+            postalCodeFormat: '請輸入有效的郵遞區號格式 (例如：100)',
+        },
+
+        // 預估配送
+        estimatedDelivery: '預估到貨時間',
+
         // 自行車分類
         bikeCategories: {
             mountainBikes: '登山車',
