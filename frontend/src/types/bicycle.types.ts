@@ -27,6 +27,8 @@ export enum BicycleCondition {
 export enum BicycleType {
     ROAD = 'road',
     MOUNTAIN = 'mountain',
+    HYBRID = 'hybrid',
+    GRAVEL = 'gravel',
 }
 
 /**
@@ -41,8 +43,10 @@ export interface IBicycleTypeOption {
  * 自行車類型選項列表
  */
 export const BICYCLE_TYPES: { value: BicycleType; translationKey: string }[] = [
-    { value: BicycleType.ROAD, translationKey: 'roadbike' },
-    { value: BicycleType.MOUNTAIN, translationKey: 'mountainbike' },
+    { value: BicycleType.ROAD, translationKey: 'roadBike' },
+    { value: BicycleType.MOUNTAIN, translationKey: 'mountainBike' },
+    { value: BicycleType.HYBRID, translationKey: 'hybridBike' },
+    { value: BicycleType.GRAVEL, translationKey: 'gravelbike' },
 ]
 
 /**
@@ -64,8 +68,16 @@ export interface IBicycleUser {
 export interface IBrand {
     id: number // 修正為 number 類型
     name: string
-    created_at: string
-    updated_at: string
+    created_at?: string
+    updated_at?: string
+}
+
+/**
+ * 變速系統介面
+ */
+export interface ITransmission {
+    id: number
+    name: string
 }
 
 /**
@@ -74,9 +86,11 @@ export interface IBrand {
 export interface IBicycleModel {
     id: number
     name: string
-    brand_id: number
-    created_at: string
-    updated_at: string
+    brand_id?: number
+    year?: number
+    original_msrp?: number // 添加原價
+    created_at?: string
+    updated_at?: string
 }
 
 /**
@@ -88,15 +102,18 @@ export interface IBicycle {
     brandId: string
     transmissionId: string
     bicycleModelId?: string
-    year: string
+    year: string // 確保為字串型別
     bicycleType: string
-    frameSize: string
+    frameSize: string // 確保為字串型別 (尺寸)
     description: string
     condition: BicycleCondition
     price: number
+    originalPrice?: number // 新增原價欄位
+    original_price?: number // 後端返回的原價欄位
     location: string
     contactMethod: string
     photosUrls: string[] // 統一的圖片 URL 陣列
+    photos_urls?: string[] // 後端返回的圖片 URL 陣列
     status: string
     createdAt: string
     updatedAt: string
@@ -114,8 +131,16 @@ export interface IBicycle {
     // 統一的關聯物件
     brand?: IBrand // 品牌完整物件
     bicycle_model?: IBicycleModel // 型號完整物件
+    transmission?: ITransmission // 變速系統完整物件
     seller?: IBicycleUser // 賣家完整物件
     sellerRating?: number
+    // 便利方法屬性
+    brand_name?: string // 品牌名稱
+    model_name?: string // 型號名稱
+    transmission_name?: string // 變速系統名稱
+    full_display_name?: string // 完整顯示名稱
+    display_price?: string // 格式化價格
+    available?: boolean // 是否可用
 }
 
 /**
@@ -131,6 +156,7 @@ export interface IBicycleCreateRequest {
     description: string
     condition: BicycleCondition // 使用 BicycleCondition 枚舉
     price: number // Or string if form input is string, then parse in service/backend
+    originalPrice?: number
     location: string
     contactMethod: string
     photos: File[]
@@ -156,6 +182,7 @@ export interface IBicycleUpdateRequest {
     description?: string
     condition?: BicycleCondition
     price?: number // Or string
+    originalPrice?: number
     location?: string
     contactMethod?: string
     photos?: File[]

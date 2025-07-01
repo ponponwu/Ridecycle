@@ -29,7 +29,7 @@ const Messages = () => {
                 if (err instanceof Error) {
                     setError(err.message)
                 } else {
-                    setError('An unknown error occurred.')
+                    setError(t('unknownErrorOccurred'))
                 }
             } finally {
                 setIsLoading(false)
@@ -75,7 +75,7 @@ const Messages = () => {
             </div>
 
             {isLoading && <div className="text-center py-12">{t('loadingMessages')}...</div>}
-            {error && <div className="text-center py-12 text-red-500">Error: {error}</div>}
+            {error && <div className="text-center py-12 text-red-500">{t('error')}: {error}</div>}
 
             {!isLoading && !error && (
                 <>

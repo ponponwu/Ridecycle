@@ -1,6 +1,7 @@
 import React from 'react'
 import { Progress } from '@/components/ui/progress'
 import { Bike, Camera, DollarSign, CheckCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export interface StepIndicatorProps {
     currentStep: number
@@ -16,21 +17,23 @@ interface StepInfo {
 }
 
 const StepIndicator = ({ currentStep, totalSteps, progressPercentage, goToStep, isSubmitting }: StepIndicatorProps) => {
+    const { t } = useTranslation()
+    
     const steps: StepInfo[] = [
         {
-            title: 'Bike Details',
+            title: t('sellStepTitles.bikeDetails'),
             icon: <Bike className="h-5 w-5" />,
         },
         {
-            title: 'Photos',
+            title: t('sellStepTitles.photos'),
             icon: <Camera className="h-5 w-5" />,
         },
         {
-            title: 'Pricing',
+            title: t('sellStepTitles.pricing'),
             icon: <DollarSign className="h-5 w-5" />,
         },
         {
-            title: 'Review',
+            title: t('sellStepTitles.review'),
             icon: <CheckCircle className="h-5 w-5" />,
         },
     ]
@@ -38,8 +41,8 @@ const StepIndicator = ({ currentStep, totalSteps, progressPercentage, goToStep, 
     return (
         <div className="border-b border-gray-200 bg-gray-50">
             <div className="p-4 sm:p-6">
-                <h1 className="text-2xl font-bold text-gray-900">Sell Your Bike</h1>
-                <p className="mt-1 text-sm text-gray-500">Complete the form below to list your bike for sale.</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('sellYourBike')}</h1>
+                <p className="mt-1 text-sm text-gray-500">{t('completeFormToList')}</p>
             </div>
 
             {/* Progress bar */}
@@ -47,9 +50,9 @@ const StepIndicator = ({ currentStep, totalSteps, progressPercentage, goToStep, 
                 <Progress value={progressPercentage} className="h-2" />
                 <div className="mt-2 flex justify-between text-xs text-gray-500">
                     <span>
-                        Step {currentStep + 1} of {totalSteps}
+                        {t('stepXOfY', { current: currentStep + 1, total: totalSteps })}
                     </span>
-                    <span>{Math.round(progressPercentage)}% Complete</span>
+                    <span>{t('percentComplete', { percent: Math.round(progressPercentage) })}</span>
                 </div>
             </div>
 

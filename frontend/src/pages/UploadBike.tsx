@@ -38,7 +38,7 @@ const UploadBike = () => {
         // 步驟 2: 照片和狀況
         ['photos', 'condition'],
         // 步驟 3: 定價和位置
-        ['price', 'location', 'contactMethod'],
+        ['price', 'originalPrice', 'location', 'contactMethod'],
         // 步驟 4: 審核 (無需驗證，只是檢視)
         [],
     ]
@@ -53,9 +53,8 @@ const UploadBike = () => {
         if (isValid) {
             setCurrentStep((prevStep) => prevStep + 1)
         } else {
-            // 顯示錯誤消息
-            toast.error('請填寫所有必填欄位', {
-                description: '您需要填寫所有標記為必填的欄位才能繼續',
+            toast.error(t('fillRequiredFields'), {
+                description: t('fillRequiredFieldsDescription'),
             })
 
             // 突出顯示錯誤字段（React Hook Form 已經處理了這部分）
@@ -80,8 +79,8 @@ const UploadBike = () => {
             // 在最終提交前驗證所有字段
             const isValid = await form.trigger()
             if (!isValid) {
-                toast.error('請填寫所有必填欄位', {
-                    description: '您需要填寫所有標記為必填的欄位才能提交',
+                toast.error(t('fillRequiredFields'), {
+                    description: t('fillRequiredFieldsSubmit'),
                 })
                 return
             }
@@ -99,6 +98,7 @@ const UploadBike = () => {
                 ...data,
                 condition: data.condition as BicycleCondition,
                 price: parseFloat(data.price), // Convert price to number
+                originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : undefined,
             })
 
             // Simulate remaining upload progress

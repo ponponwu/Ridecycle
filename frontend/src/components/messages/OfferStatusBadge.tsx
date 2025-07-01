@@ -15,35 +15,35 @@ const OfferStatusBadge: React.FC<OfferStatusBadgeProps> = ({ status, isActive = 
         switch (status) {
             case 'pending':
                 return {
-                    text: '待回應',
+                    text: t('messagesPage.pending'),
                     variant: 'secondary' as const,
                     icon: <Clock className="h-3 w-3" />,
                     className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
                 }
             case 'accepted':
                 return {
-                    text: '已接受',
+                    text: t('messagesPage.accepted'),
                     variant: 'default' as const,
                     icon: <CheckCircle className="h-3 w-3" />,
                     className: 'bg-green-100 text-green-800 border-green-200',
                 }
             case 'rejected':
                 return {
-                    text: '已拒絕',
+                    text: t('messagesPage.rejected'),
                     variant: 'destructive' as const,
                     icon: <XCircle className="h-3 w-3" />,
                     className: 'bg-red-100 text-red-800 border-red-200',
                 }
             case 'expired':
                 return {
-                    text: '已過期',
+                    text: t('messagesPage.expired'),
                     variant: 'outline' as const,
                     icon: <Ban className="h-3 w-3" />,
                     className: 'bg-gray-100 text-gray-600 border-gray-200',
                 }
             default:
                 return {
-                    text: '未知',
+                    text: t('unknown'),
                     variant: 'outline' as const,
                     icon: null,
                     className: 'bg-gray-100 text-gray-600 border-gray-200',

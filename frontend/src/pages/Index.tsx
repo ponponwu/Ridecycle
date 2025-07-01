@@ -48,16 +48,28 @@ const Index = () => {
 
     // Transform IBicycle[] to BicycleCardProps[]
     const bicycleCardData: BicycleCardProps[] =
-        allBicycles?.map((bike) => ({
-            id: bike.id,
-            title: bike.title,
-            price: bike.price,
-            location: bike.location,
-            condition: bike.condition,
-            brand: bike.brand?.name || 'Unknown Brand', // Handle brand object
-            imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
-            isFavorite: bike.isFavorite,
-        })) || []
+        allBicycles
+            ?.filter((bike) => bike && bike.id) // 過濾掉無效的資料
+            ?.map((bike) => ({
+                id: bike.id ? bike.id.toString() : '',
+                title: bike.title || 'Unknown Title',
+                price: typeof bike.price === 'number' ? bike.price : 0,
+                originalPrice: bike.original_price || bike.bicycle_model?.original_msrp || bike.originalPrice,
+                location: bike.location || 'Unknown Location',
+                condition: bike.condition || 'unknown',
+                brand: bike.brand_name || bike.brand?.name || 'Unknown Brand', // Handle brand object
+                model: bike.model_name || bike.bicycle_model?.name || bike.title || 'Unknown Model',
+                year: bike.year || undefined,
+                frameSize: bike.frameSize || undefined,
+                transmission: bike.transmission_name || bike.transmission?.name || undefined,
+                imageUrl:
+                    bike.photos_urls && bike.photos_urls.length > 0
+                        ? bike.photos_urls[0]
+                        : bike.photosUrls && bike.photosUrls.length > 0
+                        ? bike.photosUrls[0]
+                        : '/placeholder.svg',
+                isFavorite: bike.isFavorite || false,
+            })) || []
 
     return (
         <MainLayout>

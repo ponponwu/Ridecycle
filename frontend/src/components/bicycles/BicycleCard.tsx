@@ -1,19 +1,20 @@
-import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Bookmark, Edit3 } from 'lucide-react'
+import { Heart, Edit3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useTranslation } from 'react-i18next'
-import { translateBicycleCondition } from '@/utils/bicycleTranslations'
 import { formatPriceNTD } from '@/utils/priceFormatter'
 
 export interface BicycleCardProps {
     id: string
     title: string
     price: number
+    originalPrice?: number
     location: string
     condition: string
     brand: string
+    model?: string
+    year?: string
+    frameSize?: string
+    transmission?: string
     imageUrl: string
     isFavorite?: boolean
     showEditButton?: boolean
@@ -23,22 +24,24 @@ const BicycleCard = ({
     id,
     title,
     price,
-    location,
-    condition,
+    originalPrice,
     brand,
+    model,
+    year,
+    frameSize,
+    transmission,
     imageUrl,
     isFavorite = false,
     showEditButton = false,
 }: BicycleCardProps) => {
     const navigate = useNavigate()
-    const { t } = useTranslation()
 
     const handleEdit = () => {
         navigate(`/upload/${id}/edit`)
     }
 
     return (
-        <div className="bg-white rounded-lg overflow-hidden bicycle-card-shadow transition-all duration-300 hover:shadow-lg flex flex-col">
+        <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col">
             <div className="relative">
                 {/* Image */}
                 <Link to={`/bicycle/${id}`} className="block aspect-[4/3] overflow-hidden">
@@ -53,43 +56,55 @@ const BicycleCard = ({
                     />
                 </Link>
 
-                {/* Bookmark button */}
+                {/* Heart button */}
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white"
+                    className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white w-8 h-8"
                 >
-                    <Bookmark
-                        className={isFavorite ? 'h-5 w-5 fill-marketplace-orange text-marketplace-orange' : 'h-5 w-5'}
-                    />
+                    <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
                 </Button>
-
-                {/* Condition tag */}
-                <Badge
-                    variant="secondary"
-                    className="absolute bottom-2 left-2 bg-white/80 backdrop-blur-sm text-gray-800"
-                >
-                    {translateBicycleCondition(condition, t)}
-                </Badge>
             </div>
 
-            <div className="p-4 flex-grow">
-                <div className="flex justify-between items-start">
-                    <h3 className="font-medium text-lg line-clamp-2">
-                        <Link to={`/bicycle/${id}`} className="hover:text-marketplace-blue transition-colors">
-                            {title}
-                        </Link>
-                    </h3>
-                    <span className="text-lg font-semibold text-marketplace-green">{formatPriceNTD(price)}</span>
-                </div>
+            <div className="p-3 flex-grow">
+                {/* Top row: Year, Size, Transmission */}
+                {(year || frameSize || transmission) && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                        {year && <span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">{year}</span>}
+                        {frameSize && (
+                            <span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">{frameSize}</span>
+                        )}
+                        {transmission && (
+                            <span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">{transmission}</span>
+                        )}
+                    </div>
+                )}
 
-                <div className="mt-2 flex items-center justify-between text-sm text-gray-500">
-                    <span>{brand}</span>
-                    <span>{location}</span>
+                {/* Brand */}
+                <div className="text-sm font-medium text-gray-700 mb-1">{brand}</div>
+
+                {/* Model/Title */}
+                <h3 className="font-semibold text-lg text-gray-900 mb-3 line-clamp-1">
+                    <Link to={`/bicycle/${id}`} className="hover:text-marketplace-blue transition-colors">
+                        {model || title}
+                    </Link>
+                </h3>
+
+                {/* Price */}
+                <div className="space-y-1">
+                    {originalPrice && originalPrice > price ? (
+                        <>
+                            <div className="text-sm text-gray-400 line-through">{formatPriceNTD(originalPrice)}</div>
+                            <div className="text-xl font-bold text-red-600">{formatPriceNTD(price)}</div>
+                        </>
+                    ) : (
+                        <div className="text-xl font-bold text-gray-900">{formatPriceNTD(price)}</div>
+                    )}
                 </div>
             </div>
+
             {showEditButton && (
-                <div className="p-4 border-t border-gray-100">
+                <div className="p-3 border-t border-gray-100">
                     <Button onClick={handleEdit} variant="outline" className="w-full">
                         <Edit3 className="mr-2 h-4 w-4" /> Edit Bicycle
                     </Button>

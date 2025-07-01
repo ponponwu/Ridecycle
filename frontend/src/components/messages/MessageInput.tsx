@@ -75,7 +75,7 @@ const MessageInput = ({
                             onClick={handleOfferClick}
                             disabled={isOwnBicycle || isBicycleUnavailable}
                         >
-                            {isOwnBicycle ? '這是您的腳踏車' : isBicycleUnavailable ? '已售出' : t('makeAnOffer')}
+                            {isOwnBicycle ? t('messagesPage.thisIsYourBicycle') : isBicycleUnavailable ? t('messagesPage.soldOut') : t('makeAnOffer')}
                         </Button>
                     </div>
                 </>

@@ -13,6 +13,7 @@ export type SellBikeFormValues = {
     photos: File[]
     condition: string
     price: string
+    originalPrice?: string
     location: string
     contactMethod: string
 }

@@ -37,51 +37,66 @@ const MyBicycles = () => {
         fetchMyBicycles()
     }, [])
 
-    const bicycleCardData: BicycleCardProps[] = myBicycles.map((bike) => ({
-        id: bike.id.toString(),
-        title: bike.title,
-        price: bike.price,
-        location: bike.location,
-        condition: bike.condition,
-        brand: bike.brand?.name || 'Unknown Brand',
-        imageUrl: bike.photosUrls && bike.photosUrls.length > 0 ? bike.photosUrls[0] : '/placeholder.svg',
-        isFavorite: bike.isFavorite,
-        showEditButton: true,
-    }))
+    const bicycleCardData: BicycleCardProps[] = myBicycles
+        .filter((bike) => bike && bike.id) // 過濾掉無效的資料
+        .map((bike) => ({
+            id: bike.id ? bike.id.toString() : '',
+            title: bike.title || 'Unknown Title',
+            price: typeof bike.price === 'number' ? bike.price : 0,
+            originalPrice: bike.original_price || bike.bicycle_model?.original_msrp || bike.originalPrice,
+            location: bike.location || 'Unknown Location',
+            condition: bike.condition || 'unknown',
+            brand: bike.brand_name || bike.brand?.name || 'Unknown Brand',
+            model: bike.model_name || bike.bicycle_model?.name || bike.title || 'Unknown Model',
+            year: bike.year || undefined,
+            frameSize: bike.frameSize || undefined,
+            transmission: bike.transmission_name || bike.transmission?.name || undefined,
+            imageUrl:
+                bike.photos_urls && bike.photos_urls.length > 0
+                    ? bike.photos_urls[0]
+                    : bike.photosUrls && bike.photosUrls.length > 0
+                    ? bike.photosUrls[0]
+                    : '/placeholder.svg',
+            isFavorite: bike.isFavorite || false,
+            showEditButton: true,
+        }))
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-marketplace-blue"></div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-12">
+                <div className="text-red-500 mb-4">{error}</div>
+                <Button onClick={() => window.location.reload()}>{t('retry')}</Button>
+            </div>
+        )
+    }
+
+    if (myBicycles.length === 0) {
+        return (
+            <div className="text-center py-12">
+                <Bike className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noBicyclesYet')}</h3>
+                <p className="text-gray-500 mb-6">{t('startSelling')}</p>
+                <Button onClick={() => navigate('/upload')}>{t('addBicycle')}</Button>
+            </div>
+        )
+    }
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">{t('myBicycles')}</h3>
-                <Button onClick={() => navigate('/upload')} variant="outline">
-                    {t('publishNewBike')}
-                </Button>
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{t('myBicycles')}</h2>
+                <Button onClick={() => navigate('/upload')}>{t('addBicycle')}</Button>
             </div>
 
-            {isLoading && <div className="text-center py-12">{t('loading')}...</div>}
-            {error && <div className="text-center py-12 text-red-500">Error: {error}</div>}
-
-            {!isLoading && !error && (
-                <>
-                    {bicycleCardData.length > 0 ? (
-                        <BicycleGrid bicycles={bicycleCardData} />
-                    ) : (
-                        <div className="text-center py-12 border rounded-lg bg-gray-50">
-                            <Bike className="mx-auto h-12 w-12 text-gray-400" />
-                            <h3 className="mt-4 text-lg font-medium text-gray-900">
-                                {t('youHaveNotPublishedAnyBikes')}
-                            </h3>
-                            <p className="mt-2 text-sm text-gray-500">{t('startPublishingYourFirstBike')}</p>
-                            <Button
-                                className="mt-4 bg-marketplace-blue hover:bg-blue-600"
-                                onClick={() => navigate('/upload')}
-                            >
-                                {t('publishNow')}
-                            </Button>
-                        </div>
-                    )}
-                </>
-            )}
+            <BicycleGrid bicycles={bicycleCardData} />
         </div>
     )
 }

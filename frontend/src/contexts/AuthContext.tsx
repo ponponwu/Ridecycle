@@ -164,6 +164,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             dispatch({ type: 'SET_USER', payload: user })
             updateUserCache(user)
         } catch (err) {
+            // 只有在非 401 錯誤時才記錄錯誤（401 表示未登入，這是正常狀態）
+            if (err && typeof err === 'object' && 'response' in err) {
+                const axiosError = err as { response?: { status?: number } }
+                if (axiosError.response?.status !== 401) {
+                    console.error('Refresh user failed with non-401 error:', err)
+                }
+            }
             dispatch({ type: 'SET_USER', payload: null })
             updateUserCache(null)
             // 清除任何可能存在的舊 localStorage 資料
@@ -201,6 +208,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             updateUserCache(user)
         } catch (err) {
             // 如果伺服器驗證失敗（可能是 token 過期或無效），清除狀態
+            // 只有在非 401 錯誤時才記錄錯誤（401 表示未登入，這是正常狀態）
+            if (err && typeof err === 'object' && 'response' in err) {
+                const axiosError = err as { response?: { status?: number } }
+                if (axiosError.response?.status !== 401) {
+                    console.error('Authentication check failed with non-401 error:', err)
+                }
+            }
             dispatch({ type: 'SET_USER', payload: null })
             updateUserCache(null)
             // 清除任何可能存在的舊 localStorage 資料

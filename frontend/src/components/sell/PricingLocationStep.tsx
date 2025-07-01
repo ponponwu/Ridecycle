@@ -22,10 +22,37 @@ const PricingLocationStep = ({ form }: PricingLocationStepProps) => {
 
             <FormField
                 control={form.control}
+                name="originalPrice"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>{t('originalPrice')}</FormLabel>
+                        <FormControl>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                                    $
+                                </span>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="pl-6"
+                                    placeholder={t('originalPricePlaceholder')}
+                                    {...field}
+                                />
+                            </div>
+                        </FormControl>
+                        <FormDescription>{t('originalPriceDescription')}</FormDescription>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+
+            <FormField
+                control={form.control}
                 name="price"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>{t('askingPrice')}</FormLabel>
+                        <FormLabel>{t('salePrice')}</FormLabel>
                         <FormControl>
                             <div className="relative">
                                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
@@ -41,7 +68,7 @@ const PricingLocationStep = ({ form }: PricingLocationStepProps) => {
                                 />
                             </div>
                         </FormControl>
-                        <FormDescription>{t('priceDescription')}</FormDescription>
+                        <FormDescription>{t('salePriceDescription')}</FormDescription>
                         <FormMessage />
                     </FormItem>
                 )}

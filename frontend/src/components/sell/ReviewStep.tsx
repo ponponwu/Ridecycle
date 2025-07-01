@@ -138,7 +138,7 @@ const ReviewStep = ({ form, isEditMode = false }: ReviewStepProps) => {
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-red-500">No photos will be shown</p>
+                                    <p className="text-sm text-red-500">{t('noPhotosWillBeShown')}</p>
                                 )}
                             </div>
 
@@ -170,7 +170,7 @@ const ReviewStep = ({ form, isEditMode = false }: ReviewStepProps) => {
                                     <p className="text-sm">{formValues.location || t('notAvailable')}</p>
                                 </div>
                                 <div>
-                                    <h4 className="text-xs font-medium text-gray-500">{t('contactMethod')}</h4>
+                                    <h4 className="text-xs font-medium text-gray-500">{t('contactMethodLabel')}</h4>
                                     <p className="text-sm">
                                         {formValues.contactMethod
                                             ? contactMethods[formValues.contactMethod as keyof typeof contactMethods]

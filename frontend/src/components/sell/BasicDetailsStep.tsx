@@ -54,7 +54,7 @@ const BasicDetailsStep = ({ form }: BasicDetailsStepProps) => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-lg font-medium text-gray-900">{t('bikeDetails')}</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('sellStepTitles.bikeDetails')}</h2>
                 <p className="text-sm text-gray-500">{t('provideBasicBikeInfo')}</p>
             </div>
 
@@ -72,7 +72,10 @@ const BasicDetailsStep = ({ form }: BasicDetailsStepProps) => {
                                     type="button"
                                     variant={field.value === type.value ? 'default' : 'outline'}
                                     className="flex-1"
-                                    onClick={() => form.setValue('bicycleType', type.value)}
+                                    onClick={() => {
+                                        field.onChange(type.value)
+                                        form.setValue('bicycleType', type.value)
+                                    }}
                                 >
                                     {t(type.translationKey)}
                                 </Button>
@@ -166,7 +169,7 @@ const BasicDetailsStep = ({ form }: BasicDetailsStepProps) => {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>{t('year')}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger>
                                     <SelectValue placeholder={t('selectYear')} />
                                 </SelectTrigger>
@@ -189,7 +192,7 @@ const BasicDetailsStep = ({ form }: BasicDetailsStepProps) => {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>{t('frameSize')}</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger>
                                     <SelectValue placeholder={t('selectFrameSize')} />
                                 </SelectTrigger>

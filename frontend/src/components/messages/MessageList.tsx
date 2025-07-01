@@ -110,7 +110,7 @@ const MessageList = ({ messages, currentUserId, otherUserName, onAcceptOffer, on
                                         className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white"
                                     >
                                         <Check className="h-3 w-3" />
-                                        接受出價
+                                        {t('messagesPage.acceptOffer')}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -119,7 +119,7 @@ const MessageList = ({ messages, currentUserId, otherUserName, onAcceptOffer, on
                                         className="flex items-center gap-1 border-red-200 text-red-600 hover:bg-red-50"
                                     >
                                         <X className="h-3 w-3" />
-                                        拒絕出價
+                                        {t('messagesPage.rejectOffer')}
                                     </Button>
                                 </div>
                             )}
@@ -127,7 +127,7 @@ const MessageList = ({ messages, currentUserId, otherUserName, onAcceptOffer, on
                         {isCurrentUserSender && (
                             <Avatar className="h-8 w-8 ml-2 self-end">
                                 <div className="bg-blue-500 text-white h-full w-full flex items-center justify-center rounded-full">
-                                    {'Me'[0]}
+                                    {t('messagesPage.me')[0]}
                                 </div>
                             </Avatar>
                         )}

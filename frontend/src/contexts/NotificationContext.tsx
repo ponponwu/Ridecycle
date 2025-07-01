@@ -1,5 +1,6 @@
 // src/contexts/NotificationContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 // 通知類型
 export enum NotificationType {
@@ -76,9 +77,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
 // 使用通知上下文的 Hook
 export const useNotification = () => {
+    const { t } = useTranslation()
     const context = useContext(NotificationContext)
     if (context === undefined) {
-        throw new Error('useNotification 必須在 NotificationProvider 中使用')
+        throw new Error(t('messagesPage.useNotificationError'))
     }
     return context
 }

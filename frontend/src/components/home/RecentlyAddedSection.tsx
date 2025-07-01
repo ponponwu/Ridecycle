@@ -12,36 +12,44 @@ const RecentlyAddedSection = () => {
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        const fetchRecentlyAddedBicycles = async () => {
+        const fetchRecentBicycles = async () => {
             try {
                 setIsLoading(true)
-                const bicycles = await bicycleService.getRecentlyAddedBicycles(4)
+                const bicycles = await bicycleService.getRecentlyAddedBicycles(6) // 改為 6 個以配合 3 列顯示
 
-                // 將 IBicycle 轉換為 BicycleCardProps 格式
-                const bicycleCards: BicycleCardProps[] = bicycles.map((bicycle: IBicycle) => ({
-                    id: bicycle.id.toString(),
-                    title: bicycle.title,
-                    price: bicycle.price,
-                    location: bicycle.location,
-                    condition: bicycle.condition,
-                    brand: bicycle.brand?.name || 'Unknown Brand',
-                    imageUrl: bicycle.photosUrls?.[0] || '/placeholder-bike.jpg', // 使用第一張圖片或預設圖片
-                    isFavorite: bicycle.isFavorite || false,
-                }))
+                // 將 IBicycle 轉換為 BicycleCardProps 格式，加入空值檢查
+                const bicycleCards: BicycleCardProps[] = bicycles
+                    .filter((bicycle) => bicycle && bicycle.id) // 過濾掉無效的資料
+                    .map((bicycle: IBicycle) => ({
+                        id: bicycle.id ? bicycle.id.toString() : '',
+                        title: bicycle.title || 'Unknown Title',
+                        price: typeof bicycle.price === 'number' ? bicycle.price : 0,
+                        originalPrice:
+                            bicycle.original_price || bicycle.bicycle_model?.original_msrp || bicycle.originalPrice,
+                        location: bicycle.location || 'Unknown Location',
+                        condition: bicycle.condition || 'unknown',
+                        brand: bicycle.brand_name || bicycle.brand?.name || t('unknownBrand'),
+                        model: bicycle.model_name || bicycle.bicycle_model?.name || bicycle.title || 'Unknown Model',
+                        year: bicycle.year || undefined,
+                        frameSize: bicycle.frameSize || undefined,
+                        transmission: bicycle.transmission_name || bicycle.transmission?.name || undefined,
+                        imageUrl: bicycle.photos_urls?.[0] || bicycle.photosUrls?.[0] || '/placeholder-bike.jpg',
+                        isFavorite: bicycle.isFavorite || false,
+                    }))
 
                 setRecentBicycles(bicycleCards)
                 setError(null)
             } catch (err) {
-                console.error('Failed to fetch recently added bicycles:', err)
-                setError('Failed to load recently added bicycles')
+                console.error('Failed to fetch recent bicycles:', err)
+                setError('Failed to load recent bicycles')
                 setRecentBicycles([]) // 設定為空陣列以避免顯示錯誤
             } finally {
                 setIsLoading(false)
             }
         }
 
-        fetchRecentlyAddedBicycles()
-    }, [])
+        fetchRecentBicycles()
+    }, [t])
 
     if (isLoading) {
         return (

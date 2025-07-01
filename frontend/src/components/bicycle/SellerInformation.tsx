@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface SellerInformationProps {
     sellerName: string
@@ -6,6 +7,7 @@ interface SellerInformationProps {
 }
 
 const SellerInformation = ({ sellerName, sellerRating }: SellerInformationProps) => {
+    const { t } = useTranslation()
     const displayRating = typeof sellerRating === 'number' && !isNaN(sellerRating)
 
     return (
@@ -39,7 +41,7 @@ const SellerInformation = ({ sellerName, sellerRating }: SellerInformationProps)
                             <span className="ml-1 text-sm text-gray-500">({(sellerRating as number).toFixed(1)})</span>
                         </div>
                     )}
-                    {!displayRating && <span className="text-sm text-gray-500 mt-1">Rating not available</span>}
+                    {!displayRating && <span className="text-sm text-gray-500 mt-1">{t('ratingNotAvailable')}</span>}
                 </div>
             </div>
         </div>

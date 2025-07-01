@@ -56,7 +56,7 @@ const Messages = () => {
                 console.error('Failed to load conversations:', error)
                 toast({
                     title: t('error'),
-                    description: t('failedToLoadConversations'),
+                    description: t('messagesPage.failedToLoadConversations'),
                     variant: 'destructive',
                 })
             }
@@ -127,10 +127,10 @@ const Messages = () => {
                         frameSize: '',
                         description: '',
                         condition: BicycleCondition.BRAND_NEW,
-                        location: 'Unknown',
+                        location: t('unknown'),
                         contactMethod: '',
                         seller: { id: parseInt(withUser.id, 10) || 0, name: withUser.name, email: undefined },
-                        status: 'available',
+                        status: t('available'),
                         createdAt: '',
                         updatedAt: '',
                         sellerRating: undefined,
@@ -172,7 +172,7 @@ const Messages = () => {
         const bicycleId = currentConvoPreview?.bicycleId
 
         if (!bicycleId) {
-            toast({ title: t('error'), description: t('cannotSendMessageNoBicycleContext'), variant: 'destructive' })
+            toast({ title: t('error'), description: t('messagesPage.cannotSendMessageNoBicycleContext'), variant: 'destructive' })
             return
         }
 
@@ -225,14 +225,14 @@ const Messages = () => {
             // 檢查是否有訂單資訊
             if (result.order && result.order.order_number) {
                 toast({
-                    title: '出價已接受',
-                    description: `您已經接受了這個出價！訂單編號：${result.order.order_number}。請聯繫買家完成交易。`,
+                    title: t('messagesPage.offerAccepted'),
+                    description: t('messagesPage.offerAcceptedWithOrder', { orderNumber: result.order.order_number }),
                     duration: 8000, // 顯示較長時間
                 })
             } else {
                 toast({
-                    title: '出價已接受',
-                    description: '您已經接受了這個出價，請聯繫買家完成交易。',
+                    title: t('messagesPage.offerAccepted'),
+                    description: t('messagesPage.offerAcceptedMessage'),
                 })
             }
 
@@ -249,7 +249,7 @@ const Messages = () => {
             console.error('Failed to accept offer:', error)
             toast({
                 title: t('error'),
-                description: '接受出價失敗，請稍後再試',
+                description: t('messagesPage.acceptOfferFailed'),
                 variant: 'destructive',
             })
         }
@@ -268,14 +268,14 @@ const Messages = () => {
             ])
 
             toast({
-                title: '出價已拒絕',
-                description: '您已經拒絕了這個出價。',
+                title: t('messagesPage.offerRejected'),
+                description: t('messagesPage.offerRejectedMessage'),
             })
         } catch (error) {
             console.error('Failed to reject offer:', error)
             toast({
                 title: t('error'),
-                description: '拒絕出價失敗，請稍後再試',
+                description: t('messagesPage.rejectOfferFailed'),
                 variant: 'destructive',
             })
         }
@@ -309,7 +309,7 @@ const Messages = () => {
         if (isOwnBicycle) {
             toast({
                 title: t('error'),
-                description: '您不能對自己的腳踏車進行出價',
+                description: t('messagesPage.cannotOfferOnOwnBicycle'),
                 variant: 'destructive',
             })
             return
@@ -319,7 +319,7 @@ const Messages = () => {
         if (currentBicycle && currentBicycle.status !== 'available') {
             toast({
                 title: t('error'),
-                description: '此腳踏車已不可購買',
+                description: t('messagesPage.bicycleNotAvailable'),
                 variant: 'destructive',
             })
             return
@@ -385,13 +385,13 @@ const Messages = () => {
                 }
 
                 toast({
-                    title: t('errorSendingOffer'),
+                    title: t('messagesPage.errorSendingOffer'),
                     description: errorMessage,
                     variant: 'destructive',
                 })
             } else {
                 toast({
-                    title: t('errorSendingOffer'),
+                    title: t('messagesPage.errorSendingOffer'),
                     description: err instanceof Error ? err.message : t('unknownErrorOccurred'),
                     variant: 'destructive',
                 })

@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface OfferTileProps {
   amount: number;
@@ -10,6 +11,7 @@ interface OfferTileProps {
 }
 
 const OfferTile = ({ amount, percentageOff, isRecommended = false, onClick, disabled = false }: OfferTileProps) => {
+  const { t } = useTranslation();
   return (
     <div 
       className={`border rounded-lg p-3 text-center relative ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
@@ -17,7 +19,7 @@ const OfferTile = ({ amount, percentageOff, isRecommended = false, onClick, disa
     >
       {isRecommended && (
         <div className="absolute top-0 left-0 w-full text-xs text-blue-600 bg-blue-50 rounded-t-lg">
-          {isRecommended ? 'recommended' : ''}
+          {isRecommended ? t('messagesPage.recommended') : ''}
         </div>
       )}
       <div className={`font-bold text-lg ${isRecommended ? 'mt-2' : ''}`}>

@@ -111,13 +111,9 @@ const SearchSection = () => {
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                                     >
                                         <option value="">{t('allTypes')}</option>
-                                        <option value="roadbike">公路車</option>
-                                        <option value="mountainbike">登山車</option>
-                                        <option value="hybridbike">混合車</option>
-                                        <option value="citybike">城市車</option>
-                                        <option value="electricbike">電動車</option>
-                                        <option value="kidsbike">兒童車</option>
-                                        <option value="bmx">BMX</option>
+                                        <option value="road">公路車</option>
+                                        <option value="mountain">登山車</option>
+                                        <option value="gravel">Gravel</option>
                                     </select>
                                 </div>
 

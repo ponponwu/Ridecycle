@@ -57,12 +57,6 @@ const SearchPage = () => {
                 <div className="container px-4 mx-auto">
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-3xl font-bold">{t('search')}</h1>
-                        <Link to="/messages">
-                            <Button variant="outline" className="flex items-center gap-2">
-                                <MessageCircle className="h-4 w-4" />
-                                {t('messages')}
-                            </Button>
-                        </Link>
                     </div>
 
                     <div className="max-w-3xl mx-auto mb-10">
@@ -116,8 +110,10 @@ const SearchPage = () => {
                                         className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
                                     >
                                         <option value="">{t('allTypes')}</option>
-                                        <option value="roadbike">{t('bicycleTypeOptions.roadBike')}</option>
-                                        <option value="mountainbike">{t('bicycleTypeOptions.mountainBike')}</option>
+                                        <option value="road">{t('bicycleTypeOptions.roadBike')}</option>
+                                        <option value="mountain">{t('bicycleTypeOptions.mountainBike')}</option>
+                                        <option value="hybrid">{t('bicycleTypeOptions.hybridBike')}</option>
+                                        <option value="gravel">{t('bicycleTypeOptions.gravelbike')}</option>
                                     </select>
                                 </div>
 

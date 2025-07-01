@@ -43,7 +43,7 @@ const EditBike = () => {
     const stepFields: Array<Array<keyof EditBikeFormValues>> = [
         ['title', 'brandId', 'transmissionId', 'year', 'bicycleType', 'frameSize', 'description'],
         ['photos', 'condition', 'existingPhotos', 'photosToDelete'],
-        ['price', 'location', 'contactMethod'],
+        ['price', 'originalPrice', 'location', 'contactMethod'],
         [],
     ]
 
@@ -73,6 +73,7 @@ const EditBike = () => {
                         ? bikeData.price
                         : parseFloat(bikeData.price)
                     ).toString(),
+                    originalPrice: bikeData.originalPrice ? bikeData.originalPrice.toString() : bikeData.original_price ? bikeData.original_price.toString() : undefined,
                     location: bikeData.location,
                     contactMethod: bikeData.contactMethod,
                     photos: [],
@@ -154,6 +155,7 @@ const EditBike = () => {
                 description: data.description,
                 condition: data.condition as BicycleCondition,
                 price: data.price ? parseFloat(data.price) : undefined,
+                originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : undefined,
                 location: data.location,
                 contactMethod: data.contactMethod,
                 photosToDelete: data.photosToDelete && data.photosToDelete.length > 0 ? data.photosToDelete : undefined,

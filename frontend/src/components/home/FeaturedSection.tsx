@@ -15,19 +15,27 @@ const FeaturedSection = () => {
         const fetchFeaturedBicycles = async () => {
             try {
                 setIsLoading(true)
-                const bicycles = await bicycleService.getFeaturedBicycles(4)
+                const bicycles = await bicycleService.getFeaturedBicycles(6) // 改為 6 個以配合 3 列顯示
 
-                // 將 IBicycle 轉換為 BicycleCardProps 格式
-                const bicycleCards: BicycleCardProps[] = bicycles.map((bicycle: IBicycle) => ({
-                    id: bicycle.id.toString(),
-                    title: bicycle.title,
-                    price: bicycle.price,
-                    location: bicycle.location,
-                    condition: bicycle.condition,
-                    brand: bicycle.brand?.name || 'Unknown Brand',
-                    imageUrl: bicycle.photosUrls?.[0] || '/placeholder-bike.jpg', // 使用第一張圖片或預設圖片
-                    isFavorite: bicycle.isFavorite || false,
-                }))
+                // 將 IBicycle 轉換為 BicycleCardProps 格式，加入空值檢查
+                const bicycleCards: BicycleCardProps[] = bicycles
+                    .filter((bicycle) => bicycle && bicycle.id) // 過濾掉無效的資料
+                    .map((bicycle: IBicycle) => ({
+                        id: bicycle.id ? bicycle.id.toString() : '',
+                        title: bicycle.title || 'Unknown Title',
+                        price: typeof bicycle.price === 'number' ? bicycle.price : 0,
+                        originalPrice:
+                            bicycle.original_price || bicycle.bicycle_model?.original_msrp || bicycle.originalPrice,
+                        location: bicycle.location || 'Unknown Location',
+                        condition: bicycle.condition || 'unknown',
+                        brand: bicycle.brand_name || bicycle.brand?.name || t('unknownBrand'),
+                        model: bicycle.model_name || bicycle.bicycle_model?.name || bicycle.title || 'Unknown Model',
+                        year: bicycle.year || undefined,
+                        frameSize: bicycle.frameSize || undefined,
+                        transmission: bicycle.transmission_name || bicycle.transmission?.name || undefined,
+                        imageUrl: bicycle.photos_urls?.[0] || bicycle.photosUrls?.[0] || '/placeholder-bike.jpg',
+                        isFavorite: bicycle.isFavorite || false,
+                    }))
 
                 setFeaturedBicycles(bicycleCards)
                 setError(null)
@@ -41,7 +49,7 @@ const FeaturedSection = () => {
         }
 
         fetchFeaturedBicycles()
-    }, [])
+    }, [t])
 
     if (isLoading) {
         return (

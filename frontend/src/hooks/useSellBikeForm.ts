@@ -30,21 +30,37 @@ export const getSellBikeSchema = (t: TFunction) =>
 
             // Pricing & location
             price: z.string().min(1, { message: t('zodErrors.priceRequired') }),
+            originalPrice: z.string().optional(),
             location: z.string().min(1, { message: t('zodErrors.locationRequired') }),
             contactMethod: z.string().min(1, { message: t('zodErrors.contactMethodRequired') }),
         })
         .superRefine((data, ctx) => {
-            const { photos, existingPhotos, photosToDelete } = data
+            const { photos, existingPhotos, photosToDelete, price, originalPrice } = data
             const newPhotosCount = photos?.length || 0
             const existingPhotosNotMarkedForDeletionCount =
                 existingPhotos?.filter((ep) => !photosToDelete?.includes(ep.id))?.length || 0
 
+            // Photo validation
             if (newPhotosCount === 0 && existingPhotosNotMarkedForDeletionCount === 0) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: t('zodErrors.photosMinRequired'),
                     path: ['photos'],
                 })
+            }
+
+            // Price validation: sale price should not exceed original price
+            if (originalPrice && price) {
+                const salePrice = parseFloat(price)
+                const origPrice = parseFloat(originalPrice)
+                
+                if (!isNaN(salePrice) && !isNaN(origPrice) && salePrice > origPrice) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        message: t('zodErrors.salePriceExceedsOriginal'),
+                        path: ['price'],
+                    })
+                }
             }
         })
 
@@ -70,6 +86,7 @@ export const useSellBikeForm = (t: TFunction) => {
             photosToDelete: [],
             condition: '',
             price: '',
+            originalPrice: '',
             location: '',
             contactMethod: 'app',
         },
