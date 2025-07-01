@@ -7,6 +7,8 @@ import {
     CarouselNext,
     type CarouselApi, // Import CarouselApi type
 } from '@/components/ui/carousel'
+import ImageLightbox from '@/components/ui/ImageLightbox'
+import { ZoomIn } from 'lucide-react'
 
 interface BicycleImageGalleryProps {
     images: string[]
@@ -17,6 +19,8 @@ const BicycleImageGallery = ({ images, title }: BicycleImageGalleryProps) => {
     const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
     const [thumbCarouselApi, setThumbCarouselApi] = useState<CarouselApi>()
     const [selectedIndex, setSelectedIndex] = useState(0)
+    const [lightboxOpen, setLightboxOpen] = useState(false)
+    const [lightboxIndex, setLightboxIndex] = useState(0)
 
     useEffect(() => {
         if (!mainCarouselApi || !thumbCarouselApi) {
@@ -41,6 +45,20 @@ const BicycleImageGallery = ({ images, title }: BicycleImageGalleryProps) => {
         }
     }, [mainCarouselApi, thumbCarouselApi])
 
+    // Lightbox handlers
+    const openLightbox = (index: number) => {
+        setLightboxIndex(index)
+        setLightboxOpen(true)
+    }
+
+    const closeLightbox = () => {
+        setLightboxOpen(false)
+    }
+
+    const handleLightboxNavigate = (index: number) => {
+        setLightboxIndex(index)
+    }
+
     if (!images || images.length === 0) {
         return (
             <div className="aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
@@ -57,11 +75,30 @@ const BicycleImageGallery = ({ images, title }: BicycleImageGalleryProps) => {
                     <CarouselContent>
                         {images.map((image, index) => (
                             <CarouselItem key={`main-${index}`}>
-                                <img
-                                    src={image}
-                                    alt={`${title} - Image ${index + 1}`}
-                                    className="object-cover w-full h-full"
-                                />
+                                <div 
+                                    className="cursor-pointer w-full h-full relative group"
+                                    onClick={() => openLightbox(index)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault()
+                                            openLightbox(index)
+                                        }
+                                    }}
+                                >
+                                    <img
+                                        src={image}
+                                        alt={`${title} - Image ${index + 1}`}
+                                        className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-105"
+                                    />
+                                    {/* 點擊提示覆層 */}
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white bg-black/50 p-2 rounded-full">
+                                            <ZoomIn className="h-5 w-5" />
+                                        </div>
+                                    </div>
+                                </div>
                             </CarouselItem>
                         ))}
                     </CarouselContent>
@@ -108,6 +145,16 @@ const BicycleImageGallery = ({ images, title }: BicycleImageGalleryProps) => {
                     </CarouselContent>
                 </Carousel>
             )}
+
+            {/* Image Lightbox */}
+            <ImageLightbox
+                images={images}
+                currentIndex={lightboxIndex}
+                isOpen={lightboxOpen}
+                onClose={closeLightbox}
+                onNavigate={handleLightboxNavigate}
+                title={title}
+            />
         </div>
     )
 }
