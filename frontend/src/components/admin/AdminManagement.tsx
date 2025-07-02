@@ -3,9 +3,10 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Bike, MessageCircle, Users, Settings, AlertTriangle } from 'lucide-react';
+import { Bike, MessageCircle, Users, Settings, AlertTriangle, ShoppingCart } from 'lucide-react';
 import BicycleManagement from './BicycleManagement';
 import MessageManagement from './MessageManagement';
+import AdminOrderList from './AdminOrderList';
 
 const AdminManagement: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -23,6 +24,10 @@ const AdminManagement: React.FC = () => {
           <TabsTrigger value="bicycles" className="data-[state=active]:bg-muted flex items-center gap-2">
             <Bike className="w-4 h-4" />
             <span>{isChinese ? '自行車管理' : t('bicycleManagement')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="data-[state=active]:bg-muted flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4" />
+            <span>{isChinese ? '訂單管理' : t('orderManagement')}</span>
           </TabsTrigger>
           <TabsTrigger value="messages" className="data-[state=active]:bg-muted flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
@@ -44,6 +49,10 @@ const AdminManagement: React.FC = () => {
         
         <TabsContent value="bicycles" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
           <BicycleManagement />
+        </TabsContent>
+        
+        <TabsContent value="orders" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
+          <AdminOrderList />
         </TabsContent>
         
         <TabsContent value="messages" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
