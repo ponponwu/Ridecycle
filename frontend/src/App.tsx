@@ -18,6 +18,7 @@ import Index from './pages/Index'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import BicycleDetail from './pages/BicycleDetail'
+import SellerProfile from './pages/SellerProfile'
 import NotFound from './pages/NotFound'
 import AuthCallback from './pages/AuthCallback'
 import UploadBike from './pages/UploadBike'
@@ -66,6 +67,7 @@ function AppContent() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/bicycle/:id" element={<BicycleDetail />} />
+                <Route path="/seller/:sellerId" element={<SellerProfile />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/search" element={<Search />} />
 

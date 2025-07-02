@@ -195,7 +195,7 @@ class Api::V1::OrdersController < ApplicationController
         }
       )
 
-             if attachment
+        if attachment
          # 更新付款狀態為待確認
          @order.update!(payment_status: :awaiting_confirmation)
          
