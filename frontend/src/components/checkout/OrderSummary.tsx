@@ -18,9 +18,15 @@ interface OrderSummaryProps {
 const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, tax, deliveryOption }) => {
     const { t } = useTranslation()
 
+    // 判斷是否真正選擇了配送方式
+    const hasSelectedDeliveryMethod = deliveryOption && (
+        (deliveryOption.type === 'delivery' && (deliveryOption.cost > 0 || deliveryOption.estimatedDays)) ||
+        (deliveryOption.type === 'pickup')
+    )
+
     // 計算稅金（如果沒有提供，默認為5%）
     const calculatedTax = tax ?? bicycle.price * 0.05
-    const actualShipping = deliveryOption?.cost ?? shipping
+    const actualShipping = hasSelectedDeliveryMethod ? (deliveryOption?.cost ?? 0) : 0
     const total = bicycle.price + actualShipping + calculatedTax
 
     return (
@@ -42,7 +48,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                         <h3 className="font-medium text-sm leading-tight">{bicycle.title}</h3>
                         <p className="text-xs text-gray-600 mt-1">{bicycle.brand?.name}</p>
                         <p className="text-xs text-gray-600">
-                            {t('condition')}: {bicycle.condition}
+                            {t('condition')}: {t(`conditions.${bicycle.condition}`, bicycle.condition)}
                         </p>
                         {bicycle.frameSize && (
                             <p className="text-xs text-gray-600">
@@ -55,7 +61,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                 <Separator />
 
                 {/* 配送方式資訊 */}
-                {deliveryOption && (
+                {hasSelectedDeliveryMethod && (
                     <>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
@@ -76,10 +82,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                                 </Badge>
                             </div>
 
-                            {deliveryOption.type === 'delivery' && deliveryOption.estimatedDays && (
+                            {deliveryOption.type === 'delivery' && (
                                 <p className="text-xs text-gray-500">
-                                    {deliveryOption.estimatedDays.min}-{deliveryOption.estimatedDays.max}{' '}
-                                    {t('businessDays')}
+                                    {t('staffWillContact')}
                                 </p>
                             )}
 
@@ -102,10 +107,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                         <span>{formatPriceNTD(bicycle.price)}</span>
                     </div>
 
-                    <div className="flex justify-between text-sm">
-                        <span>{t('shippingCost')}</span>
-                        <span>{formatPriceNTD(actualShipping)}</span>
-                    </div>
+                    {hasSelectedDeliveryMethod && (
+                        <div className="flex justify-between text-sm">
+                            <span>{t('shippingCost')}</span>
+                            <span>{formatPriceNTD(actualShipping)}</span>
+                        </div>
+                    )}
 
                     <div className="flex justify-between text-sm">
                         <span>{t('tax')} (5%)</span>
@@ -121,17 +128,15 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                 </div>
 
                 {/* 額外資訊 */}
-                {deliveryOption?.type === 'delivery' && (
+                {hasSelectedDeliveryMethod && deliveryOption?.type === 'delivery' && (
                     <div className="text-xs text-gray-500 space-y-1 pt-2">
-                        <p>
-                            • {t('estimatedDelivery')}: 3-5 {t('businessDays')}
-                        </p>
+                        <p>• {t('staffWillContact')}</p>
                         <p>• 免費退貨 7 天內</p>
                         <p>• 商品保固 30 天</p>
                     </div>
                 )}
 
-                {deliveryOption?.type === 'pickup' && (
+                {hasSelectedDeliveryMethod && deliveryOption?.type === 'pickup' && (
                     <div className="text-xs text-gray-500 space-y-1 pt-2">
                         <p>• 面交驗收完成後7天內可退貨</p>
                         <p>• 款項由平台暫時保管</p>

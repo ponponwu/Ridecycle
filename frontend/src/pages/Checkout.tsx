@@ -21,8 +21,7 @@ const Checkout = () => {
     const [shippingInfo, setShippingInfo] = useState<IShippingInfo>({} as IShippingInfo)
     const [deliveryOption, setDeliveryOption] = useState<IDeliveryOption>({
         type: 'delivery',
-        cost: 100,
-        estimatedDays: { min: 3, max: 5 },
+        cost: 0,
     })
     const [paymentInfo] = useState<IPaymentInfo>({} as IPaymentInfo)
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -63,8 +62,8 @@ const Checkout = () => {
         setShippingInfo(data)
 
         // 更新配送選項的運費
-        if (data.county && bicycle?.weight) {
-            const newShippingCost = calculateShippingCost(data.county, bicycle.weight)
+        if (data.city && bicycle?.weight) {
+            const newShippingCost = calculateShippingCost(data.city, bicycle.weight)
             setDeliveryOption((prev) => ({
                 ...prev,
                 cost: prev.type === 'delivery' ? newShippingCost : 0,
@@ -103,7 +102,7 @@ const Checkout = () => {
                     shipping_address: {
                         full_name: shippingInfo.fullName,
                         phone_number: shippingInfo.phoneNumber,
-                        county: shippingInfo.county,
+                        city: shippingInfo.city,
                         district: shippingInfo.district,
                         address_line1: shippingInfo.addressLine1,
                         address_line2: shippingInfo.addressLine2 || '',
@@ -187,7 +186,7 @@ const Checkout = () => {
                                     <DeliveryOptionsForm
                                         selectedOption={deliveryOption}
                                         onOptionChange={handleDeliveryOptionChange}
-                                        county={shippingInfo.county}
+                                        city={shippingInfo.city}
                                         bicycleWeight={bicycle.weight}
                                     />
                                     <div className="flex justify-between space-x-4 pt-4">

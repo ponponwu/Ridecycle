@@ -96,11 +96,7 @@ const OrderSuccess = () => {
 
                             {deliveryOption.type === 'delivery' && deliveryOption.estimatedDays && (
                                 <div>
-                                    <p className="text-sm text-gray-600">{t('estimatedDelivery')}</p>
-                                    <p>
-                                        {deliveryOption.estimatedDays.min}-{deliveryOption.estimatedDays.max}{' '}
-                                        {t('businessDays')}
-                                    </p>
+                                    <p className="text-sm text-gray-600">{t('staffWillContact')}</p>
                                 </div>
                             )}
 

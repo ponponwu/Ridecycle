@@ -226,6 +226,9 @@ export const zh = {
         bankCodeLabel: '銀行代碼',
         accountNumberLabel: '帳號',
         accountNameLabel: '戶名',
+        bankName: '銀行名稱',
+        accountNumber: '帳號',
+        accountName: '戶名',
         branchLabel: '分行',
         transferAmountLabel: '轉帳金額',
         transferInstructions: '轉帳說明',
@@ -270,13 +273,26 @@ export const zh = {
             applePay: 'Apple Pay',
             googlePay: 'Google Pay',
         },
+        bankTransfer: '銀行轉帳',
+        paymentMethodNote: '我們目前只提供轉帳選項，刷卡服務正在努力串接中',
+
+        // 條款和政策
+        agreeToTerms: '我同意',
+        termsAndConditions: '條款與條件',
+        and: '和',
+        privacyPolicy: '隱私政策',
 
 
         // 配送選擇
         deliveryOptions: '配送方式',
+        deliveryMethod: '配送方式',
+        deliveryFee: '配送費',
         homeDelivery: '宅配到府',
         freeShipping: '免運費',
         estimatedDeliveryTime: '預估到貨時間',
+        distanceBasedShipping: '依實際距離計算，車箱配送2300起',
+        staffWillContact: '訂單成立會有專員聯絡',
+        deliveryAddress: '配送地址',
         pickupLocation: '面交地點',
         pickupNote: '面交說明',
         pickupInstructions: '選擇面交後，賣家會與您聯繫約定時間地點',

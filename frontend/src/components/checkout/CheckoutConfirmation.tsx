@@ -79,7 +79,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                             <h3 className="font-semibold">{bicycle.title}</h3>
                             <p className="text-sm text-gray-600">{bicycle.brand?.name}</p>
                             <p className="text-sm text-gray-600">
-                                {t('condition')}: {bicycle.condition}
+                                {t('condition')}: {t(`conditions.${bicycle.condition}`, bicycle.condition)}
                             </p>
                             {bicycle.frameSize && (
                                 <p className="text-sm text-gray-600">
@@ -119,14 +119,13 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                                 {deliveryOption.type === 'delivery' ? t('homeDelivery') : t('selfPickup')}
                             </span>
                             <Badge variant={deliveryOption.type === 'delivery' ? 'default' : 'secondary'}>
-                                {deliveryOption.cost === 0 ? t('freeShipping') : formatPriceNTD(deliveryOption.cost)}
+                                {deliveryOption.type === 'delivery' ? t('distanceBasedShipping') : t('freeShipping')}
                             </Badge>
                         </div>
 
-                        {deliveryOption.type === 'delivery' && deliveryOption.estimatedDays && (
+                        {deliveryOption.type === 'delivery' && (
                             <p className="text-sm text-gray-600">
-                                {t('estimatedDelivery')}: {deliveryOption.estimatedDays.min}-
-                                {deliveryOption.estimatedDays.max} {t('businessDays')}
+                                {t('staffWillContact')}
                             </p>
                         )}
 
@@ -155,7 +154,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                             <p className="font-medium">{shippingInfo.fullName}</p>
                             <p>{shippingInfo.phoneNumber}</p>
                             <p>
-                                {shippingInfo.county} {shippingInfo.district}
+                                {shippingInfo.city} {shippingInfo.district}
                             </p>
                             <p>{shippingInfo.addressLine1}</p>
                             {shippingInfo.addressLine2 && <p>{shippingInfo.addressLine2}</p>}
@@ -181,6 +180,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                 <CardContent>
                     <div className="space-y-2">
                         <p className="font-medium">{t('bankTransfer')}</p>
+                        <p className="text-sm text-gray-600">{t('paymentMethodNote')}</p>
                         <p className="text-sm text-gray-600">轉帳備註：{paymentInfo.transferNote}</p>
                         {paymentInfo.accountLastFiveDigits && (
                             <p className="text-sm text-gray-600">轉帳帳戶：*****{paymentInfo.accountLastFiveDigits}</p>

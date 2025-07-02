@@ -189,6 +189,7 @@ export const en = {
             applePay: 'Apple Pay',
             googlePay: 'Google Pay',
         },
+        paymentMethodNote: 'We currently only provide bank transfer option, credit card service is being integrated',
 
         // Confirmation Page
         orderConfirmation: 'Order Confirmation',
@@ -238,6 +239,9 @@ export const en = {
         bankCodeLabel: 'Bank Code',
         accountNumberLabel: 'Account Number',
         accountNameLabel: 'Account Name',
+        bankName: 'Bank Name',
+        accountNumber: 'Account Number',
+        accountName: 'Account Name',
         branchLabel: 'Branch',
         transferAmountLabel: 'Transfer Amount',
         transferInstructions: 'Transfer Instructions',
@@ -715,5 +719,16 @@ export const en = {
                 self_pickup: 'Self Pickup',
             },
         },
+
+        // Additional payment and delivery translations
+        bankTransfer: 'Bank Transfer',
+        deliveryOptions: 'Delivery Options',
+        deliveryMethod: 'Delivery Method',
+        deliveryFee: 'Delivery Fee',
+        homeDelivery: 'Home Delivery',
+        selfPickup: 'Self Pickup',
+        freeShipping: 'Free Shipping',
+        distanceBasedShipping: 'Calculated by actual distance, bike box delivery from NT$2,300',
+        staffWillContact: 'Our staff will contact you after order confirmation',
     },
 }

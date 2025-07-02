@@ -173,7 +173,7 @@ export interface IOrderCreateRequest {
         shipping_address: {
             full_name: string
             phone_number: string
-            county: string
+            city: string
             district: string
             address_line1: string
             address_line2?: string

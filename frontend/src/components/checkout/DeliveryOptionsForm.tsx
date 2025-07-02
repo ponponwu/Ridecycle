@@ -11,21 +11,21 @@ import { calculateShippingCost, calculateDeliveryTime } from '@/utils/orderCalcu
 interface DeliveryOptionsFormProps {
     selectedOption: IDeliveryOption
     onOptionChange: (option: IDeliveryOption) => void
-    county: string
+    city: string
     bicycleWeight?: number
 }
 
 const DeliveryOptionsForm: React.FC<DeliveryOptionsFormProps> = ({
     selectedOption,
     onOptionChange,
-    county,
+    city,
     bicycleWeight,
 }) => {
     const { t } = useTranslation()
 
     // 計算配送運費和時間
-    const deliveryCost = county ? calculateShippingCost(county, bicycleWeight) : 100
-    const deliveryTime = county ? calculateDeliveryTime(county) : { min: 3, max: 5 }
+    const deliveryCost = city ? calculateShippingCost(city, bicycleWeight) : 100
+    const deliveryTime = city ? calculateDeliveryTime(city) : { min: 3, max: 5 }
 
     const deliveryOptions: IDeliveryOption[] = [
         {
@@ -73,14 +73,14 @@ const DeliveryOptionsForm: React.FC<DeliveryOptionsFormProps> = ({
                                 <div className="mt-2 space-y-1">
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">{t('deliveryFee')}</span>
-                                        <span className="font-medium text-blue-600">
-                                            {formatPriceNTD(deliveryCost)}
+                                        <span className="font-medium text-blue-600 text-xs">
+                                            {t('distanceBasedShipping')}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1 text-sm text-gray-600">
                                         <Clock className="w-4 h-4" />
                                         <span>
-                                            {deliveryTime.min}-{deliveryTime.max} {t('businessDays')}
+                                            {t('staffWillContact')}
                                         </span>
                                     </div>
                                 </div>

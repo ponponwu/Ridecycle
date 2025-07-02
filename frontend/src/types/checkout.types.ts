@@ -5,7 +5,7 @@
 export interface IShippingInfo {
     fullName: string
     phoneNumber: string
-    county: string
+    city: string
     district: string
     addressLine1: string
     addressLine2?: string

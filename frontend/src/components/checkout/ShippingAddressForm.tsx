@@ -10,12 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { IShippingInfo } from '@/types/checkout.types'
-import {
-    taiwanCounties,
-    getDistrictsByCounty,
-    validateTaiwanMobile,
-    validatePostalCode,
-} from '@/utils/taiwanAddressData'
+import { useTwZipCode, cities, districts } from 'use-tw-zipcode'
+import { validateTaiwanMobile, validatePostalCode } from '@/utils/validationUtils'
 
 // 台灣地址表單驗證 schema
 const createAddressSchema = (t: any) =>
@@ -28,7 +24,7 @@ const createAddressSchema = (t: any) =>
             .string()
             .min(1, { message: t('validation.required') })
             .refine(validateTaiwanMobile, { message: t('validation.phoneNumberFormat') }),
-        county: z.string().min(1, { message: t('validation.required') }),
+        city: z.string().min(1, { message: t('validation.required') }),
         district: z.string().min(1, { message: t('validation.required') }),
         addressLine1: z
             .string()
@@ -49,8 +45,7 @@ interface ShippingAddressFormProps {
 
 const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues = {}, onSubmit }) => {
     const { t } = useTranslation()
-    const [selectedCounty, setSelectedCounty] = useState(initialValues.county || '')
-    const [availableDistricts, setAvailableDistricts] = useState<any[]>([])
+    const { city, district, zipCode, handleCityChange, handleDistrictChange } = useTwZipCode()
 
     const addressSchema = createAddressSchema(t)
 
@@ -59,7 +54,7 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
         defaultValues: {
             fullName: initialValues.fullName || '',
             phoneNumber: initialValues.phoneNumber || '',
-            county: initialValues.county || '',
+            city: initialValues.city || '',
             district: initialValues.district || '',
             addressLine1: initialValues.addressLine1 || '',
             addressLine2: initialValues.addressLine2 || '',
@@ -68,31 +63,38 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
         },
     })
 
-    // 當縣市改變時，更新可用的鄉鎮區列表
+    // 同步 use-tw-zipcode 的狀態到 react-hook-form
     useEffect(() => {
-        if (selectedCounty) {
-            const districts = getDistrictsByCounty(selectedCounty)
-            setAvailableDistricts(districts)
-
-            // 如果當前選擇的區域不在新的列表中，清空區域選擇
-            const currentDistrict = form.getValues('district')
-            if (currentDistrict && !districts.find((d) => d.code === currentDistrict)) {
-                form.setValue('district', '')
-                form.setValue('postalCode', '')
-            }
-        } else {
-            setAvailableDistricts([])
+        if (city) {
+            form.setValue('city', city)
         }
-    }, [selectedCounty, form])
+    }, [city, form])
 
-    // 當鄉鎮區改變時，自動填入郵遞區號
-    const handleDistrictChange = (districtCode: string) => {
-        form.setValue('district', districtCode)
-
-        const district = availableDistricts.find((d) => d.code === districtCode)
-        if (district && district.postalCodes.length > 0) {
-            form.setValue('postalCode', district.postalCodes[0])
+    useEffect(() => {
+        if (district) {
+            form.setValue('district', district)
         }
+    }, [district, form])
+
+    useEffect(() => {
+        if (zipCode) {
+            form.setValue('postalCode', zipCode)
+        }
+    }, [zipCode, form])
+
+    // 當使用者選擇城市時的處理函數
+    const handleCitySelect = (selectedCity: string) => {
+        handleCityChange(selectedCity)
+        form.setValue('city', selectedCity)
+        // 清空區域選擇
+        form.setValue('district', '')
+        form.setValue('postalCode', '')
+    }
+
+    // 當使用者選擇區域時的處理函數
+    const handleDistrictSelect = (selectedDistrict: string) => {
+        handleDistrictChange(selectedDistrict)
+        form.setValue('district', selectedDistrict)
     }
 
     // 格式化手機號碼輸入
@@ -152,14 +154,14 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
-                            name="county"
+                            name="city"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>{t('county')} *</FormLabel>
+                                    <FormLabel>{t('city')} *</FormLabel>
                                     <Select
                                         onValueChange={(value) => {
                                             field.onChange(value)
-                                            setSelectedCounty(value)
+                                            handleCitySelect(value)
                                         }}
                                         value={field.value}
                                     >
@@ -169,9 +171,9 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {taiwanCounties.map((county) => (
-                                                <SelectItem key={county.code} value={county.code}>
-                                                    {county.name}
+                                            {cities.map((cityName, index) => (
+                                                <SelectItem key={index} value={cityName}>
+                                                    {cityName}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -188,9 +190,12 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
                                 <FormItem>
                                     <FormLabel>{t('district')} *</FormLabel>
                                     <Select
-                                        onValueChange={handleDistrictChange}
+                                        onValueChange={(value) => {
+                                            field.onChange(value)
+                                            handleDistrictSelect(value)
+                                        }}
                                         value={field.value}
-                                        disabled={!selectedCounty}
+                                        disabled={!city}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -198,9 +203,9 @@ const ShippingAddressForm: React.FC<ShippingAddressFormProps> = ({ initialValues
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {availableDistricts.map((district) => (
-                                                <SelectItem key={district.code} value={district.code}>
-                                                    {district.name}
+                                            {city && districts[city]?.map((districtName, index) => (
+                                                <SelectItem key={index} value={districtName}>
+                                                    {districtName}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
