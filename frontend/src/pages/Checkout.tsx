@@ -8,6 +8,7 @@ import ShippingAddressForm from '@/components/checkout/ShippingAddressForm'
 import DeliveryOptionsForm from '@/components/checkout/DeliveryOptionsForm'
 import OrderSummary from '@/components/checkout/OrderSummary'
 import CheckoutConfirmation from '@/components/checkout/CheckoutConfirmation'
+import BankAccountInfo from '@/components/payment/BankAccountInfo'
 import { IShippingInfo, IPaymentInfo, IDeliveryOption } from '@/types/checkout.types'
 import { orderService } from '@/api/services/order.service'
 import { calculateShippingCost, validateOrderData, calculateOrderPrices } from '@/utils/orderCalculations'
@@ -56,6 +57,12 @@ const Checkout = () => {
 
     const handlePrevStep = () => {
         setCurrentStep((prev) => Math.max(prev - 1, 0))
+    }
+
+    const goToStep = (stepIndex: number) => {
+        if (stepIndex < currentStep) {
+            setCurrentStep(stepIndex)
+        }
     }
 
     const handleShippingSubmit = (data: IShippingInfo) => {
@@ -174,7 +181,7 @@ const Checkout = () => {
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                     <div className="md:col-span-2">
-                        <CheckoutStepper steps={steps} activeStep={currentStep} />
+                        <CheckoutStepper steps={steps} activeStep={currentStep} onStepClick={goToStep} />
 
                         <div className="p-6 mt-6 bg-white rounded-lg shadow">
                             {currentStep === 0 && (
@@ -233,27 +240,13 @@ const Checkout = () => {
                                         </div>
                                     </div>
 
-                                    <div className="p-4 bg-blue-50 rounded-lg">
-                                        <h4 className="font-medium mb-2">{t('paymentInstructions')}</h4>
-                                        <div className="text-sm space-y-1">
-                                            <p>
-                                                <strong>{t('bankName')}:</strong> 玉山銀行
-                                            </p>
-                                            <p>
-                                                <strong>{t('accountNumber')}:</strong> 1234567890123
-                                            </p>
-                                            <p>
-                                                <strong>{t('accountName')}:</strong> RideCycle 有限公司
-                                            </p>
-                                            <p>
-                                                <strong>{t('amount')}:</strong> NT${' '}
-                                                {orderCalculation.total.toLocaleString()}
-                                            </p>
-                                            <p>
-                                                <strong>{t('orderTransferNote')}:</strong> {createdOrder.order_number}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <BankAccountInfo
+                                        amount={orderCalculation.total}
+                                        transferNote={createdOrder.order_number}
+                                        mode="compact"
+                                        showCard={false}
+                                        className="bg-blue-50 p-4 rounded-lg border border-blue-200"
+                                    />
 
                                     <div className="flex justify-between space-x-4">
                                         <Button type="button" variant="outline" onClick={handlePrevStep}>

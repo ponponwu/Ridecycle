@@ -76,19 +76,13 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                             />
                         )}
                         <div className="flex-1">
-                            <h3 className="font-semibold">{bicycle.title}</h3>
                             <p className="text-sm text-gray-600">{bicycle.brand?.name}</p>
                             <p className="text-sm text-gray-600">
-                                {t('condition')}: {t(`conditions.${bicycle.condition}`, bicycle.condition)}
+                                {t('condition')}: {t(`conditionOptions.${bicycle.condition}`, bicycle.condition)}
                             </p>
                             {bicycle.frameSize && (
                                 <p className="text-sm text-gray-600">
                                     {t('frameSize')}: {bicycle.frameSize}
-                                </p>
-                            )}
-                            {bicycle.seller && (
-                                <p className="text-sm text-gray-600">
-                                    {t('seller')}: {bicycle.seller.full_name || bicycle.seller.name}
                                 </p>
                             )}
                         </div>
@@ -124,9 +118,7 @@ const CheckoutConfirmation: React.FC<CheckoutConfirmationProps> = ({
                         </div>
 
                         {deliveryOption.type === 'delivery' && (
-                            <p className="text-sm text-gray-600">
-                                {t('staffWillContact')}
-                            </p>
+                            <p className="text-sm text-gray-600">{t('staffWillContact')}</p>
                         )}
 
                         {deliveryOption.type === 'pickup' && (

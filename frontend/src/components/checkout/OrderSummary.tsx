@@ -38,17 +38,19 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ bicycle, shipping = 100, ta
                 {/* 商品資訊 */}
                 <div className="flex items-start space-x-3">
                     {bicycle.photosUrls && bicycle.photosUrls.length > 0 && (
-                        <img
-                            src={bicycle.photosUrls[0]}
-                            alt={bicycle.title}
-                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                        />
+                        <a href={`/bicycle/${bicycle.id}`} target="_blank" rel="noopener noreferrer">
+                            <img
+                                src={bicycle.photosUrls[0]}
+                                alt={bicycle.title}
+                                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                            />
+                        </a>
                     )}
                     <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-sm leading-tight">{bicycle.title}</h3>
                         <p className="text-xs text-gray-600 mt-1">{bicycle.brand?.name}</p>
                         <p className="text-xs text-gray-600">
-                            {t('condition')}: {t(`conditions.${bicycle.condition}`, bicycle.condition)}
+                            {t('condition')}: {t(`conditionOptions.${bicycle.condition}`, bicycle.condition)}
                         </p>
                         {bicycle.frameSize && (
                             <p className="text-xs text-gray-600">
