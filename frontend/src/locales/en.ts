@@ -13,6 +13,9 @@ export const en = {
         sellBicycle: 'Sell Bicycle',
         addBicycle: 'Add Bicycle',
 
+        // Admin related
+        orderManagement: 'Order Management',
+
         // Profile
         personalCenter: 'Personal Center',
         personalInfo: 'Personal Info',
@@ -71,6 +74,7 @@ export const en = {
         trackOrder: 'Track Order',
         buyerInformation: 'Buyer Information',
         sellerInformation: 'Seller Information',
+        seller: 'Seller',
         paymentMethod: 'Payment Method',
         shippingAddress: 'Shipping Address',
 
@@ -191,6 +195,35 @@ export const en = {
         },
         paymentMethodNote: 'We currently only provide bank transfer option, credit card service is being integrated',
 
+        // Payment proof upload related
+        uploadPaymentProof: 'Upload Transfer Proof',
+        updatePaymentProof: 'Update Transfer Proof',
+        reuploadPaymentProof: 'Re-upload Transfer Proof',
+        uploadProof: 'Upload Proof',
+        updateProof: 'Update Proof',
+        uploading: 'Uploading...',
+        fileTooLarge: 'File too large, please select a file smaller than 5MB',
+        invalidFileType: 'Please select an image file (JPG, PNG, GIF)',
+        pleaseSelectFileOrMessage: 'Please select a file or enter a text description',
+        copySuccess: 'Copied',
+        copySuccessDesc: 'Copied to clipboard',
+        copyFailed: 'Copy failed',
+        copyFailedDesc: 'Cannot copy to clipboard',
+
+        // Commission related
+        platformCommissionRate: 'Platform Commission Rate',
+        sellingPrice: 'Selling Price',
+        platformCommission: 'Platform Commission',
+        actualIncome: 'Actual Income',
+        commissionCalculation: 'Commission Calculation',
+        commissionNote: 'Commission Information',
+        commissionExplanation1: 'The amount paid by consumers is the product price you set',
+        commissionExplanation2: 'The platform will deduct commission fees before transferring to you',
+        commissionExplanation3: 'Commission fees are used to maintain platform operations and transaction security',
+        commissionExplanation4: 'Funds will be transferred within 7 business days after transaction completion',
+        youWillReceive: 'You will receive',
+        afterDeductingCommission: '(after deducting platform commission)',
+
         // Confirmation Page
         orderConfirmation: 'Order Confirmation',
         bicycleDetails: 'Bicycle Details',
@@ -256,15 +289,17 @@ export const en = {
         proofUploaded: 'Payment proof uploaded',
         paymentConfirmedDesc: 'Your payment has been confirmed, we will arrange shipping as soon as possible.',
         paymentRejectedDesc: 'Your payment proof did not pass verification, please re-upload a clear transfer proof.',
-        paymentPendingDesc: 'We have received your transfer information and are confirming payment. Confirmation is usually completed within 24 hours.',
-        proofUploadedDesc: 'We have received your payment proof and are reviewing it. Review is usually completed within 24 hours.',
+        paymentPendingDesc:
+            'We have received your transfer information and are confirming payment. Confirmation is usually completed within 24 hours.',
+        proofUploadedDesc:
+            'We have received your payment proof and are reviewing it. Review is usually completed within 24 hours.',
         transferDeadline: 'Please complete the transfer within 24 hours',
         transferInstructionsList: {
             step1: '1. Use online banking or visit a bank counter to transfer',
             step2: '2. Enter the bank account information provided above',
             step3: '3. Use the order number as the transfer note',
             step4: '4. Upload the transfer receipt or screenshot',
-            step5: '5. We will confirm your payment within 24 hours'
+            step5: '5. We will confirm your payment within 24 hours',
         },
         orderTotalLabel: 'Order Total',
         uploadSuccessTitle: 'Upload Successful',
@@ -495,7 +530,6 @@ export const en = {
         acceptOffer: 'Accept Offer',
         rejectOffer: 'Reject Offer',
         retractOffer: 'Retract Offer', // If user can retract their own offer
-        seller: 'Seller',
 
         // Bike conditions
         conditionOptions: {
@@ -586,6 +620,7 @@ export const en = {
             reject: 'Reject',
             actions: 'Actions',
             sellerInformation: 'Seller Information',
+            seller: 'Seller',
             bicycleInformation: 'Bicycle Information',
             bicycleTitle: 'Bicycle Title',
             adminActions: 'Admin Actions',
@@ -730,5 +765,9 @@ export const en = {
         freeShipping: 'Free Shipping',
         distanceBasedShipping: 'Calculated by actual distance, bike box delivery from NT$2,300',
         staffWillContact: 'Our staff will contact you after order confirmation',
+
+        // Payment related
+        paymentDeadlineCountdown: 'Payment Deadline Countdown',
+        remainingTime: 'Remaining Time',
     },
 }

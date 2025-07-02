@@ -15,6 +15,9 @@ export const zh = {
         sellBicycle: '出售自行車',
         addBicycle: '新增自行車',
 
+        // 管理員相關
+        orderManagement: '訂單管理',
+
         // 個人資料
         personalInfo: '個人資訊',
         myBicycles: '我的自行車',
@@ -71,6 +74,7 @@ export const zh = {
         trackOrder: '追蹤訂單',
         buyerInformation: '買家資訊',
         sellerInformation: '賣家資訊',
+        seller: '賣家',
         paymentMethod: '付款方式',
         shippingAddress: '配送地址',
 
@@ -105,7 +109,7 @@ export const zh = {
         frameSize: '車架尺寸',
         wheelSize: '輪胎尺寸',
         yearsOfUse: '使用年限',
-        contactSeller: '聯絡賣家',
+        contactSellerBike: '聯絡賣家',
         askQuestion: '詢問關於這輛自行車的問題...',
         sendMessage: '發送訊息',
         description: '描述',
@@ -210,7 +214,7 @@ export const zh = {
         comfirmAndCheckout: '前往購買',
         buyerProtection: '透過我們的買家保護，您的付款安全無虞。賣家只有在您收到並確認商品後才會收到款項。',
         learnMoreBuyerProtection: '了解更多',
-        soldBy: '賣家',
+        soldBy: '由以下賣家出售',
         anonymousSeller: '匿名賣家',
         locationNotSpecified: '未指定位置',
         ownOneLikeThis: '擁有類似車款？快速出售，立即開始',
@@ -251,7 +255,7 @@ export const zh = {
             step2: '2. 填入上方提供的銀行帳戶資訊',
             step3: '3. 轉帳備註請填寫訂單編號',
             step4: '4. 上傳轉帳收據或截圖',
-            step5: '5. 我們將在24小時內確認您的付款'
+            step5: '5. 我們將在24小時內確認您的付款',
         },
         orderTotalLabel: '訂單總額',
         uploadSuccessTitle: '上傳成功',
@@ -276,12 +280,40 @@ export const zh = {
         bankTransfer: '銀行轉帳',
         paymentMethodNote: '我們目前只提供轉帳選項，刷卡服務正在努力串接中',
 
+        // 付款證明上傳相關
+        uploadPaymentProof: '上傳轉帳證明',
+        updatePaymentProof: '更新轉帳證明',
+        reuploadPaymentProof: '重新上傳轉帳證明',
+        uploadProof: '上傳證明',
+        updateProof: '更新證明',
+        uploading: '上傳中...',
+        fileTooLarge: '檔案太大，請選擇小於 5MB 的檔案',
+        invalidFileType: '請選擇圖片檔案（JPG、PNG、GIF）',
+        pleaseSelectFileOrMessage: '請選擇檔案或填寫文字說明',
+        copySuccess: '已複製',
+        copySuccessDesc: '已複製到剪貼板',
+        copyFailed: '複製失敗',
+        copyFailedDesc: '無法複製到剪貼板',
+
+        // 手續費相關
+        platformCommissionRate: '平台手續費率',
+        sellingPrice: '商品售價',
+        platformCommission: '平台手續費',
+        actualIncome: '實際收入',
+        commissionCalculation: '手續費計算',
+        commissionNote: '手續費說明',
+        commissionExplanation1: '消費者支付的金額即為您設定的商品價格',
+        commissionExplanation2: '平台會從售價中扣除手續費後撥款給您',
+        commissionExplanation3: '手續費用於維護平台運營和交易安全保障',
+        commissionExplanation4: '款項會在交易完成後7個工作天內撥款',
+        youWillReceive: '您將收到',
+        afterDeductingCommission: '(已扣除平台手續費)',
+
         // 條款和政策
         agreeToTerms: '我同意',
         termsAndConditions: '條款與條件',
         and: '和',
         privacyPolicy: '隱私政策',
-
 
         // 配送選擇
         deliveryOptions: '配送方式',
@@ -728,7 +760,7 @@ export const zh = {
         admin: {
             adminDashboard: '管理員儀表板',
             adminAccess: '管理員專用功能',
-            pending: '待審核',
+            pendingApproval: '待審核',
             approved: '已審核',
             rejected: '已拒絕',
             totalUsers: '總用戶數',
@@ -746,6 +778,7 @@ export const zh = {
             reject: '拒絕',
             actions: '操作',
             sellerInformation: '賣家資訊',
+            seller: '賣家',
             bicycleInformation: '自行車資訊',
             bicycleTitle: '自行車標題',
             adminActions: '管理員操作',
@@ -876,6 +909,16 @@ export const zh = {
                 self_pickup: '面交自取',
             },
         },
+
+        // 付款相關
+        paymentDeadlineCountdown: '付款期限倒數',
+
+        // 賣家資訊
+        soldBy: '由以下賣家出售',
+        anonymousSeller: '匿名賣家',
+        locationNotSpecified: '未指定位置',
+        sellerProfileInfo: '賣家資料',
+        memberSinceDate: '會員註冊時間',
     },
 }
 

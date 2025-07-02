@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next'
 import MainLayout from '@/components/layout/MainLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Loader2, ArrowLeft, AlertCircle, Copy, Check, Upload } from 'lucide-react'
+import { Loader2, ArrowLeft, AlertCircle, Check } from 'lucide-react'
 import { orderService } from '@/api/services/order.service'
 import { IOrder } from '@/types/order.types'
-import { formatPriceNTD } from '@/utils/priceFormatter'
 import { useToast } from '@/components/ui/use-toast'
+import BankAccountInfo from '@/components/payment/BankAccountInfo'
+import PaymentProofUpload from '@/components/payment/PaymentProofUpload'
+import type { PaymentProofInfo } from '@/types/payment.types'
 
 const OrderPayment: React.FC = () => {
     const { orderNumber } = useParams<{ orderNumber: string }>()
@@ -20,9 +21,7 @@ const OrderPayment: React.FC = () => {
     const [order, setOrder] = useState<IOrder | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [copiedField, setCopiedField] = useState<string | null>(null)
-    const [proofFile, setProofFile] = useState<File | null>(null)
-    const [isUploading, setIsUploading] = useState(false)
+    const [paymentProofInfo, setPaymentProofInfo] = useState<PaymentProofInfo | undefined>(undefined)
 
     useEffect(() => {
         if (orderNumber) {
@@ -36,6 +35,23 @@ const OrderPayment: React.FC = () => {
             setError(null)
             const orderData = await orderService.getOrderById(orderId)
             setOrder(orderData as IOrder)
+
+            // 設置付款證明資訊（只有在真正有付款證明時才設置）
+            if (orderData.paymentProofInfo && orderData.paymentProofInfo.hasProof) {
+                const adaptedProofInfo: PaymentProofInfo = {
+                    id: `proof_${orderData.id}`,
+                    hasProof: orderData.paymentProofInfo.hasProof,
+                    status:
+                        orderData.paymentProofInfo.status === 'none' ? 'pending' : orderData.paymentProofInfo.status,
+                    uploadedAt: orderData.paymentProofInfo.uploadedAt,
+                    fileName: orderData.paymentProofInfo.filename,
+                    fileSize: orderData.paymentProofInfo.fileSize,
+                }
+                setPaymentProofInfo(adaptedProofInfo)
+            } else {
+                // 確保沒有付款證明時將狀態設為 undefined
+                setPaymentProofInfo(undefined)
+            }
         } catch (error) {
             console.error('Failed to load order:', error)
             setError(error instanceof Error ? error.message : '載入訂單失敗')
@@ -44,83 +60,40 @@ const OrderPayment: React.FC = () => {
         }
     }
 
-    const copyToClipboard = async (text: string, field: string) => {
-        try {
-            await navigator.clipboard.writeText(text)
-            setCopiedField(field)
-            toast({
-                title: '已複製',
-                description: '已複製到剪貼板',
-            })
-            setTimeout(() => setCopiedField(null), 2000)
-        } catch (error) {
-            toast({
-                title: '複製失敗',
-                description: '無法複製到剪貼板',
-                variant: 'destructive',
-            })
-        }
+    // 處理付款證明上傳成功
+    const handlePaymentProofUploadSuccess = (proofInfo: PaymentProofInfo) => {
+        setPaymentProofInfo(proofInfo)
+        toast({
+            title: t('uploadSuccessTitle', '上傳成功'),
+            description: t('uploadSuccessMessage', '轉帳證明已上傳，請等待確認'),
+        })
+        // 返回訂單詳情頁面
+        navigate(`/orders/${order?.id}`)
     }
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (file) {
-            // 檢查檔案大小 (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                toast({
-                    title: '檔案太大',
-                    description: '請選擇小於 5MB 的檔案',
-                    variant: 'destructive',
-                })
-                return
-            }
-
-            // 檢查檔案類型
-            if (!file.type.startsWith('image/')) {
-                toast({
-                    title: '檔案格式錯誤',
-                    description: '請選擇圖片檔案',
-                    variant: 'destructive',
-                })
-                return
-            }
-
-            setProofFile(file)
-        }
+    // 處理付款證明上傳失敗
+    const handlePaymentProofUploadError = (error: string) => {
+        console.error('Payment proof upload error:', error)
     }
 
-    const handleUploadProof = async () => {
-        if (!proofFile || !order) return
+    // 將英文時間字串轉換為中文
+    const formatRemainingTime = (timeString: string) => {
+        if (!timeString) return ''
 
-        setIsUploading(true)
-        try {
-            const result = await orderService.uploadPaymentProof(order.id, proofFile)
-
-            if (result.success) {
-                toast({
-                    title: t('uploadSuccessTitle'),
-                    description: result.message || t('uploadSuccessMessage'),
-                })
-
-                // 返回訂單詳情頁面
-                navigate(`/orders/${order.id}`)
-            } else {
-                toast({
-                    title: t('uploadFailedTitle'),
-                    description: result.message || t('uploadFailedMessage'),
-                    variant: 'destructive',
-                })
+        // 解析英文時間字串，例如 "2 days remaining", "1 hour remaining", etc.
+        const match = timeString.match(/(\d+)\s+(day|hour|minute)s?\s+remaining/i)
+        if (match) {
+            const [, number, unit] = match
+            const unitTranslations: { [key: string]: string } = {
+                day: number === '1' ? '天' : '天',
+                hour: number === '1' ? '小時' : '小時',
+                minute: number === '1' ? '分鐘' : '分鐘',
             }
-        } catch (error) {
-            console.error('Upload payment proof error:', error)
-            toast({
-                title: t('uploadFailedTitle'),
-                description: error instanceof Error ? error.message : t('uploadFailedMessage'),
-                variant: 'destructive',
-            })
-        } finally {
-            setIsUploading(false)
+            return `${number} ${unitTranslations[unit.toLowerCase()] || unit}`
         }
+
+        // 如果解析失敗，返回原字串
+        return timeString
     }
 
     if (isLoading) {
@@ -161,7 +134,7 @@ const OrderPayment: React.FC = () => {
     }
 
     // 如果已上傳付款證明，顯示審核中狀態
-    const hasUploadedProof = order.paymentProofInfo?.hasProof
+    const hasUploadedProof = paymentProofInfo?.hasProof
 
     // 如果訂單已過期，顯示過期提示
     if (order.expired) {
@@ -181,14 +154,6 @@ const OrderPayment: React.FC = () => {
         )
     }
 
-    const bankInfo = {
-        bankName: '玉山銀行',
-        bankCode: '808',
-        accountNumber: '1234567890123',
-        accountName: 'RideCycle 二手自行車交易平台有限公司',
-        branch: '台北分行',
-    }
-
     return (
         <MainLayout>
             <div className="container max-w-4xl mx-auto px-4 py-8">
@@ -200,7 +165,9 @@ const OrderPayment: React.FC = () => {
                     </Button>
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold">{t('completePayment')}</h1>
-                        <p className="text-gray-500">{t('orderNumberLabel')}: {order.orderNumber || order.id}</p>
+                        <p className="text-gray-500">
+                            {t('orderNumberLabel')}: {order.orderNumber || order.id}
+                        </p>
                     </div>
                 </div>
 
@@ -244,7 +211,9 @@ const OrderPayment: React.FC = () => {
                                 <h4 className="font-medium text-orange-800 mb-1">請於期限內完成付款</h4>
                                 <p className="text-sm text-orange-700">
                                     {order.remainingPaymentTimeHumanized &&
-                                        `剩餘時間：${order.remainingPaymentTimeHumanized}`}
+                                        `${t('remainingTime')}: ${formatRemainingTime(
+                                            order.remainingPaymentTimeHumanized
+                                        )}`}
                                 </p>
                             </div>
                         </div>
@@ -253,197 +222,19 @@ const OrderPayment: React.FC = () => {
 
                 <div className="grid lg:grid-cols-2 gap-6">
                     {/* Bank Transfer Information */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t('bankTransferInfo')}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('bankNameLabel')}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{bankInfo.bankName}</span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(bankInfo.bankName, 'bankName')}
-                                        >
-                                            {copiedField === 'bankName' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
+                    <BankAccountInfo
+                        amount={order.totalPrice}
+                        transferNote={order.orderNumber || order.id}
+                        mode="full"
+                    />
 
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('bankCodeLabel')}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{bankInfo.bankCode}</span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(bankInfo.bankCode, 'bankCode')}
-                                        >
-                                            {copiedField === 'bankCode' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('accountNumberLabel')}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{bankInfo.accountNumber}</span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(bankInfo.accountNumber, 'accountNumber')}
-                                        >
-                                            {copiedField === 'accountNumber' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('accountNameLabel')}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{bankInfo.accountName}</span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(bankInfo.accountName, 'accountName')}
-                                        >
-                                            {copiedField === 'accountName' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('branchLabel')}</span>
-                                    <span className="font-medium">{bankInfo.branch}</span>
-                                </div>
-                            </div>
-
-                            <Separator />
-
-                            <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">{t('transferAmountLabel')}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xl font-bold text-green-600">
-                                            {formatPriceNTD(order.totalPrice)}
-                                        </span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(order.totalPrice.toString(), 'amount')}
-                                        >
-                                            {copiedField === 'amount' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-yellow-50 p-3 rounded-lg">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">轉帳備註</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium">{order.orderNumber || order.id}</span>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => copyToClipboard(order.orderNumber || order.id, 'note')}
-                                        >
-                                            {copiedField === 'note' ? (
-                                                <Check className="w-4 h-4 text-green-600" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Upload Payment Proof */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>
-                                {hasUploadedProof
-                                    ? order.paymentProofInfo?.status === 'rejected'
-                                        ? '重新上傳轉帳證明'
-                                        : '更新轉帳證明'
-                                    : '上傳轉帳證明'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="text-sm text-gray-600">
-                                {hasUploadedProof
-                                    ? order.paymentProofInfo?.status === 'rejected'
-                                        ? '您的付款證明未通過審核，請重新上傳清晰的轉帳證明。'
-                                        : '如需更新轉帳證明，請重新選擇並上傳檔案。'
-                                    : '完成轉帳後，請上傳轉帳證明以加速訂單確認。'}
-                            </p>
-
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm text-gray-600 mb-4">點擊選擇檔案或拖拽檔案到此處</p>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileSelect}
-                                    className="hidden"
-                                    id="proof-upload"
-                                />
-                                <label htmlFor="proof-upload">
-                                    <Button variant="outline" asChild>
-                                        <span>選擇檔案</span>
-                                    </Button>
-                                </label>
-                            </div>
-
-                            {proofFile && (
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-sm text-gray-600">已選擇檔案:</p>
-                                    <p className="font-medium">{proofFile.name}</p>
-                                    <p className="text-xs text-gray-500">
-                                        {(proofFile.size / 1024 / 1024).toFixed(2)} MB
-                                    </p>
-                                </div>
-                            )}
-
-                            <Button onClick={handleUploadProof} disabled={!proofFile || isUploading} className="w-full">
-                                {isUploading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        上傳中...
-                                    </>
-                                ) : (
-                                    '上傳轉帳證明'
-                                )}
-                            </Button>
-
-                            <p className="text-xs text-gray-500">支援 JPG、PNG 格式，檔案大小不超過 5MB</p>
-                        </CardContent>
-                    </Card>
+                    {/* Payment Proof Upload */}
+                    <PaymentProofUpload
+                        orderId={order.id}
+                        existingProof={paymentProofInfo}
+                        onUploadSuccess={handlePaymentProofUploadSuccess}
+                        onUploadError={handlePaymentProofUploadError}
+                    />
                 </div>
 
                 {/* Instructions */}
