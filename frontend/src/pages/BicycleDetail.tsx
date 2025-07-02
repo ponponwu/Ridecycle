@@ -280,27 +280,51 @@ const BicycleDetail = () => {
                                         <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
                                             <User className="h-6 w-6 text-gray-500" />
                                         </div>
-                                        <div>
+                                        <div className="flex-1">
                                             <p className="text-sm text-gray-600">{t('soldBy')}</p>
-                                            <p className="font-medium text-gray-900">
+                                            <button
+                                                onClick={() => navigate(`/seller/${bicycle.seller?.id}`)}
+                                                className="font-medium text-gray-900 hover:text-blue-600 transition-colors underline text-left"
+                                            >
                                                 {bicycle.seller?.name ||
                                                     bicycle.seller?.full_name ||
                                                     t('anonymousSeller')}
-                                            </p>
+                                            </button>
                                             <div className="flex items-center gap-1 mt-1">
                                                 <MapPin className="h-3 w-3 text-gray-400" />
                                                 <span className="text-xs text-gray-500">
                                                     {bicycle.location || t('locationNotSpecified')}
                                                 </span>
                                             </div>
+                                            {bicycle.seller?.created_at && (
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <Calendar className="h-3 w-3 text-gray-400" />
+                                                    <span className="text-xs text-gray-500">
+                                                        Member since{' '}
+                                                        {new Date(bicycle.seller.created_at).toLocaleDateString(
+                                                            'en-US',
+                                                            {
+                                                                month: 'long',
+                                                                year: 'numeric',
+                                                            }
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     {!isOwner && (
-                                        <ContactSellerForm
-                                            sellerId={bicycle.seller?.id.toString() || ''}
-                                            bicycleId={bicycle.id.toString()}
-                                        />
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => {
+                                                // 可以導向到聯繫賣家的頁面或開啟對話
+                                                navigate(`/messages?sellerId=${bicycle.seller?.id}`)
+                                            }}
+                                        >
+                                            ▷ Contact seller
+                                        </Button>
                                     )}
                                 </div>
                             </CardContent>

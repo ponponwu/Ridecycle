@@ -45,7 +45,7 @@ export interface IBicycleTypeOption {
 export const BICYCLE_TYPES: { value: BicycleType; translationKey: string }[] = [
     { value: BicycleType.ROAD, translationKey: 'roadBike' },
     { value: BicycleType.MOUNTAIN, translationKey: 'mountainBike' },
-    { value: BicycleType.HYBRID, translationKey: 'hybridBike' },
+    // { value: BicycleType.HYBRID, translationKey: 'hybridBike' },
     { value: BicycleType.GRAVEL, translationKey: 'gravelbike' },
 ]
 
