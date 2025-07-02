@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { SellBikeFormValues } from './types'
 import { useTranslation } from 'react-i18next'
+import CommissionFeeDisplay from '@/components/bicycle/CommissionFeeDisplay'
 
 interface PricingLocationStepProps {
     form: UseFormReturn<SellBikeFormValues>
@@ -12,6 +13,10 @@ interface PricingLocationStepProps {
 
 const PricingLocationStep = ({ form }: PricingLocationStepProps) => {
     const { t } = useTranslation()
+    
+    // 監聽價格輸入變化
+    const currentPrice = form.watch('price')
+    const priceValue = currentPrice ? parseFloat(currentPrice.toString().replace(/[^0-9]/g, '')) : 0
     
     return (
         <div className="space-y-6">
@@ -72,6 +77,14 @@ const PricingLocationStep = ({ form }: PricingLocationStepProps) => {
                         <FormMessage />
                     </FormItem>
                 )}
+            />
+
+            {/* 手續費計算顯示 */}
+            <CommissionFeeDisplay 
+                price={priceValue}
+                showCard={true}
+                showDetails={true}
+                className="bg-gray-50"
             />
 
             <FormField

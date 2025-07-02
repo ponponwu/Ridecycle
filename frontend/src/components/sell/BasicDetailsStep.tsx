@@ -77,7 +77,7 @@ const BasicDetailsStep = ({ form }: BasicDetailsStepProps) => {
                                         form.setValue('bicycleType', type.value)
                                     }}
                                 >
-                                    {t(type.translationKey)}
+                                    {t(`bicycleTypeOptions.${type.translationKey}`)}
                                 </Button>
                             ))}
                         </div>
