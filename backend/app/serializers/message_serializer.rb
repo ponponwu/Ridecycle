@@ -1,75 +1,36 @@
+# app/serializers/message_serializer.rb
 class MessageSerializer
   include JSONAPI::Serializer
-  
-  attributes :id, :content, :read_at, :created_at, :updated_at, :is_offer, :offer_amount, :offer_status
-  
-  # 統一的關聯物件
-  attribute :bicycle do |object|
-    if object.bicycle
-      {
-        id: object.bicycle.id,
-        title: object.bicycle.title,
-        price: object.bicycle.price.to_f,
-        status: object.bicycle.status
-      }
-    end
+
+  attributes :id, :content, :created_at, :read_at, :is_offer, :offer_amount, :offer_status
+
+  belongs_to :sender, serializer: :user, record_type: :user
+  belongs_to :recipient, serializer: :user, record_type: :user
+  belongs_to :bicycle, serializer: :bicycle, record_type: :bicycle
+
+  attribute :sender_id do |object|
+    object.sender_id.to_s
   end
 
-  attribute :sender do |object|
-    if object.sender
-      {
-        id: object.sender.id,
-        name: object.sender.name,
-        full_name: object.sender.full_name,
-        email: object.sender.email,
-        avatar_url: object.sender.avatar_url
-      }
-    end
+  attribute :recipient_id do |object|
+    object.recipient_id.to_s
+  end
+  
+  # Add receiver_id as an alias for backward compatibility
+  attribute :receiver_id do |object|
+    object.recipient_id.to_s
   end
 
-  attribute :recipient do |object|
-    if object.recipient
-      {
-        id: object.recipient.id,
-        name: object.recipient.name,
-        full_name: object.recipient.full_name,
-        email: object.recipient.email,
-        avatar_url: object.recipient.avatar_url
-      }
-    end
+  attribute :bicycle_id do |object|
+    object.bicycle_id.to_s
   end
-  
-  # 格式化的出價金額
-  attribute :formatted_offer_amount do |object|
-    object.formatted_offer_amount if object.is_offer?
+
+  # Add sender and recipient names for admin interface
+  attribute :sender_name do |object|
+    object.sender&.name
   end
-  
-  # 出價狀態的中文顯示
-  attribute :offer_status_text do |object|
-    object.offer_status_text if object.is_offer?
+
+  attribute :recipient_name do |object|
+    object.recipient&.name
   end
-  
-  # 出價是否仍有效
-  attribute :offer_active do |object|
-    object.offer_active? if object.is_offer?
-  end
-  
-  # 如果有附件
-  # attribute :attachments_urls do |object|
-  #   if object.respond_to?(:attachments) && object.attachments.attached?
-  #     object.attachments.map do |attachment|
-  #       begin
-  #         Rails.application.routes.url_helpers.rails_blob_url(attachment, only_path: false)
-  #       rescue NoMethodError
-  #         Rails.logger.error "MessageSerializer: Failed to generate attachment_url. Ensure default_url_options[:host] is set."
-  #         nil
-  #       rescue StandardError => e
-  #         Rails.logger.error "MessageSerializer: Error generating attachment_url for attachment ##{attachment.id}: #{e.message}"
-  #         nil
-  #       end
-  #     end.compact
-  #   else
-  #     []
-  #   end
-  # end
-end 
+end
