@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_04_025029) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -173,6 +173,29 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
     t.index ["sender_id", "bicycle_id", "offer_status"], name: "index_messages_on_sender_bicycle_offer_status"
   end
 
+  create_table "order_payments", force: :cascade do |t|
+    t.bigint "order_id", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "method", default: 0, null: false
+    t.string "payment_id"
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.datetime "deadline", null: false
+    t.datetime "expires_at", null: false
+    t.text "instructions"
+    t.text "company_account_info"
+    t.jsonb "metadata", default: {}
+    t.datetime "paid_at"
+    t.datetime "failed_at"
+    t.string "failure_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_order_payments_on_expires_at"
+    t.index ["order_id"], name: "index_order_payments_on_order_id"
+    t.index ["payment_id"], name: "index_order_payments_on_payment_id", unique: true, where: "(payment_id IS NOT NULL)"
+    t.index ["status", "expires_at"], name: "index_order_payments_on_status_and_expires_at"
+    t.index ["status"], name: "index_order_payments_on_status"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "bicycle_id", null: false
@@ -188,22 +211,13 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
     t.string "carrier"
     t.text "notes"
     t.text "cancel_reason"
-    t.integer "payment_status", default: 0, null: false
-    t.string "payment_id"
     t.datetime "estimated_delivery_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "shipping_distance", precision: 10, scale: 2
-    t.text "company_account_info"
-    t.text "payment_instructions"
     t.integer "shipping_method", default: 0
-    t.integer "payment_method", default: 0
-    t.datetime "payment_deadline", comment: "付款期限"
-    t.datetime "expires_at", comment: "訂單過期時間（用於索引查詢）"
     t.index ["bicycle_id"], name: "index_orders_on_bicycle_id"
-    t.index ["expires_at"], name: "index_orders_on_expires_at"
     t.index ["order_number"], name: "index_orders_on_order_number", unique: true
-    t.index ["status", "expires_at"], name: "index_orders_on_status_and_expires_at"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
@@ -215,8 +229,21 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
     t.datetime "last_used_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["expires_at", "revoked_at"], name: "index_refresh_tokens_on_expires_at_and_revoked_at"
+    t.index ["expires_at"], name: "index_refresh_tokens_on_expires_at"
+    t.index ["revoked_at"], name: "index_refresh_tokens_on_revoked_at"
     t.index ["token"], name: "index_refresh_tokens_on_token", unique: true
     t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
+  end
+
+  create_table "site_configurations", force: :cascade do |t|
+    t.string "setting_key", null: false
+    t.text "setting_value", null: false
+    t.string "setting_type", default: "string"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["setting_key"], name: "index_site_configurations_on_setting_key", unique: true
   end
 
   create_table "transmissions", force: :cascade do |t|
@@ -244,7 +271,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
     t.text "bank_account_number"
     t.text "bank_code"
     t.text "bank_branch"
+    t.boolean "is_suspicious", default: false, null: false
+    t.boolean "is_blacklisted", default: false, null: false
     t.index ["admin"], name: "index_users_on_admin"
+    t.index ["is_blacklisted"], name: "index_users_on_is_blacklisted"
+    t.index ["is_suspicious"], name: "index_users_on_is_suspicious"
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
   end
 
@@ -261,6 +292,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_06_09_092033) do
   add_foreign_key "components", "components"
   add_foreign_key "csp_violation_reports", "users"
   add_foreign_key "messages", "bicycles"
+  add_foreign_key "order_payments", "orders"
   add_foreign_key "orders", "bicycles"
   add_foreign_key "orders", "users"
   add_foreign_key "refresh_tokens", "users"

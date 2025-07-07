@@ -1,4 +1,4 @@
-# 二手腳踏車交易平台 (Pedal Palace) MVP 開發任務清單
+# 二手腳踏車交易平台 (Ride Cycle) MVP 開發任務清單
 
 ## 前置準備
 
