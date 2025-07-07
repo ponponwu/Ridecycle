@@ -3,7 +3,10 @@ module Api
   module V1
     class AuthController < ApplicationController
       skip_before_action :authenticate_user!, only: [:login, :register, :csrf_token]
-      skip_before_action :verify_authenticity_token, only: [:login, :register, :logout]
+      # 只在非測試環境中跳過 CSRF 驗證
+      unless Rails.env.test?
+        skip_before_action :verify_authenticity_token, only: [:login, :register, :logout]
+      end
       
       def register
         begin

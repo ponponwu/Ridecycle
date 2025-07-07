@@ -82,16 +82,42 @@ Rails.application.routes.draw do
           member do
             patch :approve
             patch :reject
+            patch :archive
           end
         end
         
-        # Admin user management (future implementation)
-        # resources :users do
-        #   member do
-        #     patch :make_admin
-        #     patch :remove_admin
-        #   end
-        # end
+        # Admin order management
+        resources :orders do
+          member do
+            patch :approve_sale
+            patch :reject_sale
+          end
+        end
+        
+        # Admin user management
+        resources :users do
+          member do
+            patch :blacklist
+            patch :suspicious
+            patch :make_admin
+            patch :remove_admin
+          end
+        end
+        
+        # Admin message management
+        resources :messages, only: [:index] do
+          collection do
+            get :conversations
+          end
+        end
+        
+        # Admin site configuration management
+        resources :site_configurations, only: [:index] do
+          collection do
+            patch :update
+            get :bank_info
+          end
+        end
       end
     end
   end

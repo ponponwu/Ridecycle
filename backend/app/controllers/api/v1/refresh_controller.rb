@@ -5,7 +5,10 @@ module Api
       # as this endpoint relies on the refresh_token_cookie itself for authentication.
       # However, if refresh token is invalid/expired, it should not grant a new access token.
       skip_before_action :authenticate_user!, only: [:create]
-      skip_before_action :verify_authenticity_token, only: [:create]
+      # 只在非測試環境中跳過 CSRF 驗證
+      unless Rails.env.test?
+        skip_before_action :verify_authenticity_token, only: [:create]
+      end
 
       def create
         jwt_payload = decoded_token(:refresh)
@@ -22,6 +25,14 @@ module Api
         unless user_id && jti
           delete_auth_cookies
           render json: { error: 'Invalid refresh token payload.' }, status: :unauthorized
+          return
+        end
+
+        # 驗證 token binding
+        unless verify_token_binding(jwt_payload[0])
+          Rails.logger.warn "Refresh token binding verification failed"
+          delete_auth_cookies
+          render json: { error: 'Token binding verification failed.' }, status: :unauthorized
           return
         end
 

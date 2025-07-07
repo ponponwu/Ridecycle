@@ -30,15 +30,48 @@ class ApplicationController < ActionController::API
     response.headers['X-CSRF-Token'] = token
   end
   
+  def generate_simple_binding
+    # 使用簡單但有效的綁定因子
+    user_agent = request.user_agent || ''
+    ip_subnet = extract_ip_subnet(request.remote_ip)
+    
+    # 創建綁定哈希
+    binding_data = "#{user_agent}:#{ip_subnet}"
+    Digest::SHA256.hexdigest(binding_data)[0..16] # 取前16位減少 token 大小
+  end
+
+  def extract_ip_subnet(ip)
+    # 提取 IP 的子網，允許同一網絡內的正常使用
+    begin
+      addr = IPAddr.new(ip)
+      if addr.ipv4?
+        # IPv4: 取前三段 (例如 192.168.1.x -> 192.168.1)
+        ip.split('.')[0..2].join('.')
+      else
+        # IPv6: 取前64位
+        addr.mask(64).to_s
+      end
+    rescue IPAddr::InvalidAddressError
+      'unknown'
+    end
+  end
+
   def encode_token(payload, exp = 1.hour.from_now)
     payload[:exp] = exp.to_i
+    payload[:bnd] = generate_simple_binding # 添加綁定資訊
     # 使用正確的密鑰名稱，並提供備用
     secret_key = Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
     JWT.encode(payload, secret_key)
   end
 
   def encode_refresh_token(user_id, jti, exp = 7.days.from_now)
-    payload = { user_id: user_id, jti: jti, exp: exp.to_i, type: 'refresh' }
+    payload = { 
+      user_id: user_id, 
+      jti: jti, 
+      exp: exp.to_i, 
+      type: 'refresh',
+      bnd: generate_simple_binding # 添加綁定資訊
+    }
     refresh_secret = Rails.application.credentials.jwt_refresh_secret || Rails.application.credentials.jwt_secret_key || 'test_secret_key_for_ci'
     JWT.encode(payload, refresh_secret)
   end
@@ -73,12 +106,33 @@ class ApplicationController < ActionController::API
     end
   end
   
+  def verify_token_binding(decoded_payload)
+    return true unless decoded_payload['bnd'] # 向後兼容，舊 token 沒有綁定資訊
+    
+    current_binding = generate_simple_binding
+    stored_binding = decoded_payload['bnd']
+    
+    if current_binding != stored_binding
+      Rails.logger.warn "Token binding mismatch for user #{decoded_payload['user_id']}: expected #{current_binding}, got #{stored_binding}"
+      return false
+    end
+    
+    true
+  end
+
   def current_user
     return @current_user if defined?(@current_user)
 
     decoded_payload = decoded_token(:access)
     
     if decoded_payload && decoded_payload != :expired && decoded_payload[0]['user_id']
+      # 驗證 token binding
+      unless verify_token_binding(decoded_payload[0])
+        Rails.logger.warn "Token binding verification failed"
+        @current_user = nil
+        return nil
+      end
+      
       user_id = decoded_payload[0]['user_id']
       @current_user = User.find_by(id: user_id)
     else
@@ -117,7 +171,9 @@ class ApplicationController < ActionController::API
       value: token,
       httponly: true,
       secure: Rails.env.production?,
-      same_site: :lax,
+      same_site: Rails.env.production? ? :strict : :lax, # 生產環境更嚴格
+      domain: Rails.env.production? ? ENV['COOKIE_DOMAIN'] : nil, # 限制域名
+      path: '/' # 明確指定路徑
     }
   end
 
@@ -140,7 +196,8 @@ class ApplicationController < ActionController::API
         httponly: true,
         secure: Rails.env.production?,
         expires: expires_at,
-        same_site: :lax,
+        same_site: Rails.env.production? ? :strict : :lax, # 生產環境更嚴格
+        domain: Rails.env.production? ? ENV['COOKIE_DOMAIN'] : nil, # 限制域名
         path: '/' 
       }
     else
