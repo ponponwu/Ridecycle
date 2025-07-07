@@ -2,8 +2,15 @@ class Order < ApplicationRecord
   belongs_to :user # The buyer
   belongs_to :bicycle
 
-  # 付款證明檔案關聯
-  has_many_attached :payment_proofs
+  # OrderPayment association - one payment per order
+  has_one :payment, class_name: 'OrderPayment', dependent: :destroy
+
+  # Delegate payment-related methods to OrderPayment
+  delegate :payment_status, :payment_method, :payment_deadline, :payment_instructions,
+           :company_account_info, :remaining_payment_hours, :remaining_payment_time_humanized,
+           :has_payment_proof?, :latest_payment_proof, :payment_proof_status,
+           :set_payment_proof_status, :payment_proof_approved?, :payment_proof_rejected?,
+           :payment_proof_pending?, to: :payment, allow_nil: true
 
   # Enum for status, matching frontend's OrderStatus if possible, or use strings
   # Example if using string status directly from frontend:
@@ -23,23 +30,10 @@ class Order < ApplicationRecord
     refunded: 6
   }, prefix: true
 
-  enum :payment_status, {
-    pending: 0,
-    awaiting_confirmation: 1, # 待確認 (已上傳付款證明)
-    paid: 2,
-    failed: 3,
-    refunded: 4 # Note: 'refunded' is also an order status, ensure consistency
-  }, prefix: true
-
   # 配送方式 enum
   enum :shipping_method, {
     self_pickup: 0,      # 自行運送
     assisted_delivery: 1  # 我們協助運送
-  }, prefix: true
-
-  # 付款方式 enum
-  enum :payment_method, {
-    bank_transfer: 0 # 銀行匯款
   }, prefix: true
 
   validates :order_number, presence: true, uniqueness: true
@@ -47,7 +41,7 @@ class Order < ApplicationRecord
   validates :user_id, presence: true
   validates :bicycle_id, presence: true
   validates :shipping_method, presence: true
-  validates :payment_method, presence: true
+  validate :bicycle_must_be_available, on: :create
 
   # 配送距離驗證 - 當選擇協助運送時必須有距離資訊
   validates :shipping_distance, presence: true, numericality: { greater_than: 0 }, 
@@ -60,12 +54,15 @@ class Order < ApplicationRecord
   # Ensure order_number is generated before validation if not provided
   before_validation :generate_order_number, on: :create
   before_validation :calculate_shipping_cost, on: :create
-  before_validation :set_payment_deadline, on: :create
-  before_save :set_payment_instructions
+  after_create :create_order_payment
+  after_create :reserve_bicycle
+  after_create :set_processing_status
+  after_update :update_bicycle_status_on_payment_change
+  after_update :restore_bicycle_on_cancellation
   
   # Scopes for order management
-  scope :pending_payment, -> { where(status: :pending, payment_status: :pending) }
-  scope :expired, -> { where('expires_at < ?', Time.current) }
+  scope :pending_payment, -> { joins(:payment).where(status: :pending, order_payments: { status: 0 }) }
+  scope :expired, -> { joins(:payment).where('order_payments.expires_at < ?', Time.current) }
   scope :pending_and_expired, -> { pending_payment.expired }
 
   # 計算運費的方法
@@ -89,19 +86,30 @@ class Order < ApplicationRecord
     base_cost + distance_cost
   end
 
-  # 設定付款說明
-  def set_payment_instructions_text
-    if payment_method_bank_transfer?
-      I18n.t('payment.instructions') + "\n\n" + 
-      I18n.t('payment.company_account_info').gsub('訂單編號', order_number || 'PENDING')
-    else
-      ''
-    end
-  end
-
   # 檢查是否可以完成訂單
   def can_complete?
-    payment_status_paid? && (status_delivered? || status_shipped?)
+    payment&.status_paid? && (status_delivered? || status_shipped?)
+  end
+  
+  # 管理員批准訂單並標記腳踏車為已售出
+  def admin_approve_sale!
+    return false unless payment&.status_paid?
+    return false unless bicycle&.reserved?
+    
+    Order.transaction do
+      bicycle.update!(status: :sold)
+      update!(status: :completed)
+      Rails.logger.info "Admin approved sale for order #{order_number}, bicycle #{bicycle.id} marked as sold"
+      true
+    end
+  rescue StandardError => e
+    Rails.logger.error "Failed to approve sale for order #{order_number}: #{e.message}"
+    false
+  end
+  
+  # 檢查訂單是否可以被管理員批准
+  def can_be_approved_by_admin?
+    payment&.status_paid? && bicycle&.reserved? && status_processing?
   end
 
   # 取得賣家資訊
@@ -119,98 +127,33 @@ class Order < ApplicationRecord
     seller.bank_account_complete?
   end
 
-  # 檢查訂單是否已過期
+  # 檢查訂單是否已過期（delegate to payment）
   def expired?
-    expires_at.present? && expires_at < Time.current
+    payment&.expired? || false
   end
 
-  # 取得剩餘付款時間（以小時為單位）
-  def remaining_payment_hours
-    return 0 if payment_deadline.blank? || payment_deadline < Time.current
-    
-    ((payment_deadline - Time.current) / 1.hour).ceil
-  end
-
-  # 取得剩餘付款時間的人性化顯示
-  def remaining_payment_time_humanized
-    return I18n.t('orders.payment_expired') if expired?
-    
-    hours = remaining_payment_hours
-    if hours > 24
-      days = (hours / 24.0).ceil
-      I18n.t('orders.remaining_days', count: days)
-    else
-      I18n.t('orders.remaining_hours', count: hours)
-    end
-  end
-
-  # 自動取消過期訂單
+  # 自動取消過期訂單 - 配合 OrderPayment 架構
   def self.cancel_expired_orders!
     expired_orders = pending_and_expired
     cancelled_count = 0
     
     expired_orders.find_each do |order|
-      if order.update(status: :cancelled)
-        cancelled_count += 1
-        Rails.logger.info "訂單 #{order.order_number} 因付款超期而自動取消"
+      Order.transaction do
+        # 先處理 OrderPayment 狀態
+        if order.payment&.mark_as_failed!('Payment deadline expired')
+          # 然後更新訂單狀態
+          if order.update!(status: :cancelled)
+            cancelled_count += 1
+            Rails.logger.info "訂單 #{order.order_number} 因付款超期而自動取消"
+          end
+        end
       end
+    rescue StandardError => e
+      Rails.logger.error "取消過期訂單 #{order&.order_number} 時發生錯誤: #{e.message}"
     end
     
     Rails.logger.info "自動取消了 #{cancelled_count} 個過期訂單"
     cancelled_count
-  end
-
-  # 付款證明相關方法
-  
-  # 檢查是否有有效的付款證明
-  def has_payment_proof?
-    payment_proofs.attached? && payment_proofs.any?
-  end
-
-  # 取得最新的付款證明
-  def latest_payment_proof
-    return nil unless has_payment_proof?
-    payment_proofs.order(created_at: :desc).first
-  end
-
-  # 取得付款證明狀態
-  def payment_proof_status
-    proof = latest_payment_proof
-    return 'none' unless proof
-    
-    metadata = proof.metadata || {}
-    metadata['status'] || 'pending'
-  end
-
-  # 設定付款證明狀態
-  def set_payment_proof_status(status, reviewed_by_user = nil, notes = nil)
-    proof = latest_payment_proof
-    return false unless proof
-
-    metadata = proof.metadata || {}
-    metadata['status'] = status
-    metadata['reviewed_at'] = Time.current.iso8601
-    metadata['reviewed_by_id'] = reviewed_by_user&.id
-    metadata['review_notes'] = notes if notes
-
-    proof.metadata = metadata
-    proof.save!
-    true
-  end
-
-  # 檢查付款證明是否已審核通過
-  def payment_proof_approved?
-    payment_proof_status == 'approved'
-  end
-
-  # 檢查付款證明是否被拒絕
-  def payment_proof_rejected?
-    payment_proof_status == 'rejected'
-  end
-
-  # 檢查付款證明是否待審核
-  def payment_proof_pending?
-    payment_proof_status == 'pending'
   end
 
   private
@@ -231,20 +174,78 @@ class Order < ApplicationRecord
     self.shipping_cost = calculate_shipping_cost_amount
   end
 
-  def set_payment_deadline
-    return if payment_deadline.present? # 不要覆蓋已設定的期限
+  def create_order_payment
+    # Create the associated OrderPayment record
+    payment_deadline = 3.days.from_now
+    payment_method = @payment_method_for_creation || :bank_transfer # Default to bank_transfer
     
-    # 設定3天後為付款期限
-    self.payment_deadline = 3.days.from_now
-    self.expires_at = payment_deadline # 用於索引查詢
+    payment = OrderPayment.create!(
+      order: self,
+      status: :pending,
+      method: payment_method,
+      amount: total_price,
+      deadline: payment_deadline,
+      expires_at: payment_deadline
+    )
+    
+    Rails.logger.info "Created OrderPayment #{payment.id} for Order #{order_number} with method #{payment_method}"
+  rescue StandardError => e
+    Rails.logger.error "Failed to create OrderPayment for Order #{order_number}: #{e.message}"
+    raise e
   end
 
-  def set_payment_instructions
-    self.payment_instructions = set_payment_instructions_text
-    # Replace both Chinese and English placeholders
-    account_info = I18n.t('payment.company_account_info')
-    account_info = account_info.gsub('訂單編號', order_number || 'PENDING')
-    account_info = account_info.gsub('order number', order_number || 'PENDING')
-    self.company_account_info = account_info
+  # Set payment method for creation (called by OrderService)
+  def set_payment_method_for_creation(method)
+    @payment_method_for_creation = method
+  end
+
+  # Bicycle status management callbacks
+  def reserve_bicycle
+    return unless bicycle&.available?
+    
+    bicycle.update!(status: :reserved)
+    Rails.logger.info "Reserved bicycle #{bicycle.id} for order #{order_number}"
+  rescue StandardError => e
+    Rails.logger.error "Failed to reserve bicycle #{bicycle&.id} for order #{order_number}: #{e.message}"
+  end
+
+  def update_bicycle_status_on_payment_change
+    return unless bicycle && payment
+    
+    # Payment confirmation no longer automatically marks bicycle as sold
+    # Admin approval is required after payment to mark bicycle as sold
+    if payment.status_paid? && bicycle.reserved?
+      Rails.logger.info "Payment confirmed for order #{order_number}, bicycle #{bicycle.id} remains reserved pending admin approval"
+    end
+  rescue StandardError => e
+    Rails.logger.error "Failed to update bicycle status for order #{order_number}: #{e.message}"
+  end
+
+  def restore_bicycle_on_cancellation
+    return unless bicycle
+    
+    # When order is cancelled, restore bicycle to available
+    if status_cancelled? && (bicycle.reserved? || bicycle.sold?)
+      bicycle.update!(status: :available)
+      Rails.logger.info "Restored bicycle #{bicycle.id} to available status for cancelled order #{order_number}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "Failed to restore bicycle status for order #{order_number}: #{e.message}"
+  end
+  
+  # Set order status to processing after creation (payment pending)
+  def set_processing_status
+    update_column(:status, :processing) if status_pending?
+  rescue StandardError => e
+    Rails.logger.error "Failed to set processing status for order #{order_number}: #{e.message}"
+  end
+  
+  # Validation to ensure bicycle is available for order creation
+  def bicycle_must_be_available
+    return unless bicycle
+    
+    unless bicycle.available?
+      errors.add(:bicycle, "must be available for purchase. Current status: #{bicycle.status}")
+    end
   end
 end

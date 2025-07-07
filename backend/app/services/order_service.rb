@@ -38,11 +38,8 @@ def create_order(user, order_params)
      order = build_order(user, bicycle, order_params)
       
       if order.save
-        # Mark bicycle as sold if payment is successful
-        if order.payment_method_bank_transfer?
-          # For bank transfer, keep bicycle available until payment is confirmed
-          # We'll update this in a separate payment confirmation process
-        end
+        # OrderPayment will be created automatically via after_create callback
+        # For bank transfer, keep bicycle available until payment is confirmed
         
         success(order)
       else
@@ -79,7 +76,7 @@ def create_order(user, order_params)
   end
 
   def bicycle_available?(bicycle)
-    bicycle.status == 'available'
+    bicycle.status_available?
   end
 
   def build_order(user, bicycle, order_params)
@@ -89,17 +86,18 @@ def create_order(user, order_params)
       order_number: generate_order_number,
       total_price: order_params[:total_price] || calculate_total_price(bicycle, order_params),
       status: :pending,
-      payment_status: :pending,
-      payment_method: order_params[:payment_method] || :bank_transfer,
       shipping_method: determine_shipping_method(order_params),
       shipping_distance: order_params[:shipping_distance],
       shipping_address: sanitize_shipping_address(order_params[:shipping_address]),
       payment_details: sanitize_payment_details(order_params[:payment_details])
     )
 
-    # Set shipping cost and payment instructions
+    # Set shipping cost 
     order.shipping_cost = calculate_shipping_cost(order)
-    order.payment_instructions = generate_payment_instructions(order)
+    
+    # Set payment method for OrderPayment creation
+    payment_method = order_params[:payment_method] || :bank_transfer
+    order.set_payment_method_for_creation(payment_method)
 
     order
   end

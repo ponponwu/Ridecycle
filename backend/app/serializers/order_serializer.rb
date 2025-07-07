@@ -1,9 +1,33 @@
 class OrderSerializer
   include JSONAPI::Serializer
   
-  attributes :id, :order_number, :total_price, :status, :payment_status, :created_at, :updated_at,
-             :shipping_method, :shipping_cost, :shipping_distance, :payment_method,
-             :payment_deadline, :expires_at, :payment_instructions, :company_account_info
+  attributes :id, :order_number, :total_price, :status, :created_at, :updated_at,
+             :shipping_method, :shipping_cost, :shipping_distance
+
+  # Payment-related attributes now come from OrderPayment
+  attribute :payment_status do |object|
+    object.payment&.status
+  end
+
+  attribute :payment_method do |object|
+    object.payment&.method
+  end
+
+  attribute :payment_deadline do |object|
+    object.payment&.deadline
+  end
+
+  attribute :expires_at do |object|
+    object.payment&.expires_at
+  end
+
+  attribute :payment_instructions do |object|
+    object.payment&.instructions
+  end
+
+  attribute :company_account_info do |object|
+    object.payment&.company_account_info
+  end
   
   # 買家資訊
   attribute :buyer do |object|
@@ -76,26 +100,27 @@ class OrderSerializer
     object.tracking_number if object.respond_to?(:tracking_number)
   end
 
-  # 付款期限相關資訊
+  # 付款期限相關資訊 (now from OrderPayment)
   attribute :remaining_payment_hours do |object|
-    object.remaining_payment_hours if object.respond_to?(:remaining_payment_hours)
+    object.payment&.remaining_payment_hours
   end
 
   attribute :remaining_payment_time_humanized do |object|
-    object.remaining_payment_time_humanized if object.respond_to?(:remaining_payment_time_humanized)
+    object.payment&.remaining_payment_time_humanized
   end
 
   attribute :expired do |object|
-    object.expired? if object.respond_to?(:expired?)
+    object.payment&.expired? || false
   end
 
-  # 付款證明相關資訊
+  # 付款證明相關資訊 (now from OrderPayment)
   attribute :payment_proof_info do |object|
-    if object.has_payment_proof?
-      latest_proof = object.latest_payment_proof
+    payment = object.payment
+    if payment&.has_payment_proof?
+      latest_proof = payment.latest_payment_proof
       {
         has_proof: true,
-        status: object.payment_proof_status,
+        status: payment.payment_proof_status,
         filename: latest_proof.filename.to_s,
         uploaded_at: latest_proof.created_at.iso8601,
         file_size: latest_proof.byte_size,
