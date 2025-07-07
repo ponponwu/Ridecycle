@@ -29,8 +29,8 @@ const HeroBanner = () => {
                     style={{ backgroundImage: `url("${backgroundPattern}")` }}
                 ></div>
                 <div className="absolute top-20 right-20 w-32 h-32 bg-white/5 rounded-full blur-xl"></div>
-                <div className="absolute bottom-40 left-10 w-24 h-24 bg-orange-300/10 rounded-full blur-lg"></div>
-                <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-amber-400/10 rounded-full blur-md"></div>
+                <div className="absolute bottom-40 left-10 w-24 h-24 bg-teal-300/10 rounded-full blur-lg"></div>
+                <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-emerald-400/10 rounded-full blur-md"></div>
             </div>
 
             <div className="container relative px-4 py-16 mx-auto sm:py-20 md:py-24 lg:py-28">
@@ -38,7 +38,7 @@ const HeroBanner = () => {
                     <div className="flex flex-col justify-center space-y-8">
                         {/* 徽章 */}
                         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white w-fit">
-                            <Star className="w-4 h-4 text-amber-300 fill-current" />
+                            <Star className="w-4 h-4 text-teal-300 fill-current" />
                             <span className="text-sm font-medium">台灣第一自行車交易平台</span>
                         </div>
 
@@ -48,10 +48,10 @@ const HeroBanner = () => {
                                 {t('findPerfectBike')}
                             </h1>
                             <div className="flex items-center gap-3">
-                                <span className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
+                                <span className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-300 to-emerald-400 bg-clip-text text-transparent">
                                     {t('ride')}
                                 </span>
-                                <div className="w-12 h-1 bg-gradient-to-r from-amber-300 to-orange-400 rounded-full"></div>
+                                <div className="w-12 h-1 bg-gradient-to-r from-teal-300 to-emerald-400 rounded-full"></div>
                             </div>
                         </div>
 
@@ -110,8 +110,8 @@ const HeroBanner = () => {
                                 {/* 裝飾圖案 */}
                                 <div className="absolute inset-0">
                                     <div className="absolute top-10 left-10 w-32 h-32 bg-white/20 rounded-full"></div>
-                                    <div className="absolute top-20 right-20 w-20 h-20 bg-amber-300/30 rounded-full"></div>
-                                    <div className="absolute bottom-20 left-20 w-24 h-24 bg-orange-300/30 rounded-full"></div>
+                                    <div className="absolute top-20 right-20 w-20 h-20 bg-teal-300/30 rounded-full"></div>
+                                    <div className="absolute bottom-20 left-20 w-24 h-24 bg-emerald-300/30 rounded-full"></div>
                                     <div className="absolute bottom-10 right-10 w-28 h-28 bg-white/15 rounded-full"></div>
                                 </div>
 
@@ -152,7 +152,7 @@ const HeroBanner = () => {
             </div>
 
             {/* 分類標籤 */}
-            <div className="container px-4 pb-8 mx-auto relative z-20">
+            {/* <div className="container px-4 pb-8 mx-auto relative z-20">
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                     <div className="flex flex-wrap justify-center gap-3">
                         {bikeCategories.map((category) => (
@@ -172,7 +172,7 @@ const HeroBanner = () => {
                         ))}
                     </div>
                 </div>
-            </div>
+            </div> */}
         </section>
     )
 }

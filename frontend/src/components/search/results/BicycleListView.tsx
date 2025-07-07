@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Bicycle } from '../types';
 
 interface BicycleListViewProps {
@@ -10,7 +11,11 @@ const BicycleListView: React.FC<BicycleListViewProps> = ({ bicycles }) => {
   return (
     <div className="space-y-4">
       {bicycles.map((bicycle) => (
-        <div key={bicycle.id} className="border rounded-lg overflow-hidden flex">
+        <Link 
+          key={bicycle.id} 
+          to={`/bicycle/${bicycle.id}`}
+          className="block border rounded-lg overflow-hidden flex hover:shadow-md transition-shadow"
+        >
           <img 
             src={bicycle.imageUrl} 
             alt={bicycle.title} 
@@ -21,7 +26,7 @@ const BicycleListView: React.FC<BicycleListViewProps> = ({ bicycles }) => {
             <p className="text-lg font-bold text-marketplace-green">${bicycle.price}</p>
             <p className="text-sm text-gray-500">{bicycle.location} • {bicycle.condition}</p>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

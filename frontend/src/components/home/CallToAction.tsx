@@ -12,9 +12,9 @@ const CallToAction = () => {
             {/* 動態背景裝飾 */}
             <div className="absolute inset-0">
                 <div className="absolute top-0 left-0 w-full h-full opacity-20">
-                    <div className="absolute top-20 left-20 w-64 h-64 bg-amber-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
-                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-rose-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000"></div>
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-500"></div>
+                    <div className="absolute top-20 left-20 w-64 h-64 bg-teal-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
+                    <div className="absolute bottom-20 right-20 w-80 h-80 bg-emerald-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-1000"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-500"></div>
                 </div>
 
                 {/* 幾何圖案 */}
@@ -50,7 +50,7 @@ const CallToAction = () => {
                 <div className="max-w-5xl mx-auto text-center">
                     {/* 徽章 */}
                     <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 text-white mb-8">
-                        <Sparkles className="w-5 h-5 text-amber-300" />
+                        <Sparkles className="w-5 h-5 text-teal-300" />
                         <span className="font-medium">加入我們的社群</span>
                     </div>
 

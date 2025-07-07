@@ -45,15 +45,17 @@ const Navbar = () => {
 
                     {currentUser ? (
                         <>
-                            <Link to="/profile">
-                                <Button
-                                    variant="ghost"
-                                    className="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl"
-                                >
-                                    <User className="h-5 w-5 mr-2" />
-                                    {t('personalCenter')}
-                                </Button>
-                            </Link>
+                            {!currentUser.admin && (
+                                <Link to="/profile">
+                                    <Button
+                                        variant="ghost"
+                                        className="text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl"
+                                    >
+                                        <User className="h-5 w-5 mr-2" />
+                                        {t('personalCenter')}
+                                    </Button>
+                                </Link>
+                            )}
                             {currentUser.admin && (
                                 <Link to="/admin">
                                     <Button
@@ -146,14 +148,16 @@ const Navbar = () => {
 
                             {currentUser ? (
                                 <>
-                                    <Link
-                                        to="/profile"
-                                        className="flex items-center p-4 rounded-xl hover:bg-emerald-50 transition-colors"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        <User className="w-5 h-5 mr-3 text-emerald-600" />
-                                        <span className="text-gray-700 font-medium">{t('personalCenter')}</span>
-                                    </Link>
+                                    {!currentUser.admin && (
+                                        <Link
+                                            to="/profile"
+                                            className="flex items-center p-4 rounded-xl hover:bg-emerald-50 transition-colors"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <User className="w-5 h-5 mr-3 text-emerald-600" />
+                                            <span className="text-gray-700 font-medium">{t('personalCenter')}</span>
+                                        </Link>
+                                    )}
 
                                     {currentUser.admin && (
                                         <Link

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
 import { ILoginRequest, IRegisterRequest } from '@/types/auth.types'
 
 type AuthFormProps = {
@@ -14,13 +15,14 @@ const AuthForm = ({ type }: AuthFormProps) => {
     const [password, setPassword] = useState('')
     const [name, setName] = useState('')
     const navigate = useNavigate()
+    const { t } = useTranslation()
 
     const { login, register, isLoading, error, clearError } = useAuth()
 
     const isLogin = type === 'login'
-    const title = isLogin ? '登入' : '創建帳號'
-    const buttonText = isLogin ? '登入' : '創建帳號'
-    const altText = isLogin ? '還沒有帳號？註冊' : '已經有帳號？登入'
+    const title = isLogin ? t('login') : t('auth.createAccount')
+    const buttonText = isLogin ? t('login') : t('auth.createAccount')
+    const altText = isLogin ? t('auth.noAccountYet') : t('auth.alreadyHaveAccount')
     const altLink = isLogin ? '/register' : '/login'
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,8 +38,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 }
                 await login(loginData)
                 toast({
-                    title: '登入成功',
-                    description: '歡迎回來！',
+                    title: t('auth.loginSuccess'),
+                    description: t('auth.welcomeBack'),
                 })
                 navigate('/')
             } else {
@@ -50,17 +52,17 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 }
                 await register(registerData)
                 toast({
-                    title: '註冊成功',
-                    description: '您的帳號已成功創建！',
+                    title: t('auth.registerSuccess'),
+                    description: t('auth.accountCreatedSuccessfully'),
                 })
                 navigate('/')
             }
         } catch (err) {
-            console.error('認證錯誤:', err)
+            console.error(t('auth.authError'), err)
             toast({
                 variant: 'destructive',
-                title: isLogin ? '登入失敗' : '註冊失敗',
-                description: error || '發生錯誤，請稍後再試',
+                title: isLogin ? t('auth.loginFailed') : t('auth.registerFailed'),
+                description: error || t('auth.errorOccurred'),
             })
         }
     }
@@ -74,11 +76,11 @@ const AuthForm = ({ type }: AuthFormProps) => {
 
             // 注意：這裡不需要導航和顯示成功訊息，因為頁面會被重定向
         } catch (err) {
-            console.error('Google 登入錯誤:', err)
+            console.error(t('auth.googleLoginError'), err)
             toast({
                 variant: 'destructive',
-                title: 'Google 登入失敗',
-                description: '無法啟動 Google 登入流程，請稍後再試',
+                title: t('auth.googleLoginFailed'),
+                description: t('auth.googleLoginFailedMessage'),
             })
         }
     }
@@ -92,11 +94,11 @@ const AuthForm = ({ type }: AuthFormProps) => {
 
             // 注意：這裡不需要導航和顯示成功訊息，因為頁面會被重定向
         } catch (err) {
-            console.error('Facebook 登入錯誤:', err)
+            console.error(t('auth.facebookLoginError'), err)
             toast({
                 variant: 'destructive',
-                title: 'Facebook 登入失敗',
-                description: '無法啟動 Facebook 登入流程，請稍後再試',
+                title: t('auth.facebookLoginFailed'),
+                description: t('auth.facebookLoginFailedMessage'),
             })
         }
     }
@@ -105,7 +107,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
         <div className="bg-white p-8 rounded-lg shadow-sm max-w-md w-full mx-auto">
             <div className="text-center mb-8">
                 <h1 className="text-2xl font-bold">{title}</h1>
-                <p className="text-gray-600 mt-2">{isLogin ? '歡迎回到 Ride Cycle' : '加入 Ride Cycle 社區'}</p>
+                <p className="text-gray-600 mt-2">{isLogin ? t('auth.welcomeBackToRideCycle') : t('auth.joinRideCycleCommunity')}</p>
             </div>
 
             {/* Social Login Buttons */}
@@ -133,7 +135,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
                             fill="#EA4335"
                         />
                     </svg>
-                    使用 Google 帳號登入
+                    {t('auth.signInWithGoogle')}
                 </button>
 
                 <button
@@ -150,14 +152,14 @@ const AuthForm = ({ type }: AuthFormProps) => {
                     >
                         <path d="M24 12.0733C24 5.40546 18.6274 0 12 0C5.37262 0 0 5.40546 0 12.0733C0 18.0995 4.38823 23.0943 10.125 24V15.5633H7.07694V12.0733H10.125V9.41343C10.125 6.38755 11.9165 4.71615 14.6576 4.71615C15.9705 4.71615 17.3438 4.95195 17.3438 4.95195V7.92313H15.8306C14.3399 7.92313 13.875 8.85384 13.875 9.80855V12.0733H17.2031L16.6711 15.5633H13.875V24C19.6118 23.0943 24 18.0995 24 12.0733Z" />
                     </svg>
-                    使用 Facebook 帳號登入
+                    {t('auth.signInWithFacebook')}
                 </button>
             </div>
 
             {/* Divider */}
             <div className="flex items-center mb-6">
                 <div className="flex-grow border-t border-gray-300"></div>
-                <span className="px-4 text-gray-500 text-sm">或</span>
+                <span className="px-4 text-gray-500 text-sm">{t('auth.or')}</span>
                 <div className="flex-grow border-t border-gray-300"></div>
             </div>
 
@@ -166,7 +168,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 {!isLogin && (
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                            姓名
+                            {t('auth.name')}
                         </label>
                         <input
                             id="name"
@@ -174,7 +176,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
-                            placeholder="請輸入您的姓名"
+                            placeholder={t('auth.enterName')}
                             required={!isLogin}
                         />
                     </div>
@@ -182,7 +184,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
 
                 <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        電子郵件
+                        {t('auth.email')}
                     </label>
                     <input
                         id="email"
@@ -190,14 +192,14 @@ const AuthForm = ({ type }: AuthFormProps) => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
-                        placeholder="請輸入您的電子郵件"
+                        placeholder={t('auth.enterEmail')}
                         required
                     />
                 </div>
 
                 <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                        密碼
+                        {t('auth.password')}
                     </label>
                     <input
                         id="password"
@@ -205,7 +207,7 @@ const AuthForm = ({ type }: AuthFormProps) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-marketplace-blue focus:border-transparent"
-                        placeholder="請輸入您的密碼"
+                        placeholder={t('auth.enterPassword')}
                         required
                     />
                 </div>
@@ -213,21 +215,21 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 {isLogin && (
                     <div className="flex justify-end">
                         <Link to="/forgot-password" className="text-sm text-marketplace-blue hover:underline">
-                            忘記密碼？
+                            {t('auth.forgotPassword')}
                         </Link>
                     </div>
                 )}
 
                 <Button type="submit" className="w-full bg-marketplace-blue hover:bg-blue-600" disabled={isLoading}>
-                    {isLoading ? '處理中...' : buttonText}
+                    {isLoading ? t('auth.processing') : buttonText}
                 </Button>
             </form>
 
             <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
-                    {isLogin ? '還沒有帳號？' : '已經有帳號？'}
+                    {altText}
                     <Link to={altLink} className="text-marketplace-blue hover:underline font-medium">
-                        {isLogin ? '註冊' : '登入'}
+                        {isLogin ? t('register') : t('login')}
                     </Link>
                 </p>
             </div>
