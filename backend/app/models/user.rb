@@ -45,6 +45,31 @@ class User < ApplicationRecord
   def remove_admin!
     update!(admin: false)
   end
+  
+  # User status methods
+  def suspicious?
+    is_suspicious
+  end
+  
+  def blacklisted?
+    is_blacklisted
+  end
+  
+  def mark_suspicious!
+    update!(is_suspicious: true)
+  end
+  
+  def unmark_suspicious!
+    update!(is_suspicious: false)
+  end
+  
+  def blacklist!
+    update!(is_blacklisted: true)
+  end
+  
+  def unblacklist!
+    update!(is_blacklisted: false)
+  end
 
   # 銀行戶頭相關方法
   def bank_account_complete?
