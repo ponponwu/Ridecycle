@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Copy, Upload, CreditCard, Clock, AlertCircle } from 'lucide-react'
-import { IPaymentInfo, COMPANY_BANK_ACCOUNT } from '@/types/checkout.types'
+import { Upload, CreditCard, Clock, AlertCircle } from 'lucide-react'
+import { IPaymentInfo } from '@/types/checkout.types'
 import { formatPriceNTD } from '@/utils/priceFormatter'
+import BankAccountInfo from '@/components/payment/BankAccountInfo'
 
 // 創建動態驗證 schema
 const createPaymentSchema = (t: (key: string) => string) =>
@@ -48,10 +49,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ initialValues = {}, onSubmit,
         },
     })
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text)
-        // 這裡可以添加 toast 通知
-    }
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
@@ -94,81 +91,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ initialValues = {}, onSubmit,
             </Card>
 
             {/* 銀行帳戶資訊 */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('bankAccount')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">{t('bankName')}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.bankName}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.bankName)}
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">{t('bankCode')}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.bankCode}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.bankCode)}
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">{t('accountNumber')}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="font-mono font-medium">{COMPANY_BANK_ACCOUNT.accountNumber}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.accountNumber)}
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">{t('accountName')}</span>
-                            <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm">{COMPANY_BANK_ACCOUNT.accountName}</span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => copyToClipboard(COMPANY_BANK_ACCOUNT.accountName)}
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-
-                        {COMPANY_BANK_ACCOUNT.branch && (
-                            <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">{t('branch')}</span>
-                                <span className="font-medium">{COMPANY_BANK_ACCOUNT.branch}</span>
-                            </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+            <BankAccountInfo 
+                amount={totalAmount}
+                mode="full"
+                title={t('bankAccount')}
+            />
 
             {/* 轉帳資訊表單 */}
             <Form {...form}>

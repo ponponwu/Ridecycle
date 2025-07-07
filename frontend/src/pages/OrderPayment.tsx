@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast'
 import BankAccountInfo from '@/components/payment/BankAccountInfo'
 import PaymentProofUpload from '@/components/payment/PaymentProofUpload'
 import type { PaymentProofInfo } from '@/types/payment.types'
+import { formatRemainingTime } from '@/utils/timeUtils'
 
 const OrderPayment: React.FC = () => {
     const { orderNumber } = useParams<{ orderNumber: string }>()
@@ -36,7 +37,6 @@ const OrderPayment: React.FC = () => {
             const orderData = await orderService.getOrderById(orderId)
             setOrder(orderData as IOrder)
 
-            // 設置付款證明資訊（只有在真正有付款證明時才設置）
             if (orderData.paymentProofInfo && orderData.paymentProofInfo.hasProof) {
                 const adaptedProofInfo: PaymentProofInfo = {
                     id: `proof_${orderData.id}`,
@@ -49,7 +49,6 @@ const OrderPayment: React.FC = () => {
                 }
                 setPaymentProofInfo(adaptedProofInfo)
             } else {
-                // 確保沒有付款證明時將狀態設為 undefined
                 setPaymentProofInfo(undefined)
             }
         } catch (error) {
@@ -60,40 +59,17 @@ const OrderPayment: React.FC = () => {
         }
     }
 
-    // 處理付款證明上傳成功
     const handlePaymentProofUploadSuccess = (proofInfo: PaymentProofInfo) => {
         setPaymentProofInfo(proofInfo)
         toast({
             title: t('uploadSuccessTitle', '上傳成功'),
             description: t('uploadSuccessMessage', '轉帳證明已上傳，請等待確認'),
         })
-        // 返回訂單詳情頁面
         navigate(`/orders/${order?.id}`)
     }
 
-    // 處理付款證明上傳失敗
     const handlePaymentProofUploadError = (error: string) => {
         console.error('Payment proof upload error:', error)
-    }
-
-    // 將英文時間字串轉換為中文
-    const formatRemainingTime = (timeString: string) => {
-        if (!timeString) return ''
-
-        // 解析英文時間字串，例如 "2 days remaining", "1 hour remaining", etc.
-        const match = timeString.match(/(\d+)\s+(day|hour|minute)s?\s+remaining/i)
-        if (match) {
-            const [, number, unit] = match
-            const unitTranslations: { [key: string]: string } = {
-                day: number === '1' ? '天' : '天',
-                hour: number === '1' ? '小時' : '小時',
-                minute: number === '1' ? '分鐘' : '分鐘',
-            }
-            return `${number} ${unitTranslations[unit.toLowerCase()] || unit}`
-        }
-
-        // 如果解析失敗，返回原字串
-        return timeString
     }
 
     if (isLoading) {
@@ -127,16 +103,13 @@ const OrderPayment: React.FC = () => {
         )
     }
 
-    // 如果訂單已付款或已確認，重導向到訂單詳情
     if (order.paymentStatus === 'paid') {
         navigate(`/orders/${order.id}`, { replace: true })
         return null
     }
 
-    // 如果已上傳付款證明，顯示審核中狀態
     const hasUploadedProof = paymentProofInfo?.hasProof
 
-    // 如果訂單已過期，顯示過期提示
     if (order.expired) {
         return (
             <MainLayout>
@@ -157,7 +130,6 @@ const OrderPayment: React.FC = () => {
     return (
         <MainLayout>
             <div className="container max-w-4xl mx-auto px-4 py-8">
-                {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/orders/${order.id}`)}>
                         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -171,7 +143,6 @@ const OrderPayment: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Payment Status Information */}
                 {hasUploadedProof ? (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                         <div className="flex items-start gap-3">
@@ -211,9 +182,7 @@ const OrderPayment: React.FC = () => {
                                 <h4 className="font-medium text-orange-800 mb-1">請於期限內完成付款</h4>
                                 <p className="text-sm text-orange-700">
                                     {order.remainingPaymentTimeHumanized &&
-                                        `${t('remainingTime')}: ${formatRemainingTime(
-                                            order.remainingPaymentTimeHumanized
-                                        )}`}
+                                        `剩餘時間：${formatRemainingTime(order.remainingPaymentTimeHumanized, t)}`}
                                 </p>
                             </div>
                         </div>
@@ -221,14 +190,11 @@ const OrderPayment: React.FC = () => {
                 )}
 
                 <div className="grid lg:grid-cols-2 gap-6">
-                    {/* Bank Transfer Information */}
                     <BankAccountInfo
                         amount={order.totalPrice}
                         transferNote={order.orderNumber || order.id}
                         mode="full"
                     />
-
-                    {/* Payment Proof Upload */}
                     <PaymentProofUpload
                         orderId={order.id}
                         existingProof={paymentProofInfo}
@@ -237,7 +203,6 @@ const OrderPayment: React.FC = () => {
                     />
                 </div>
 
-                {/* Instructions */}
                 <Card className="mt-6">
                     <CardHeader>
                         <CardTitle>轉帳注意事項</CardTitle>

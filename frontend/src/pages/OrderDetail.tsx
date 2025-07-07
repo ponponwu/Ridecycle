@@ -12,11 +12,14 @@ import { formatPriceNTD } from '@/utils/priceFormatter'
 import BankAccountInfo from '@/components/payment/BankAccountInfo'
 import PaymentProofUpload from '@/components/payment/PaymentProofUpload'
 import type { PaymentProofInfo } from '@/types/payment.types'
+import { formatRemainingTime } from '@/utils/timeUtils'
+import { useAuth } from '@/contexts/AuthContext'
 
 const OrderDetail: React.FC = () => {
     const { orderNumber } = useParams<{ orderNumber: string }>()
     const navigate = useNavigate()
     const { t } = useTranslation()
+    const { currentUser } = useAuth()
 
     const [order, setOrder] = useState<IOrder | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -73,24 +76,12 @@ const OrderDetail: React.FC = () => {
         console.error('Payment proof upload error:', error)
     }
 
-    // 將英文時間字串轉換為中文
-    const formatRemainingTime = (timeString: string) => {
-        if (!timeString) return ''
-
-        // 解析英文時間字串，例如 "2 days remaining", "1 hour remaining", etc.
-        const match = timeString.match(/(\d+)\s+(day|hour|minute)s?\s+remaining/i)
-        if (match) {
-            const [, number, unit] = match
-            const unitTranslations: { [key: string]: string } = {
-                day: number === '1' ? '天' : '天',
-                hour: number === '1' ? '小時' : '小時',
-                minute: number === '1' ? '分鐘' : '分鐘',
-            }
-            return `${number} ${unitTranslations[unit.toLowerCase()] || unit}`
+    // 檢查當前用戶是否為訂單的買家
+    const isBuyer = () => {
+        if (!currentUser || !order || !order.buyer) {
+            return false
         }
-
-        // 如果解析失敗，返回原字串
-        return timeString
+        return currentUser.id === order.buyer.id
     }
 
     // 獲取付款期限倒數時間
@@ -98,13 +89,12 @@ const OrderDetail: React.FC = () => {
         if (!order || order.paymentStatus === 'paid' || order.expired) return null
 
         if (order.remainingPaymentTimeHumanized) {
-            const formattedTime = formatRemainingTime(order.remainingPaymentTimeHumanized)
             return (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-orange-600" />
                         <span className="text-sm font-medium text-orange-800">
-                            {t('paymentDeadlineCountdown')}: {formattedTime}
+                            付款期限倒數：{formatRemainingTime(order.remainingPaymentTimeHumanized, t)}
                         </span>
                     </div>
                 </div>
@@ -361,14 +351,15 @@ const OrderDetail: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="text-sm space-y-2 pt-4">
-                                    {/* Payment Deadline */}
-                                    {getPaymentDeadlineDisplay()}
+                                    {/* Payment Deadline (show only for buyers) */}
+                                    {isBuyer() && getPaymentDeadlineDisplay()}
                                 </div>
                             </div>
 
-                            {/* Bank Account Information (show when payment is needed) */}
+                            {/* Bank Account Information (show when payment is needed and user is buyer) */}
                             {(order.paymentStatus === 'pending' || order.paymentStatus === 'awaiting_confirmation') &&
-                                !order.expired && (
+                                !order.expired &&
+                                isBuyer() && (
                                     <BankAccountInfo
                                         amount={order.totalPrice}
                                         transferNote={order.orderNumber || order.id}
@@ -377,9 +368,10 @@ const OrderDetail: React.FC = () => {
                                     />
                                 )}
 
-                            {/* Payment Proof Upload (show when payment is needed or proof can be updated) */}
+                            {/* Payment Proof Upload (show when payment is needed and user is buyer) */}
                             {(order.paymentStatus === 'pending' || order.paymentStatus === 'awaiting_confirmation') &&
-                                !order.expired && (
+                                !order.expired &&
+                                isBuyer() && (
                                     <PaymentProofUpload
                                         orderId={order.id}
                                         existingProof={paymentProofInfo}
