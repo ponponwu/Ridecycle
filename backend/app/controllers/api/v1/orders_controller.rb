@@ -33,8 +33,8 @@ class Api::V1::OrdersController < ApplicationController
                             .where(bicycles: { user_id: current_user.id })
                             .includes(
                               :user, # 買家資訊
-                              :payment_proofs_attachments, # ActiveStorage 付款證明
-                              :payment_proofs_blobs,
+                              :payment, # OrderPayment
+                              payment: [:payment_proofs_attachments, :payment_proofs_blobs], # ActiveStorage 付款證明
                               bicycle: [
                                 :user,                 # 賣家資訊
                                 :brand,                # 自行車品牌
@@ -46,8 +46,8 @@ class Api::V1::OrdersController < ApplicationController
     else
       # 作為買家的訂單（購買）
       orders_relation = current_user.orders.includes(
-                          :payment_proofs_attachments, # ActiveStorage 付款證明
-                          :payment_proofs_blobs,
+                          :payment, # OrderPayment
+                          payment: [:payment_proofs_attachments, :payment_proofs_blobs], # ActiveStorage 付款證明
                           bicycle: [
                             :user,                 # 賣家資訊
                             :brand,                # 自行車品牌
@@ -161,7 +161,7 @@ class Api::V1::OrdersController < ApplicationController
     end
 
     # 檢查訂單狀態是否允許上傳付款證明
-    unless @order.status_pending? && @order.payment_status_pending?
+    unless @order.status_pending? && @order.payment&.status_pending?
       return render_jsonapi_errors(['Cannot upload payment proof for this order status'], status: :unprocessable_entity)
     end
 
@@ -182,8 +182,11 @@ class Api::V1::OrdersController < ApplicationController
     end
 
     begin
-      # 使用 ActiveStorage 附加檔案
-      attachment = @order.payment_proofs.attach(
+      # 使用 ActiveStorage 附加檔案到 OrderPayment
+      payment = @order.payment
+      return render_jsonapi_errors(['No payment record found'], status: :not_found) unless payment
+
+      attachment = payment.payment_proofs.attach(
         io: uploaded_file.tempfile,
         filename: uploaded_file.original_filename,
         content_type: uploaded_file.content_type,
@@ -197,7 +200,7 @@ class Api::V1::OrdersController < ApplicationController
 
         if attachment
          # 更新付款狀態為待確認
-         @order.update!(payment_status: :awaiting_confirmation)
+         payment.update!(status: :awaiting_confirmation)
          
          render json: {
            success: true,
@@ -227,11 +230,12 @@ class Api::V1::OrdersController < ApplicationController
     end
 
     # 檢查是否有上傳的付款證明
-    unless @order.has_payment_proof?
+    payment = @order.payment
+    unless payment&.has_payment_proof?
       return render_jsonapi_errors(['No payment proof found'], status: :not_found)
     end
 
-    latest_proof = @order.latest_payment_proof
+    latest_proof = payment.latest_payment_proof
 
     # 回傳檔案
     send_data latest_proof.download,
@@ -267,8 +271,8 @@ class Api::V1::OrdersController < ApplicationController
                   )
                   .includes(
                     :user, # Buyer info
-                    :payment_proofs_attachments,
-                    :payment_proofs_blobs,
+                    :payment, # OrderPayment
+                    payment: [:payment_proofs_attachments, :payment_proofs_blobs], # ActiveStorage 付款證明
                     bicycle: [
                       :user, # Seller info
                       :brand,
@@ -305,6 +309,6 @@ class Api::V1::OrdersController < ApplicationController
   end
 
   def update_params
-    params.require(:order).permit(:status, :payment_status, :tracking_number, :carrier)
+    params.require(:order).permit(:status, :tracking_number, :carrier)
   end
 end 

@@ -8,8 +8,6 @@ FactoryBot.define do
     sequence(:order_number) { |n| "R-#{Date.current.strftime('%y%m%d')}-#{sprintf('%06X', n)}" }
     total_price { 15000 }
     status { :pending }
-    payment_status { :pending }
-    payment_method { :bank_transfer }
     shipping_method { :assisted_delivery }
     shipping_distance { 5 }
     
@@ -35,7 +33,6 @@ FactoryBot.define do
     
     trait :completed do
       status { :completed }
-      payment_status { :paid }
     end
     
     trait :cancelled do
@@ -70,12 +67,23 @@ FactoryBot.define do
       status { :refunded }
     end
 
-    trait :failed do
-      payment_status { :failed }
+    # Payment-related traits are now handled by order_payment factory
+    trait :with_paid_payment do
+      after(:create) do |order|
+        order.payment.update!(status: :paid)
+      end
     end
 
-    trait :payment_refunded do
-      payment_status { :refunded }
+    trait :with_failed_payment do
+      after(:create) do |order|
+        order.payment.update!(status: :failed)
+      end
+    end
+
+    trait :with_refunded_payment do
+      after(:create) do |order|
+        order.payment.update!(status: :refunded)
+      end
     end
   end
 end 
