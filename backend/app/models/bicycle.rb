@@ -73,8 +73,8 @@ class Bicycle < ApplicationRecord
     pending: 0,    # 待審核 (新建立的自行車預設狀態)
     available: 1,  # 可購買
     sold: 2,       # 已售出
-    draft: 3       # 草稿/被拒絕
-    reserved: 4,   # 被預定但尚未付款
+    draft: 3,      # 草稿/被拒絕
+    reserved: 4    # 被預定但尚未付款
   }
   
   # Validates presence of required fields

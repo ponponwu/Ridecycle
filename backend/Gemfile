@@ -73,3 +73,4 @@ gem "omniauth-facebook"
 gem "image_processing", ">= 1.2"
 gem 'google-cloud-storage', '~> 1.30', require: false
 gem 'jsonapi-serializer'
+gem "whenever", "~> 1.0"
