@@ -35,6 +35,9 @@ import EditBike from './pages/EditBike'
 import AdminDashboard from './components/admin/AdminDashboard'
 import BicycleManagement from './components/admin/BicycleManagement'
 import BicycleDetailsView from './components/admin/bicycles/BicycleDetailsView'
+import UserManagement from './components/admin/UserManagement'
+import MessageManagement from './components/admin/MessageManagement'
+import SystemSettings from './components/admin/SystemSettings'
 import AdminRoute from './components/AdminRoute'
 import AdminTest from './pages/AdminTest'
 
@@ -184,6 +187,30 @@ function AppContent() {
                     element={
                         <AdminRoute>
                             <BicycleDetailsView />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/users"
+                    element={
+                        <AdminRoute>
+                            <UserManagement />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/messages"
+                    element={
+                        <AdminRoute>
+                            <MessageManagement />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/settings"
+                    element={
+                        <AdminRoute>
+                            <SystemSettings />
                         </AdminRoute>
                     }
                 />
