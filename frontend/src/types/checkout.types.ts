@@ -50,12 +50,3 @@ export interface IBankAccount {
     accountName: string
     branch?: string
 }
-
-// 預設的公司帳戶資訊
-export const COMPANY_BANK_ACCOUNT: IBankAccount = {
-    bankName: '玉山銀行',
-    bankCode: '808',
-    accountNumber: '1234567890123',
-    accountName: 'RideCycle 二手自行車交易平台有限公司',
-    branch: '台北分行',
-}
