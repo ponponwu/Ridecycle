@@ -40,25 +40,15 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
 
   config.active_storage.service_configurations = {
-    "google" => {
-      "service" => "GCS",
-      "project" => ENV['GOOGLE_CLOUD_PROJECT_ID'],
-      "credentials" => ENV['GOOGLE_CLOUD_KEYFILE'] || '/tmp/gcp_credentials.json',
-      "bucket" => ENV['GOOGLE_CLOUD_BUCKET']
+    "amazon" => {
+      "service" => "S3",
+      "access_key_id" => ENV['AWS_ACCESS_KEY_ID'],
+      "secret_access_key" => ENV['AWS_SECRET_ACCESS_KEY'],
+      "region" => ENV['AWS_REGION'] || 'ap-northeast-1',
+      "bucket" => ENV['AWS_S3_BUCKET_NAME'] || 'ride-cycle-production'
     }
   }
-  config.active_storage.service = :google
-
-  if ENV['GOOGLE_CLOUD_CREDENTIALS'].present?
-    require 'fileutils'
-    temp_credentials_path = '/tmp/gcp_credentials.json'
-    
-    File.open(temp_credentials_path, 'w') do |f|
-      f.write(ENV['GOOGLE_CLOUD_CREDENTIALS'])
-    end
-    FileUtils.chmod(0600, temp_credentials_path)
-    ENV['GOOGLE_CLOUD_KEYFILE'] = temp_credentials_path
-  end
+  config.active_storage.service = :amazon
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
