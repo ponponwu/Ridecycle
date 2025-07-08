@@ -4,14 +4,14 @@ import { BicycleWithOwner } from '@/types/bicycle.types'
 import { toast } from '@/hooks/use-toast'
 import { useBicycleActions } from './useBicycleActions'
 
-export type BicycleStatus = 'pending' | 'available' | 'draft' | 'sold'
+export type BicycleStatus = 'pending' | 'available' | 'draft' | 'sold' | 'archived'
 
 export const useBicycleManagement = (initialStatus: BicycleStatus = 'pending') => {
     const [bicycles, setBicycles] = useState<BicycleWithOwner[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<BicycleStatus>(initialStatus)
     const [meta, setMeta] = useState<Record<string, unknown>>({})
-    const { approveBicycle, rejectBicycle, deleteBicycle } = useBicycleActions()
+    const { approveBicycle, rejectBicycle, deleteBicycle, archiveBicycle } = useBicycleActions()
 
     useEffect(() => {
         fetchBicycles(activeTab)
@@ -62,6 +62,12 @@ export const useBicycleManagement = (initialStatus: BicycleStatus = 'pending') =
         setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
     }
 
+    const handleArchive = async (id: string): Promise<void> => {
+        await archiveBicycle(id)
+
+        setBicycles((prev) => prev.filter((bicycle) => bicycle.id !== id))
+    }
+
     const refreshBicycles = () => {
         fetchBicycles(activeTab)
     }
@@ -75,6 +81,7 @@ export const useBicycleManagement = (initialStatus: BicycleStatus = 'pending') =
         handleApprove,
         handleReject,
         handleDelete,
+        handleArchive,
         refreshBicycles,
         fetchBicycles,
     }

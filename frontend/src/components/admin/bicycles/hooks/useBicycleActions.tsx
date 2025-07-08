@@ -63,9 +63,29 @@ export const useBicycleActions = () => {
         }
     }
 
+    const archiveBicycle = async (id: string): Promise<void> => {
+        try {
+            await adminService.archiveBicycle(Number(id))
+
+            toast({
+                title: '成功',
+                description: '自行車已封存',
+            })
+        } catch (error) {
+            console.error('Error archiving bicycle:', error)
+            toast({
+                variant: 'destructive',
+                title: '錯誤',
+                description: '封存失敗，請稍後再試',
+            })
+            throw error
+        }
+    }
+
     return {
         approveBicycle,
         rejectBicycle,
         deleteBicycle,
+        archiveBicycle,
     }
 }

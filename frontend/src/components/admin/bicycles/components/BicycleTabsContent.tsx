@@ -12,9 +12,10 @@ interface BicycleTabsContentProps {
     loading: boolean
     onApprove: (id: string) => void
     onReject: (id: string) => void
+    onArchive?: (id: string) => void
 }
 
-const BicycleTabsContent: React.FC<BicycleTabsContentProps> = ({ status, bicycles, loading, onApprove, onReject }) => {
+const BicycleTabsContent: React.FC<BicycleTabsContentProps> = ({ status, bicycles, loading, onApprove, onReject, onArchive }) => {
     return (
         <TabsContent value={status} className="focus-visible:outline-none focus-visible:ring-0">
             <BicycleTableLoading loading={loading} />
@@ -22,7 +23,7 @@ const BicycleTabsContent: React.FC<BicycleTabsContentProps> = ({ status, bicycle
             <EmptyBicycleState status={status} isEmpty={!loading && (!bicycles || bicycles.length === 0)} />
 
             {!loading && bicycles && bicycles.length > 0 && (
-                <BicycleTable bicycles={bicycles} onApprove={onApprove} onReject={onReject} />
+                <BicycleTable bicycles={bicycles} onApprove={onApprove} onReject={onReject} onArchive={onArchive} />
             )}
         </TabsContent>
     )

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Check, X, Eye } from 'lucide-react'
+import { Check, X, Eye, Archive } from 'lucide-react'
 import { BicycleWithOwner } from '@/types/bicycle.types'
 import { useStatusBadge } from '../utils/statusUtils'
 import { formatPriceNTD } from '@/utils/priceFormatter'
@@ -12,9 +12,10 @@ interface BicycleTableProps {
     bicycles: BicycleWithOwner[]
     onApprove: (id: string) => void
     onReject: (id: string) => void
+    onArchive?: (id: string) => void
 }
 
-const BicycleTable: React.FC<BicycleTableProps> = ({ bicycles, onApprove, onReject }) => {
+const BicycleTable: React.FC<BicycleTableProps> = ({ bicycles, onApprove, onReject, onArchive }) => {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { renderStatusBadge } = useStatusBadge()
@@ -77,6 +78,18 @@ const BicycleTable: React.FC<BicycleTableProps> = ({ bicycles, onApprove, onReje
                                                     {t('admin.reject')}
                                                 </Button>
                                             </>
+                                        )}
+
+                                        {(bicycle.status === 'available' || bicycle.status === 'draft') && onArchive && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                                                onClick={() => onArchive(bicycle.id)}
+                                            >
+                                                <Archive className="h-4 w-4 mr-1" />
+                                                封存
+                                            </Button>
                                         )}
                                     </div>
                                 </TableCell>

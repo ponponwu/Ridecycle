@@ -11,13 +11,24 @@ const EmptyBicycleState: React.FC<EmptyBicycleStateProps> = ({ status, isEmpty }
 
     if (!isEmpty) return null
 
+    const getEmptyMessage = () => {
+        switch (status) {
+            case 'pending':
+                return t('admin.noPendingBicycles')
+            case 'draft':
+                return t('admin.noDraftBicycles')
+            case 'available':
+                return t('admin.noAvailableBicycles')
+            case 'archived':
+                return t('admin.noArchivedBicycles')
+            default:
+                return `沒有 ${status} 狀態的自行車`
+        }
+    }
+
     return (
         <div className="text-center py-8 bg-white rounded-lg border">
-            <p className="text-gray-500">
-                {status === 'pending'
-                    ? t('admin.noPendingBicycles')
-                    : `${t('no')} ${t(status.toLowerCase())} ${t('bicycles')}`}
-            </p>
+            <p className="text-gray-500">{getEmptyMessage()}</p>
         </div>
     )
 }
