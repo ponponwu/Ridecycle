@@ -211,10 +211,174 @@ class Api::V1::BicyclesController < ApplicationController
   end
 
   def search_params
-    params.permit(:search, :page, :limit, :sort, :bicycle_type, :condition,
-                 :price_min, :price_max, :location, :brand_id, :transmission_id,
-                 :frame_material, :year_min, :year_max, :color, :frameset_only,
-                 bicycle_type: [], condition: [], brand: [], status: [])
+    # First permit all possible parameters (including both old and new formats)
+    raw_permitted = params.permit(:search, :page, :limit, :sort, :condition, :price, :type, :category,
+                                  :price_min, :price_max, :location, :brand_id, :transmission_id,
+                                  :frame_material, :year_min, :year_max, :color, :frameset_only,
+                                  bicycle_type: [], condition: [], brand: [], status: [])
+    
+    # Then normalize parameters to handle different frontend formats
+    normalized_params = normalize_search_params(raw_permitted)
+    
+    # Re-permit the normalized parameters to ensure they maintain permitted status
+    final_permitted = ActionController::Parameters.new(normalized_params.to_h).permit(
+      :search, :page, :limit, :sort, :condition,
+      :price_min, :price_max, :location, :brand_id, :transmission_id,
+      :frame_material, :year_min, :year_max, :color, :frameset_only,
+      bicycle_type: [], condition: [], brand: [], status: []
+    )
+    
+    # Validate and clean price parameters
+    final_permitted = validate_price_params(final_permitted)
+    
+    Rails.logger.debug "Final processed search params: #{final_permitted.to_h}"
+    final_permitted
+  end
+  
+  # Validates and cleans price parameters for search
+  # @param params [ActionController::Parameters] The permitted parameters
+  # @return [ActionController::Parameters] Cleaned parameters
+  def validate_price_params(params)
+    # Clean price_min parameter
+    if params[:price_min].present?
+      clean_price = clean_price_input(params[:price_min])
+      if clean_price.nil?
+        Rails.logger.warn "Invalid price_min parameter: #{params[:price_min]}"
+        params.delete(:price_min)
+      else
+        params[:price_min] = clean_price
+      end
+    end
+    
+    # Clean price_max parameter
+    if params[:price_max].present?
+      clean_price = clean_price_input(params[:price_max])
+      if clean_price.nil?
+        Rails.logger.warn "Invalid price_max parameter: #{params[:price_max]}"
+        params.delete(:price_max)
+      else
+        params[:price_max] = clean_price
+      end
+    end
+    
+    # Validate price range logic
+    if params[:price_min] && params[:price_max] && params[:price_min].to_f > params[:price_max].to_f
+      Rails.logger.warn "Invalid price range: min (#{params[:price_min]}) > max (#{params[:price_max]})"
+      params.delete(:price_min)
+      params.delete(:price_max)
+    end
+    
+    params
+  end
+  
+  # Cleans and validates price input
+  # @param price_input [String, Numeric] The price input to clean
+  # @return [String, nil] Cleaned price string or nil if invalid
+  def clean_price_input(price_input)
+    return nil if price_input.blank?
+    
+    # Handle string inputs
+    if price_input.is_a?(String)
+      # Remove common currency symbols and whitespace, keep digits, dots, and hyphens
+      clean_input = price_input.gsub(/[^\d.-]/, '')
+      return nil if clean_input.blank?
+    else
+      clean_input = price_input.to_s
+    end
+    
+    # Validate the cleaned input can be converted to a valid positive number
+    begin
+      price = Float(clean_input)
+      return nil if price < 0
+      clean_input
+    rescue ArgumentError, TypeError
+      nil
+    end
+  end
+  
+  # Normalizes search parameters to handle different frontend formats
+  # @param params [ActionController::Parameters] Raw parameters from frontend
+  # @return [ActionController::Parameters] Normalized parameters
+  def normalize_search_params(params)
+    normalized = params.dup
+    
+    # Handle price range format: price=30000-50000 -> price_min=30000, price_max=50000
+    if params[:price].present?
+      price_min, price_max = parse_price_range(params[:price])
+      normalized[:price_min] = price_min if price_min
+      normalized[:price_max] = price_max if price_max
+      normalized.delete(:price)
+    end
+    
+    # Handle parameter name mapping: type -> bicycle_type
+    if params[:type].present?
+      # Convert single type to array format for consistency
+      normalized[:bicycle_type] = Array(params[:type])
+      normalized.delete(:type)
+    end
+    
+    # Handle other parameter aliases if needed
+    if params[:category].present?
+      normalized[:bicycle_type] = Array(params[:category])
+      normalized.delete(:category)
+    end
+    
+    Rails.logger.debug "Normalized params: #{normalized.to_unsafe_h.slice(:price_min, :price_max, :bicycle_type, :type, :price)}"
+    normalized
+  end
+  
+  # Parses price range string into min and max values
+  # @param price_range [String] Price range in format "min-max", "min-", "-max", or "min+"
+  # @return [Array<String, String>] Array containing [price_min, price_max]
+  def parse_price_range(price_range)
+    return [nil, nil] if price_range.blank?
+    
+    # Clean the input - remove currency symbols and whitespace, but keep +, -, and digits
+    clean_range = price_range.to_s.gsub(/[^\d.+-]/, '')
+    
+    # Handle different formats:
+    # "30000-50000" -> ["30000", "50000"]
+    # "30000-" -> ["30000", nil]
+    # "-50000" -> [nil, "50000"]
+    # "300000+" -> ["300000", nil] (new format for "300000 and above")
+    # "30000" -> ["30000", nil] (single value treated as minimum)
+    
+    if clean_range.end_with?('+')
+      # Handle "300000+" format
+      price_min = clean_range.chomp('+')
+      price_max = nil
+    elsif clean_range.include?('-')
+      parts = clean_range.split('-', 2)
+      price_min = parts[0].present? ? parts[0] : nil
+      price_max = parts[1].present? ? parts[1] : nil
+    else
+      # Single value treated as minimum price
+      price_min = clean_range.present? ? clean_range : nil
+      price_max = nil
+    end
+    
+    # Validate the parsed values
+    price_min = validate_price_value(price_min)
+    price_max = validate_price_value(price_max)
+    
+    Rails.logger.debug "Parsed price range '#{price_range}' -> min: #{price_min}, max: #{price_max}"
+    [price_min, price_max]
+  end
+  
+  # Validates a single price value
+  # @param price_value [String, nil] Price value to validate
+  # @return [String, nil] Valid price string or nil
+  def validate_price_value(price_value)
+    return nil if price_value.blank?
+    
+    begin
+      price = Float(price_value)
+      return nil if price < 0
+      price_value
+    rescue ArgumentError, TypeError
+      Rails.logger.warn "Invalid price value in range: #{price_value}"
+      nil
+    end
   end
 
   # Add other actions (index, show, update, destroy, etc.) here as needed

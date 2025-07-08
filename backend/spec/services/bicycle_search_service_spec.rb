@@ -160,6 +160,93 @@ RSpec.describe BicycleSearchService, type: :service do
         
         expect(result[:bicycles].count).to eq(2) # No filtering applied
       end
+
+      # Enhanced price filter tests
+      context 'with robust price validation' do
+        it 'handles string price inputs with currency symbols' do
+          service = described_class.new({ price_min: '$1,300', price_max: '1,500' })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(1)
+          expect(result[:bicycles].first.price).to be >= 1300
+          expect(result[:bicycles].first.price).to be <= 1500
+        end
+
+        it 'handles decimal price inputs' do
+          service = described_class.new({ price_min: '1299.99', price_max: '1500.01' })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(1)
+          expect(result[:bicycles].first.price).to be >= 1299.99
+        end
+
+        it 'ignores negative price inputs' do
+          service = described_class.new({ price_min: -100, price_max: 1000 })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(1) # Only mountain bike (1200) filtered out
+        end
+
+        it 'ignores invalid string price inputs' do
+          service = described_class.new({ price_min: 'invalid', price_max: 'also_invalid' })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(2) # No filtering applied
+        end
+
+        it 'ignores empty string price inputs' do
+          service = described_class.new({ price_min: '', price_max: '   ' })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(2) # No filtering applied
+        end
+
+        it 'ignores nil price inputs' do
+          service = described_class.new({ price_min: nil, price_max: nil })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(2) # No filtering applied
+        end
+
+        it 'handles invalid price range (min > max) gracefully' do
+          # This should log a warning and not apply any price filter
+          expect(Rails.logger).to receive(:warn).with(/Invalid price range/)
+          
+          service = described_class.new({ price_min: 2000, price_max: 1000 })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(2) # No filtering applied
+        end
+
+        it 'applies only valid price filter when one is invalid' do
+          service = described_class.new({ price_min: 'invalid', price_max: 1300 })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(1)
+          expect(result[:bicycles].first.price).to be <= 1300
+        end
+
+        it 'handles price inputs with whitespace' do
+          service = described_class.new({ price_min: '  1200  ', price_max: ' 1600 ' })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(2) # Both bikes within range
+        end
+
+        it 'handles very large price inputs' do
+          service = described_class.new({ price_min: 999999, price_max: 9999999 })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(0) # No bikes in this range
+        end
+
+        it 'handles very small decimal price inputs' do
+          service = described_class.new({ price_min: 0.01, price_max: 0.99 })
+          result = service.call
+          
+          expect(result[:bicycles].count).to eq(0) # No bikes in this range
+        end
+      end
     end
 
     context 'with location filter' do

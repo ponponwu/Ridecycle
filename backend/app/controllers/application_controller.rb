@@ -120,6 +120,8 @@ class ApplicationController < ActionController::API
     true
   end
 
+  protected
+
   def current_user
     return @current_user if defined?(@current_user)
 
@@ -155,8 +157,6 @@ class ApplicationController < ActionController::API
       end
     end
   end
-
-  protected
 
   def set_auth_cookies(user)
     set_access_token_cookie(user)

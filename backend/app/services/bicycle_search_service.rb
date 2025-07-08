@@ -100,15 +100,52 @@ class BicycleSearchService
     @query = @query.where(condition: conditions)
   end
 
-  # Filters by price range
+  # Filters by price range with robust validation
   # @return [void]
   def filter_by_price_range
-    if @params[:price_min].present?
-      @query = @query.where("price >= ?", @params[:price_min].to_f)
+    price_min = parse_price(@params[:price_min])
+    price_max = parse_price(@params[:price_max])
+    
+    # Validate price range logic
+    if price_min && price_max && price_min > price_max
+      Rails.logger.warn "Invalid price range: min (#{price_min}) > max (#{price_max})"
+      return
     end
     
-    if @params[:price_max].present? && @params[:price_max].to_f > 0
-      @query = @query.where("price <= ?", @params[:price_max].to_f)
+    # Apply minimum price filter
+    if price_min && price_min >= 0
+      @query = @query.where("price >= ?", price_min)
+    end
+    
+    # Apply maximum price filter
+    if price_max && price_max > 0
+      @query = @query.where("price <= ?", price_max)
+    end
+  end
+  
+  # Safely parses price input to float with validation
+  # @param price_input [String, Numeric] The price input to parse
+  # @return [Float, nil] Parsed price or nil if invalid
+  def parse_price(price_input)
+    return nil if price_input.blank?
+    
+    # Handle string inputs
+    if price_input.is_a?(String)
+      # Remove common currency symbols and whitespace
+      clean_input = price_input.gsub(/[^\d.-]/, '')
+      return nil if clean_input.blank?
+    else
+      clean_input = price_input
+    end
+    
+    # Convert to float with error handling
+    begin
+      price = Float(clean_input)
+      # Return nil for negative prices (except for validation purposes)
+      price < 0 ? nil : price
+    rescue ArgumentError, TypeError
+      Rails.logger.warn "Invalid price input: #{price_input}"
+      nil
     end
   end
 

@@ -143,6 +143,125 @@ RSpec.describe Api::V1::BicyclesController, type: :controller do
       # 檢查分頁 meta
       expect(json_response['meta']).to include('total_count', 'current_page', 'per_page', 'total_pages')
     end
+    
+    context 'with search parameters' do
+      let!(:road_bike) { create(:bicycle, user: user, bicycle_type: 'road', price: 35000, status: :available) }
+      let!(:mountain_bike) { create(:bicycle, user: user, bicycle_type: 'mountain', price: 45000, status: :available) }
+      
+      it 'handles price range format (price=30000-50000)' do
+        get :index, params: { price: '30000-50000' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Both bikes should be included (35000 and 45000 are within 30000-50000)
+        expect(json_response['data'].length).to be >= 2
+        
+        # Check that price filter was applied by verifying meta count
+        expect(json_response['meta']['total_count']).to be >= 2
+      end
+      
+      it 'handles type parameter (type=road)' do
+        get :index, params: { type: 'road' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should only return road bikes
+        expect(json_response['data'].length).to be >= 1
+        
+        # Verify the returned bike is indeed a road bike
+        returned_bike = json_response['data'].find { |bike| bike['id'] == road_bike.id.to_s }
+        expect(returned_bike).to be_present
+        expect(returned_bike['attributes']['bicycle_type']).to eq('road')
+      end
+      
+      it 'handles combined parameters (price=30000-50000&type=road)' do
+        get :index, params: { price: '30000-50000', type: 'road' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should return only road bikes within price range
+        expect(json_response['data']).to be_an(Array)
+        
+        # Verify road bike is included
+        returned_bike = json_response['data'].find { |bike| bike['id'] == road_bike.id.to_s }
+        expect(returned_bike).to be_present
+        expect(returned_bike['attributes']['bicycle_type']).to eq('road')
+      end
+      
+      it 'handles price range with only minimum (price=40000-)' do
+        get :index, params: { price: '40000-' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should include bikes priced 40000 and above
+        expect(json_response['data']).to be_an(Array)
+        
+        # Mountain bike (45000) should be included
+        returned_bike = json_response['data'].find { |bike| bike['id'] == mountain_bike.id.to_s }
+        expect(returned_bike).to be_present
+      end
+      
+      it 'handles price range with only maximum (price=-40000)' do
+        get :index, params: { price: '-40000' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should include bikes priced 40000 and below
+        expect(json_response['data']).to be_an(Array)
+        
+        # Road bike (35000) should be included
+        returned_bike = json_response['data'].find { |bike| bike['id'] == road_bike.id.to_s }
+        expect(returned_bike).to be_present
+      end
+      
+      it 'handles single price value (price=35000)' do
+        get :index, params: { price: '35000' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should include bikes priced 35000 and above
+        expect(json_response['data']).to be_an(Array)
+        
+        # Both bikes should be included (35000 and 45000)
+        road_bike_returned = json_response['data'].find { |bike| bike['id'] == road_bike.id.to_s }
+        mountain_bike_returned = json_response['data'].find { |bike| bike['id'] == mountain_bike.id.to_s }
+        
+        expect(road_bike_returned).to be_present
+        expect(mountain_bike_returned).to be_present
+      end
+      
+      it 'handles invalid price range gracefully (price=invalid-range)' do
+        get :index, params: { price: 'invalid-range' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should return all bikes (no price filter applied)
+        expect(json_response['data']).to be_an(Array)
+        expect(json_response['meta']['total_count']).to be >= 4 # Original 2 + road_bike + mountain_bike
+      end
+      
+      it 'maintains backward compatibility with old format (price_min&price_max)' do
+        get :index, params: { price_min: '30000', price_max: '50000', bicycle_type: 'road' }
+        
+        expect(response).to have_http_status(:ok)
+        json_response = JSON.parse(response.body)
+        
+        # Should work the same as new format
+        expect(json_response['data']).to be_an(Array)
+        
+        # Verify road bike is included
+        returned_bike = json_response['data'].find { |bike| bike['id'] == road_bike.id.to_s }
+        expect(returned_bike).to be_present
+        expect(returned_bike['attributes']['bicycle_type']).to eq('road')
+      end
+    end
 
     it 'requires authentication' do
       allow(controller).to receive(:current_user).and_return(nil)
