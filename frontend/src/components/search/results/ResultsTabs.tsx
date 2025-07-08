@@ -1,14 +1,11 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import BicycleGrid from '@/components/bicycles/BicycleGrid'
-import BicycleListView from './BicycleListView'
-import { Bicycle } from '../types'
 import { BicycleCardProps } from '@/components/bicycles/BicycleCard'
 
 interface ResultsTabsProps {
-    bicycles: Bicycle[]
+    bicycles: BicycleCardProps[]
     loading: boolean
     resetFilters: () => void
 }
@@ -16,69 +13,37 @@ interface ResultsTabsProps {
 const ResultsTabs: React.FC<ResultsTabsProps> = ({ bicycles, loading, resetFilters }) => {
     const { t } = useTranslation()
 
-    // 將 Bicycle 資料轉換為 BicycleCardProps 格式
-    const bicycleCards: BicycleCardProps[] = bicycles.map((bicycle) => ({
-        id: bicycle.id,
-        title: bicycle.title,
-        price: bicycle.price,
-        originalPrice: undefined, // 從 search types 中沒有原價資訊
-        location: bicycle.location,
-        condition: bicycle.condition,
-        brand: bicycle.brand,
-        model: bicycle.title, // 使用 title 作為 model
-        year: undefined, // 從 search types 中沒有年份資訊
-        frameSize: undefined, // 從 search types 中沒有尺寸資訊
-        transmission: undefined, // 從 search types 中沒有變速系統資訊
-        imageUrl: bicycle.imageUrl,
-        isFavorite: false,
-    }))
+    if (loading) {
+        return (
+            <div className="flex justify-center py-10">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-marketplace-blue"></div>
+            </div>
+        )
+    }
 
-    const renderContent = (viewType: 'grid' | 'list') => {
-        if (loading) {
-            return (
-                <div className="flex justify-center py-10">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-marketplace-blue"></div>
-                </div>
-            )
-        }
-
-        if (bicycles.length === 0) {
-            return (
-                <div className="text-center py-12">
-                    <p className="text-lg text-gray-600">{t('noBicyclesFound')}</p>
-                    <Button className="mt-4" onClick={resetFilters}>
-                        {t('resetFilters')}
-                    </Button>
-                </div>
-            )
-        }
-
-        return viewType === 'grid' ? <BicycleGrid bicycles={bicycleCards} /> : <BicycleListView bicycles={bicycles} />
+    if (bicycles.length === 0) {
+        return (
+            <div className="text-center py-12">
+                <p className="text-lg text-gray-600">{t('noBicyclesFound')}</p>
+                <Button className="mt-4" onClick={resetFilters}>
+                    {t('resetFilters')}
+                </Button>
+            </div>
+        )
     }
 
     return (
-        <Tabs defaultValue="grid">
-            <div className="flex justify-between items-center mb-4">
+        <div>
+            <div className="flex justify-between items-center mb-6">
                 <div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-lg font-semibold text-gray-900">
                         {bicycles.length} {t('resultsFound')}
                     </span>
                     {loading && <span className="ml-2 text-sm text-blue-500">{t('loading')}...</span>}
                 </div>
-                <TabsList>
-                    <TabsTrigger value="grid">{t('grid')}</TabsTrigger>
-                    <TabsTrigger value="list">{t('list')}</TabsTrigger>
-                </TabsList>
             </div>
-
-            <TabsContent value="grid" className="mt-0">
-                {renderContent('grid')}
-            </TabsContent>
-
-            <TabsContent value="list" className="mt-0">
-                {renderContent('list')}
-            </TabsContent>
-        </Tabs>
+            <BicycleGrid bicycles={bicycles} />
+        </div>
     )
 }
 
