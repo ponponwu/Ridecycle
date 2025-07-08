@@ -13,7 +13,45 @@ export const en = {
         sellBicycle: 'Sell Bicycle',
         addBicycle: 'Add Bicycle',
 
+        // Authentication related
+        auth: {
+            createAccount: 'Create Account',
+            welcomeBackToRideCycle: 'Welcome back to Ride Cycle',
+            joinRideCycleCommunity: 'Join Ride Cycle Community',
+            signInWithGoogle: 'Sign in with Google',
+            signInWithFacebook: 'Sign in with Facebook',
+            or: 'or',
+            name: 'Name',
+            email: 'Email',
+            password: 'Password',
+            forgotPassword: 'Forgot Password?',
+            processing: 'Processing...',
+            alreadyHaveAccount: 'Already have an account?',
+            noAccountYet: "Don't have an account yet?",
+            // Success messages
+            loginSuccess: 'Login Successful',
+            welcomeBack: 'Welcome back!',
+            registerSuccess: 'Registration Successful',
+            accountCreatedSuccessfully: 'Your account has been successfully created!',
+            // Error messages
+            loginFailed: 'Login Failed',
+            registerFailed: 'Registration Failed',
+            errorOccurred: 'An error occurred, please try again later',
+            authError: 'Authentication Error',
+            googleLoginError: 'Google Login Error',
+            googleLoginFailed: 'Google Login Failed',
+            googleLoginFailedMessage: 'Unable to start Google login process, please try again later',
+            facebookLoginError: 'Facebook Login Error',
+            facebookLoginFailed: 'Facebook Login Failed',
+            facebookLoginFailedMessage: 'Unable to start Facebook login process, please try again later',
+            // Form placeholders
+            enterName: 'Please enter your name',
+            enterEmail: 'Please enter your email',
+            enterPassword: 'Please enter your password',
+        },
+
         // Admin related
+        adminPanel: 'Admin Panel',
         orderManagement: 'Order Management',
 
         // Profile
@@ -658,6 +696,8 @@ export const en = {
             status: 'Status',
             edit: 'Edit',
             delete: 'Delete',
+            userManagement: 'User Management',
+            systemSettings: 'System Settings',
         },
 
         // Orders
@@ -748,26 +788,38 @@ export const en = {
             },
 
             // Shipping Methods
+            // ... (其他翻譯)
             shippingMethods: {
                 home_delivery: 'Home Delivery',
                 convenience_store: 'Convenience Store Pickup',
                 self_pickup: 'Self Pickup',
             },
+            timeUnits: {
+                day: '{{count}} day',
+                day_plural: '{{count}} days',
+                hour: '{{count}} hour',
+                hour_plural: '{{count}} hours',
+                minute: '{{count}} minute',
+                minute_plural: '{{count}} minutes',
+                second: '{{count}} second',
+                second_plural: '{{count}} seconds',
+            },
+
+            // Additional payment and delivery translations
+            bankTransfer: 'Bank Transfer',
+
+            deliveryOptions: 'Delivery Options',
+            deliveryMethod: 'Delivery Method',
+            deliveryFee: 'Delivery Fee',
+            homeDelivery: 'Home Delivery',
+            selfPickup: 'Self Pickup',
+            freeShipping: 'Free Shipping',
+            distanceBasedShipping: 'Calculated by actual distance, bike box delivery from NT$2,300',
+            staffWillContact: 'Our staff will contact you after order confirmation',
+
+            // Payment related
+            paymentDeadlineCountdown: 'Payment Deadline Countdown',
+            remainingTime: 'Remaining Time',
         },
-
-        // Additional payment and delivery translations
-        bankTransfer: 'Bank Transfer',
-        deliveryOptions: 'Delivery Options',
-        deliveryMethod: 'Delivery Method',
-        deliveryFee: 'Delivery Fee',
-        homeDelivery: 'Home Delivery',
-        selfPickup: 'Self Pickup',
-        freeShipping: 'Free Shipping',
-        distanceBasedShipping: 'Calculated by actual distance, bike box delivery from NT$2,300',
-        staffWillContact: 'Our staff will contact you after order confirmation',
-
-        // Payment related
-        paymentDeadlineCountdown: 'Payment Deadline Countdown',
-        remainingTime: 'Remaining Time',
     },
 }

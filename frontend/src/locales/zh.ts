@@ -15,8 +15,67 @@ export const zh = {
         sellBicycle: '出售自行車',
         addBicycle: '新增自行車',
 
+        // 認證相關
+        auth: {
+            createAccount: '建立帳戶',
+            welcomeBackToRideCycle: '歡迎回到 Ride Cycle',
+            joinRideCycleCommunity: '加入 Ride Cycle 社群',
+            signInWithGoogle: '使用 Google 帳號登入',
+            signInWithFacebook: '使用 Facebook 帳號登入',
+            or: '或',
+            name: '姓名',
+            email: '電子郵件',
+            password: '密碼',
+            forgotPassword: '忘記密碼？',
+            processing: '處理中...',
+            alreadyHaveAccount: '已經有帳號？',
+            noAccountYet: '還沒有帳號？',
+            // 成功訊息
+            loginSuccess: '登入成功',
+            welcomeBack: '歡迎回來！',
+            registerSuccess: '註冊成功',
+            accountCreatedSuccessfully: '您的帳號已成功建立！',
+            // 錯誤訊息
+            loginFailed: '登入失敗',
+            registerFailed: '註冊失敗',
+            errorOccurred: '發生錯誤，請稍後再試',
+            authError: '認證錯誤',
+            googleLoginError: 'Google 登入錯誤',
+            googleLoginFailed: 'Google 登入失敗',
+            googleLoginFailedMessage: '無法啟動 Google 登入流程，請稍後再試',
+            facebookLoginError: 'Facebook 登入錯誤',
+            facebookLoginFailed: 'Facebook 登入失敗',
+            facebookLoginFailedMessage: '無法啟動 Facebook 登入流程，請稍後再試',
+            // 表單佔位符
+            enterName: '請輸入您的姓名',
+            enterEmail: '請輸入您的電子郵件',
+            enterPassword: '請輸入您的密碼',
+        },
+
         // 管理員相關
+        adminPanel: '管理員控制台',
         orderManagement: '訂單管理',
+        userManagement: '用戶管理',
+        viewAndManageUsers: '查看和管理所有用戶',
+        allUsers: '所有用戶',
+        joinDate: '註冊日期',
+        bicycles: '自行車',
+        status: '狀態',
+        actions: '操作',
+        view: '查看',
+        active: '活躍',
+        blacklisted: '黑名單',
+        blacklist: '加入黑名單',
+        unblacklist: '移出黑名單',
+        suspiciousUser: '可疑用戶',
+        markSuspicious: '標記可疑',
+        removeSuspicious: '取消可疑',
+        phoneVerified: '手機已驗證',
+        unnamed: '未命名',
+        noUsers: '暫無用戶',
+        featureNotAvailable: '功能暫未開放',
+        userProfileViewingComingSoon: '用戶資料查看功能即將上線',
+        userMessageViewingComingSoon: '用戶訊息查看功能即將上線',
 
         // 個人資料
         personalInfo: '個人資訊',
@@ -85,6 +144,7 @@ export const zh = {
         tryAgain: '重試',
         loading: '載入中',
         notAvailable: '不適用',
+        error: '錯誤',
 
         // 訂單詳情相關
         bicycleInfo: '自行車資訊',
@@ -277,7 +337,6 @@ export const zh = {
             applePay: 'Apple Pay',
             googlePay: 'Google Pay',
         },
-        bankTransfer: '銀行轉帳',
         paymentMethodNote: '我們目前只提供轉帳選項，刷卡服務正在努力串接中',
 
         // 付款證明上傳相關
@@ -642,9 +701,6 @@ export const zh = {
             contactMethodRequired: '聯絡方式為必填項目',
         },
 
-        unknown: '未知',
-        available: '可用',
-
         // 出售自行車表單
         completeFormToList: '完成下方表單以刊登您的自行車出售',
         stepXOfY: '第 {{current}} 步，共 {{total}} 步',
@@ -722,7 +778,7 @@ export const zh = {
 
         // Footer 區塊
         footer: {
-            brandName: 'Pedal Palace',
+            brandName: 'Ride Cycle',
             brandTagline: '二手自行車愛好者的交易平台，輕鬆買賣二手自行車',
 
             // 導航區塊
@@ -758,6 +814,11 @@ export const zh = {
 
         // 管理員功能
         admin: {
+            userManagement: '用戶管理',
+            viewAndManageUsers: '查看和管理所有用戶',
+            allUsers: '所有用戶',
+            joinDate: '註冊日期',
+            status: '狀態',
             adminDashboard: '管理員儀表板',
             adminAccess: '管理員專用功能',
             pendingApproval: '待審核',
@@ -806,6 +867,9 @@ export const zh = {
             approving: '審核中...',
             rejecting: '拒絕中...',
             noPendingBicycles: '目前沒有待審核的自行車',
+            noDraftBicycles: '目前沒有草稿自行車',
+            noAvailableBicycles: '目前沒有可用的自行車',
+            noArchivedBicycles: '目前沒有封存的自行車',
             images: '圖片',
             image: '圖片',
             noImagesAvailable: '沒有可用的圖片',
@@ -815,6 +879,9 @@ export const zh = {
             status: '狀態',
             edit: '編輯',
             delete: '刪除',
+            systemSettings: '系統設定',
+            settings: '設定',
+            manageSystemConfiguration: '管理系統配置',
         },
 
         viewOrders: '查看訂單',
@@ -903,22 +970,45 @@ export const zh = {
             },
 
             // 配送方式
+            // ... (其他翻譯)
             shippingMethods: {
                 home_delivery: '宅配到府',
                 convenience_store: '超商取貨',
                 self_pickup: '面交自取',
+            },
+            timeUnits: {
+                day: '{{count}} 天',
+                hour: '{{count}} 小時',
+                minute: '{{count}} 分鐘',
+                second: '{{count}} 秒',
             },
         },
 
         // 付款相關
         paymentDeadlineCountdown: '付款期限倒數',
 
-        // 賣家資訊
-        soldBy: '由以下賣家出售',
-        anonymousSeller: '匿名賣家',
-        locationNotSpecified: '未指定位置',
-        sellerProfileInfo: '賣家資料',
-        memberSinceDate: '會員註冊時間',
+        // 通用詞彙
+        no: '沒有',
+        draft: '草稿',
+        archived: '封存',
+        pending: '待審核',
+        bicycles: '自行車',
+        user: '用戶',
+        view: '查看',
+        active: '活躍',
+        phoneVerified: '手機已驗證',
+        suspiciousUser: '可疑用戶',
+        unnamed: '未命名',
+        featureNotAvailable: '功能暫不可用',
+        userProfileViewingComingSoon: '用戶資料查看功能即將上線',
+        userMessageViewingComingSoon: '用戶訊息查看功能即將上線',
+        removeSuspicious: '移除可疑標記',
+        markSuspicious: '標記可疑',
+        unblacklist: '移出黑名單',
+        blacklist: '加入黑名單',
+        noUsers: '沒有用戶',
+        error: '錯誤',
+        notAvailable: '不適用',
     },
 }
 
