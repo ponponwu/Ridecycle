@@ -80,3 +80,7 @@ test:
 production:
     <<: *default
     url: <%= ENV['DATABASE_URL'] %>
+    reaping_frequency: 10
+    dead_connection_timeout: 5
+    prepared_statements: true
+    advisory_locks: true

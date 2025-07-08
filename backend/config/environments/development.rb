@@ -70,6 +70,23 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
   Rails.application.routes.default_url_options = { host: 'localhost', port: 3000 }
 
+  # Rails 7 Performance Optimizations - Phase 1
+  # Enable strict_loading to catch N+1 queries early
+  config.active_record.strict_loading_by_default = true
+  
+  # Enable query origin logging for debugging
+  config.active_record.query_log_tags_enabled = true
+  config.active_record.query_log_tags = [
+    :application, :controller, :action, :job,
+    { 
+      request_id: ->(context) { context[:controller]&.request&.request_id },
+      user_id: ->(context) { context[:controller]&.current_user&.id }
+    }
+  ]
+  
+  # Enhanced query logging
+  config.active_record.verbose_query_logs = true
+
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
 end

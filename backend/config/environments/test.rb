@@ -62,6 +62,24 @@ Rails.application.configure do
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
 
+  # Rails 7 Performance Optimizations - Phase 1
+  # Enable strict_loading in test environment to catch N+1 queries
+  config.active_record.strict_loading_by_default = true
+  
+  # Enable query logging in tests for performance debugging
+  config.active_record.query_log_tags_enabled = true
+  config.active_record.query_log_tags = [:application, :controller, :action, :job]
+  
+  # Phase 2: Parallel Testing Configuration
+  # Enable parallel testing for faster test suite execution
+  config.active_support.test_parallelization_threshold = 50
+  
+  # Use processes for parallel testing (more isolation)
+  config.active_support.test_parallelization_with_processes = ENV.fetch('PARALLEL_TESTS_PROCESSES', 2).to_i
+  
+  # Set up parallel test databases
+  config.active_support.parallel_testing_first_worker = ENV.fetch('TEST_ENV_NUMBER', '').blank?
+
   # Set a default tax rate for testing purposes
   config.tax_rate = 0.05
 

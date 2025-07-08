@@ -27,6 +27,17 @@ require 'database_cleaner/active_record'
 #
 Dir[Rails.root.join('spec', 'support', '**', '*.rb')].sort.each { |f| require f }
 
+# Rails 7 Parallel Testing Support
+if ENV['PARALLEL_TESTS']
+  require 'parallel_tests'
+  
+  # Configure parallel database setup
+  def setup_parallel_database
+    worker_number = ENV['TEST_ENV_NUMBER'].presence || '1'
+    puts "Setting up test database for worker #{worker_number}"
+  end
+end
+
 # Checks for pending migrations and applies them before tests are run.
 # If you are not using ActiveRecord, you can remove these lines.
 begin
