@@ -7,13 +7,14 @@ import AdminLayout from './AdminLayout'
 
 const BicycleManagement: React.FC = () => {
     const { t } = useTranslation()
-    const { bicycles, loading, activeTab, setActiveTab, handleApprove, handleReject } = useBicycleManagement()
+    const { bicycles, loading, activeTab, setActiveTab, handleApprove, handleReject, handleArchive } =
+        useBicycleManagement()
 
-    const statuses: BicycleStatus[] = ['pending', 'available', 'draft']
+    const statuses: BicycleStatus[] = ['pending', 'available', 'draft', 'archived']
 
     return (
         <AdminLayout>
-            <div className="space-y-6">
+            <div className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
                 <div>
                     <h1 className="text-2xl font-bold">{t('admin.bicycleManagement')}</h1>
                     <p className="text-gray-500">{t('admin.reviewAndManage')}</p>
@@ -24,6 +25,7 @@ const BicycleManagement: React.FC = () => {
                         <TabsTrigger value="pending">{t('admin.pendingApproval')}</TabsTrigger>
                         <TabsTrigger value="available">{t('admin.approved')}</TabsTrigger>
                         <TabsTrigger value="draft">{t('admin.rejected')}</TabsTrigger>
+                        <TabsTrigger value="archived">封存</TabsTrigger>
                     </TabsList>
 
                     {statuses.map((status) => (
@@ -34,6 +36,7 @@ const BicycleManagement: React.FC = () => {
                             loading={status === activeTab && loading}
                             onApprove={handleApprove}
                             onReject={handleReject}
+                            onArchive={handleArchive}
                         />
                     ))}
                 </Tabs>

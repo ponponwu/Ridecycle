@@ -7,6 +7,7 @@ import { Bike, MessageCircle, Users, Settings, AlertTriangle, ShoppingCart } fro
 import BicycleManagement from './BicycleManagement';
 import MessageManagement from './MessageManagement';
 import AdminOrderList from './AdminOrderList';
+import SystemSettings from './SystemSettings';
 
 const AdminManagement: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -80,13 +81,7 @@ const AdminManagement: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="settings" className="focus-visible:outline-none focus-visible:ring-0 mt-0">
-          <Card className="p-6">
-            <h2 className="text-xl font-medium mb-4">{isChinese ? '系統設置' : t('systemSettings')}</h2>
-            <p className="text-gray-500">{isChinese ? '配置系統設置和偏好' : t('systemSettingsDescription')}</p>
-            <div className="mt-4 text-center text-gray-500 py-8">
-              {isChinese ? '即將上線' : t('comingSoon')}
-            </div>
-          </Card>
+          <SystemSettings standalone={false} />
         </TabsContent>
       </Tabs>
     </div>
