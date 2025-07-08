@@ -121,56 +121,56 @@ const MessageManagement: React.FC = () => {
     return (
         <AdminLayout>
             <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">所有訊息</h1>
-                <p className="text-gray-500">查看和管理用戶訊息</p>
-            </div>
+                <div>
+                    <h1 className="text-2xl font-bold">所有訊息</h1>
+                    <p className="text-gray-500">查看和管理用戶訊息</p>
+                </div>
 
-            <Tabs defaultValue="all">
-                <TabsList className="mb-4">
-                    <TabsTrigger value="all">所有訊息</TabsTrigger>
-                    <TabsTrigger value="unread">未讀訊息</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="all">
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="all">所有訊息</TabsTrigger>
+                        <TabsTrigger value="unread">未讀訊息</TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="all" className="space-y-4">
-                    <Card className="p-4">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Message List */}
-                            <div className="lg:col-span-1 border rounded-lg overflow-hidden">
-                                <div className="bg-gray-100 p-3 border-b">
-                                    <h3 className="font-medium">對話列表</h3>
+                    <TabsContent value="all" className="space-y-4">
+                        <Card className="p-4">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Message List */}
+                                <div className="lg:col-span-1 border rounded-lg overflow-hidden">
+                                    <div className="bg-gray-100 p-3 border-b">
+                                        <h3 className="font-medium">對話列表</h3>
+                                    </div>
+
+                                    <ConversationList
+                                        messages={messages}
+                                        loading={loading}
+                                        selectedChat={selectedChat}
+                                        onSelectConversation={viewConversation}
+                                    />
                                 </div>
 
-                                <ConversationList
-                                    messages={messages}
-                                    loading={loading}
-                                    selectedChat={selectedChat}
-                                    onSelectConversation={viewConversation}
-                                />
+                                {/* Message Detail */}
+                                <div className="lg:col-span-2 border rounded-lg overflow-hidden">
+                                    <div className="bg-gray-100 p-3 border-b">
+                                        <h3 className="font-medium">對話內容</h3>
+                                    </div>
+
+                                    <div className="p-4 max-h-[600px] overflow-y-auto">
+                                        <ConversationDetail chatMessages={chatMessages} selectedChat={selectedChat} />
+                                    </div>
+                                </div>
                             </div>
+                        </Card>
+                    </TabsContent>
 
-                            {/* Message Detail */}
-                            <div className="lg:col-span-2 border rounded-lg overflow-hidden">
-                                <div className="bg-gray-100 p-3 border-b">
-                                    <h3 className="font-medium">對話內容</h3>
-                                </div>
-
-                                <div className="p-4 max-h-[600px] overflow-y-auto">
-                                    <ConversationDetail chatMessages={chatMessages} selectedChat={selectedChat} />
-                                </div>
+                    <TabsContent value="unread">
+                        <Card className="p-4">
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">未讀訊息功能即將上線</p>
                             </div>
-                        </div>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="unread">
-                    <Card className="p-4">
-                        <div className="text-center py-8">
-                            <p className="text-gray-500">未讀訊息功能即將上線</p>
-                        </div>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </AdminLayout>
     )

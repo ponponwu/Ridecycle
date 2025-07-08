@@ -117,154 +117,156 @@ const UserManagement: React.FC = () => {
     return (
         <AdminLayout>
             <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">{t('userManagement')}</h1>
-                <p className="text-gray-500">{t('viewAndManageUsers')}</p>
-            </div>
+                <div>
+                    <h1 className="text-2xl font-bold">{t('userManagement')}</h1>
+                    <p className="text-gray-500">{t('viewAndManageUsers')}</p>
+                </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('allUsers')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {loading ? (
-                        <div className="flex justify-center py-8">
-                            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>{t('user')}</TableHead>
-                                    <TableHead>{t('joinDate')}</TableHead>
-                                    <TableHead>{t('bicycles')}</TableHead>
-                                    <TableHead>{t('messages')}</TableHead>
-                                    <TableHead>{t('status')}</TableHead>
-                                    <TableHead>{t('actions')}</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {users.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-2">
-                                                <Avatar className="h-8 w-8">
-                                                    {user.avatarUrl ? (
-                                                        <AvatarImage src={user.avatarUrl} alt={user.fullName} />
-                                                    ) : (
-                                                        <AvatarFallback>
-                                                            {user.fullName?.charAt(0) || 'U'}
-                                                        </AvatarFallback>
-                                                    )}
-                                                </Avatar>
-                                                <div>
-                                                    <span>{user.fullName || user.name || t('unnamed')}</span>
-                                                    {user.phoneVerified && (
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="ml-2 bg-green-50 text-green-700 border-green-200"
-                                                        >
-                                                            {t('phoneVerified')}
-                                                        </Badge>
-                                                    )}
-                                                    {user.isSuspicious && (
-                                                        <Badge
-                                                            variant="outline"
-                                                            className="ml-2 bg-orange-50 text-orange-700 border-orange-200"
-                                                        >
-                                                            <AlertTriangle className="h-3 w-3 mr-1" />
-                                                            {t('suspiciousUser')}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{formatDate(user.createdAt)}</TableCell>
-                                        <TableCell>{user.bicyclesCount}</TableCell>
-                                        <TableCell>{user.messagesCount}</TableCell>
-                                        <TableCell>
-                                            {user.isBlacklisted ? (
-                                                <Badge variant="destructive">{t('blacklisted')}</Badge>
-                                            ) : (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="bg-green-50 text-green-700 border-green-200"
-                                                >
-                                                    {t('active')}
-                                                </Badge>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center space-x-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        toast({
-                                                            title: t('featureNotAvailable'),
-                                                            description: t('userProfileViewingComingSoon'),
-                                                        })
-                                                    }
-                                                >
-                                                    <Eye className="h-4 w-4 mr-1" />
-                                                    {t('view')}
-                                                </Button>
-
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        toast({
-                                                            title: t('featureNotAvailable'),
-                                                            description: t('userMessageViewingComingSoon'),
-                                                        })
-                                                    }
-                                                >
-                                                    <MessageCircle className="h-4 w-4 mr-1" />
-                                                    {t('messages')}
-                                                </Button>
-
-                                                <Button
-                                                    variant={user.isSuspicious ? 'outline' : 'secondary'}
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        toggleSuspicious(user.id, user.isSuspicious || false)
-                                                    }
-                                                    className={
-                                                        user.isSuspicious
-                                                            ? 'bg-orange-50 text-orange-700 border-orange-200'
-                                                            : ''
-                                                    }
-                                                >
-                                                    <AlertTriangle className="h-4 w-4 mr-1" />
-                                                    {user.isSuspicious ? t('removeSuspicious') : t('markSuspicious')}
-                                                </Button>
-
-                                                <Button
-                                                    variant={user.isBlacklisted ? 'outline' : 'destructive'}
-                                                    size="sm"
-                                                    onClick={() => toggleBlacklist(user.id, user.isBlacklisted)}
-                                                >
-                                                    <Ban className="h-4 w-4 mr-1" />
-                                                    {user.isBlacklisted ? t('unblacklist') : t('blacklist')}
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-
-                                {users.length === 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('allUsers')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {loading ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-4">
-                                            {t('noUsers')}
-                                        </TableCell>
+                                        <TableHead>{t('user')}</TableHead>
+                                        <TableHead>{t('joinDate')}</TableHead>
+                                        <TableHead>{t('bicycles')}</TableHead>
+                                        <TableHead>{t('messages')}</TableHead>
+                                        <TableHead>{t('status')}</TableHead>
+                                        <TableHead>{t('actions')}</TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+                                </TableHeader>
+                                <TableBody>
+                                    {users.map((user) => (
+                                        <TableRow key={user.id}>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-8 w-8">
+                                                        {user.avatarUrl ? (
+                                                            <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                                                        ) : (
+                                                            <AvatarFallback>
+                                                                {user.fullName?.charAt(0) || 'U'}
+                                                            </AvatarFallback>
+                                                        )}
+                                                    </Avatar>
+                                                    <div>
+                                                        <span>{user.fullName || user.name || t('unnamed')}</span>
+                                                        {user.phoneVerified && (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="ml-2 bg-green-50 text-green-700 border-green-200"
+                                                            >
+                                                                {t('phoneVerified')}
+                                                            </Badge>
+                                                        )}
+                                                        {user.isSuspicious && (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="ml-2 bg-orange-50 text-orange-700 border-orange-200"
+                                                            >
+                                                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                                                {t('suspiciousUser')}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{formatDate(user.createdAt)}</TableCell>
+                                            <TableCell>{user.bicyclesCount}</TableCell>
+                                            <TableCell>{user.messagesCount}</TableCell>
+                                            <TableCell>
+                                                {user.isBlacklisted ? (
+                                                    <Badge variant="destructive">{t('blacklisted')}</Badge>
+                                                ) : (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="bg-green-50 text-green-700 border-green-200"
+                                                    >
+                                                        {t('active')}
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center space-x-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            toast({
+                                                                title: t('featureNotAvailable'),
+                                                                description: t('userProfileViewingComingSoon'),
+                                                            })
+                                                        }
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-1" />
+                                                        {t('view')}
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            toast({
+                                                                title: t('featureNotAvailable'),
+                                                                description: t('userMessageViewingComingSoon'),
+                                                            })
+                                                        }
+                                                    >
+                                                        <MessageCircle className="h-4 w-4 mr-1" />
+                                                        {t('messages')}
+                                                    </Button>
+
+                                                    <Button
+                                                        variant={user.isSuspicious ? 'outline' : 'secondary'}
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            toggleSuspicious(user.id, user.isSuspicious || false)
+                                                        }
+                                                        className={
+                                                            user.isSuspicious
+                                                                ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                                                : ''
+                                                        }
+                                                    >
+                                                        <AlertTriangle className="h-4 w-4 mr-1" />
+                                                        {user.isSuspicious
+                                                            ? t('removeSuspicious')
+                                                            : t('markSuspicious')}
+                                                    </Button>
+
+                                                    <Button
+                                                        variant={user.isBlacklisted ? 'outline' : 'destructive'}
+                                                        size="sm"
+                                                        onClick={() => toggleBlacklist(user.id, user.isBlacklisted)}
+                                                    >
+                                                        <Ban className="h-4 w-4 mr-1" />
+                                                        {user.isBlacklisted ? t('unblacklist') : t('blacklist')}
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+
+                                    {users.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center py-4">
+                                                {t('noUsers')}
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AdminLayout>
     )
