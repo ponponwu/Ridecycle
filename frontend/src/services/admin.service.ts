@@ -1,4 +1,4 @@
-import apiClient from '@/api/client'
+import apiClient, { JSONAPIResponse } from '@/api/client'
 import { IBicycle, BicycleWithOwner } from '@/types/bicycle.types'
 import { IOrder } from '@/types/order.types'
 
@@ -6,29 +6,29 @@ import { IOrder } from '@/types/order.types'
  * 管理員儀表板統計資料介面
  */
 export interface IAdminStats {
-    pending_bicycles: number
-    available_bicycles: number
-    sold_bicycles: number
-    draft_bicycles: number
-    total_bicycles: number
-    total_users: number
-    admin_users: number
-    recent_bicycles: number
-    recent_users: number
+    pendingBicycles: number
+    availableBicycles: number
+    soldBicycles: number
+    draftBicycles: number
+    totalBicycles: number
+    totalUsers: number
+    adminUsers: number
+    recentBicycles: number
+    recentUsers: number
 }
 
 /**
  * 管理員最近活動資料介面
  */
 export interface IAdminRecentActivity {
-    recent_bicycles: BicycleWithOwner[]
-    recent_users: Array<{
+    recentBicycles: BicycleWithOwner[]
+    recentUsers: Array<{
         id: number
         name: string
         email: string
         admin: boolean
-        created_at: string
-        bicycles_count: number
+        createdAt: string
+        bicyclesCount: number
     }>
 }
 
@@ -36,38 +36,110 @@ export interface IAdminRecentActivity {
  * 管理員訂單統計資料介面
  */
 export interface IAdminOrderStats {
-    total_orders: number
-    pending_payment: number
-    awaiting_confirmation: number
-    paid_orders: number
-    failed_payments: number
-    refunded_orders: number
-    recent_orders: number
+    totalOrders: number
+    pendingPayment: number
+    awaitingConfirmation: number
+    paidOrders: number
+    failedPayments: number
+    refundedOrders: number
+    recentOrders: number
+}
+
+/**
+ * 銀行帳戶資訊介面
+ */
+export interface BankAccountInfo {
+    bankName: string
+    bankCode: string
+    accountNumber: string
+    accountName: string
+    branch: string
+}
+
+/**
+ * 網站配置介面
+ */
+export interface SiteConfiguration {
+    siteName: string
+    contactEmail: string
+    bankName: string
+    bankCode: string
+    accountNumber: string
+    accountName: string
+    bankBranch: string
+    enableRegistration: boolean
+    requireVerification: boolean
+    bicycleApprovalRequired: boolean
+}
+
+/**
+ * 管理員用戶資料介面
+ */
+export interface IAdminUser {
+    id: number
+    fullName: string
+    name: string
+    email: string
+    avatarUrl?: string
+    admin: boolean
+    createdAt: string
+    updatedAt: string
+    bicyclesCount: number
+    messagesCount: number
+    isBlacklisted: boolean
+    phoneVerified: boolean
+    isSuspicious: boolean
+}
+
+/**
+ * 訊息資料介面
+ */
+export interface IAdminMessage {
+    id: number
+    content: string
+    senderId: number
+    receiverId: number
+    bicycleId: number
+    createdAt: string
+    updatedAt: string
+    messageType?: string
+    offerAmount?: number
+    offerStatus?: string
+    senderName: string
+    recipientName: string
+}
+
+/**
+ * API 回應介面
+ */
+interface IApiResponse {
+    message?: string
 }
 
 /**
  * 管理員用訂單介面（擴展基本訂單資料）
  */
-export interface IAdminOrder extends IOrder {
+export interface IAdminOrder extends Omit<IOrder, 'buyer' | 'seller'> {
     buyer: {
         id: number
         name: string
         email: string
-        full_name?: string
+        fullName?: string
     }
     seller: {
         id: number
         name: string
         email: string
-        full_name?: string
+        fullName?: string
     }
     bicycle: {
-        id: number
+        id: string
         title: string
         brand?: string
         model?: string
         price: number
         mainPhotoUrl?: string
+        status: string
     }
     paymentProofInfo?: {
         hasProof: boolean
@@ -80,42 +152,6 @@ export interface IAdminOrder extends IOrder {
         reviewedAt?: string
         reviewedBy?: string
         reviewNotes?: string
-    }
-}
-
-/**
- * JSON:API 回應格式介面
- */
-interface IJSONAPIResponse<T> {
-    data: T
-    meta?: Record<string, unknown>
-    errors?: Array<{
-        status: string
-        title: string
-        detail: string
-    }>
-}
-
-/**
- * JSON:API 資源格式介面
- */
-interface IJSONAPIResource<T> {
-    type: string
-    id: string
-    attributes: T
-}
-
-/**
- * 分頁回應格式介面
- */
-interface IPaginatedResponse<T> {
-    data: T[]
-    meta: {
-        total_count: number
-        current_page: number
-        per_page: number
-        total_pages: number
-        status_counts?: Record<string, number>
     }
 }
 
@@ -133,7 +169,7 @@ class AdminService {
     async getDashboardStats(): Promise<IAdminStats> {
         try {
             const response = await apiClient.get(`${this.baseUrl}/dashboard/stats`)
-            // API 客戶端已經處理了 JSON:API 格式，直接使用 data
+            // API 客戶端已經處理了 JSON:API 格式和 camelCase 轉換
             return response.data as IAdminStats
         } catch (error) {
             console.error('Error fetching dashboard stats:', error)
@@ -148,7 +184,7 @@ class AdminService {
     async getRecentActivity(): Promise<IAdminRecentActivity> {
         try {
             const response = await apiClient.get(`${this.baseUrl}/dashboard/recent_activity`)
-            // API 客戶端已經處理了 JSON:API 格式，直接使用 data
+            // API 客戶端已經處理了 JSON:API 格式和 camelCase 轉換
             return response.data as IAdminRecentActivity
         } catch (error) {
             console.error('Error fetching recent activity:', error)
@@ -179,8 +215,7 @@ class AdminService {
 
             const response = await apiClient.get(`${this.baseUrl}/bicycles?${queryParams.toString()}`)
 
-            // API 客戶端已經處理了 JSON:API 格式
-            // 後端使用統一的 render_jsonapi_collection 方法
+            // API 客戶端已經處理了 JSON:API 格式和 camelCase 轉換
             const bicycles = Array.isArray(response.data) ? (response.data as BicycleWithOwner[]) : []
             const meta = response.meta || {}
 
@@ -273,6 +308,21 @@ class AdminService {
         }
     }
 
+    /**
+     * 封存自行車
+     * @param id 自行車 ID
+     * @returns Promise<Record<string, unknown>> 封存結果
+     */
+    async archiveBicycle(id: number): Promise<Record<string, unknown>> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/bicycles/${id}/archive`)
+            return response.data as Record<string, unknown>
+        } catch (error) {
+            console.error('Error archiving bicycle:', error)
+            throw error
+        }
+    }
+
     // ==================== 訂單管理方法 ====================
 
     /**
@@ -352,10 +402,7 @@ class AdminService {
      * @param notes 審核備註
      * @returns Promise<{ success: boolean; message: string }> 審核結果
      */
-    async approvePaymentProof(
-        orderId: string,
-        notes?: string
-    ): Promise<{ success: boolean; message: string }> {
+    async approvePaymentProof(orderId: string, notes?: string): Promise<{ success: boolean; message: string }> {
         try {
             const response = await apiClient.patch(`${this.baseUrl}/orders/${orderId}/approve_payment`, {
                 notes,
@@ -413,11 +460,7 @@ class AdminService {
      * @param notes 更新備註
      * @returns Promise<IAdminOrder> 更新後的訂單資料
      */
-    async updateOrderStatus(
-        orderId: string,
-        status: string,
-        notes?: string
-    ): Promise<IAdminOrder> {
+    async updateOrderStatus(orderId: string, status: string, notes?: string): Promise<IAdminOrder> {
         try {
             const response = await apiClient.patch(`${this.baseUrl}/orders/${orderId}/status`, {
                 status,
@@ -451,6 +494,222 @@ class AdminService {
             return response.data as { success: boolean; message: string; results: Record<string, unknown>[] }
         } catch (error) {
             console.error('Error bulk updating orders:', error)
+            throw error
+        }
+    }
+
+    // ==================== 用戶管理方法 ====================
+
+    /**
+     * 獲取所有用戶列表（管理員視圖）
+     * @returns Promise<{ users: IAdminUser[], meta: Record<string, unknown> }> 用戶列表和統計資訊
+     */
+    async getUsers(): Promise<{ users: IAdminUser[]; meta: Record<string, unknown> }> {
+        try {
+            const response = await apiClient.get(`${this.baseUrl}/users`)
+
+            const users = Array.isArray(response.data) ? (response.data as IAdminUser[]) : []
+            const meta = response.meta || {}
+
+            return {
+                users,
+                meta,
+            }
+        } catch (error) {
+            console.error('Error fetching admin users:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 獲取單一用戶詳細資訊（管理員視圖）
+     * @param id 用戶 ID
+     * @returns Promise<IAdminUser> 用戶詳細資訊
+     */
+    async getUserById(id: number): Promise<IAdminUser> {
+        try {
+            const response = await apiClient.get(`${this.baseUrl}/users/${id}`)
+            // API 客戶端已經處理了 JSON:API 格式和 camelCase 轉換
+            return response.data as IAdminUser
+        } catch (error) {
+            console.error('Error fetching user details:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 切換用戶黑名單狀態
+     * @param id 用戶 ID
+     * @returns Promise<{ success: boolean; message: string }> 更新結果
+     */
+    async toggleUserBlacklist(id: number): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/users/${id}/blacklist`)
+            const apiResponse = response.data as IApiResponse
+            return {
+                success: true,
+                message: apiResponse.message || 'Blacklist status updated successfully',
+            }
+        } catch (error) {
+            console.error('Error updating blacklist status:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 切換用戶可疑狀態
+     * @param id 用戶 ID
+     * @returns Promise<{ success: boolean; message: string }> 更新結果
+     */
+    async toggleUserSuspicious(id: number): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/users/${id}/suspicious`)
+            const apiResponse = response.data as IApiResponse
+            return {
+                success: true,
+                message: apiResponse.message || 'Suspicious status updated successfully',
+            }
+        } catch (error) {
+            console.error('Error updating suspicious status:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 設定用戶為管理員
+     * @param id 用戶 ID
+     * @returns Promise<{ success: boolean; message: string }> 更新結果
+     */
+    async makeUserAdmin(id: number): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/users/${id}/make_admin`)
+            const apiResponse = response.data as IApiResponse
+            return {
+                success: true,
+                message: apiResponse.message || 'User made admin successfully',
+            }
+        } catch (error) {
+            console.error('Error making user admin:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 移除用戶管理員權限
+     * @param id 用戶 ID
+     * @returns Promise<{ success: boolean; message: string }> 更新結果
+     */
+    async removeUserAdmin(id: number): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/users/${id}/remove_admin`)
+            const apiResponse = response.data as IApiResponse
+            return {
+                success: true,
+                message: apiResponse.message || 'Admin privileges removed successfully',
+            }
+        } catch (error) {
+            console.error('Error removing admin privileges:', error)
+            throw error
+        }
+    }
+
+    // ==================== 網站配置管理方法 ====================
+
+    /**
+     * 獲取網站配置
+     * @returns Promise<SiteConfiguration> 網站配置
+     */
+    async getSiteConfigurations(): Promise<SiteConfiguration> {
+        try {
+            const response = await apiClient.get(`${this.baseUrl}/site_configurations`)
+            return response.data as SiteConfiguration
+        } catch (error) {
+            console.error('Error fetching site configurations:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 更新網站配置
+     * @param settings 配置資料
+     * @returns Promise<SiteConfiguration> 更新後的配置
+     */
+    async updateSiteConfigurations(settings: Partial<SiteConfiguration>): Promise<SiteConfiguration> {
+        try {
+            const response = await apiClient.patch(`${this.baseUrl}/site_configurations`, { settings })
+            return response.data as SiteConfiguration
+        } catch (error) {
+            console.error('Error updating site configurations:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 獲取銀行資訊
+     * @returns Promise<BankAccountInfo> 銀行資訊
+     */
+    async getBankInfo(): Promise<BankAccountInfo> {
+        try {
+            const response = await apiClient.get(`${this.baseUrl}/site_configurations/bank_info`)
+            return response.data as BankAccountInfo
+        } catch (error) {
+            console.error('Error fetching bank info:', error)
+            throw error
+        }
+    }
+
+    // ==================== 訊息管理方法 ====================
+
+    /**
+     * 獲取所有訊息列表（管理員視圖）
+     * @param params 查詢參數
+     * @returns Promise<JSONAPIResponse<IAdminMessage[]>> 訊息列表和統計資訊
+     */
+    async getMessages(
+        params: {
+            limit?: number
+        } = {}
+    ): Promise<JSONAPIResponse<IAdminMessage[]>> {
+        try {
+            const queryParams = new URLSearchParams()
+
+            if (params.limit) queryParams.append('limit', params.limit.toString())
+
+            const response = await apiClient.get(`${this.baseUrl}/messages?${queryParams.toString()}`)
+
+            // 返回完整的 JSON:API 回應
+            return response as JSONAPIResponse<IAdminMessage[]>
+        } catch (error) {
+            console.error('Error fetching admin messages:', error)
+            throw error
+        }
+    }
+
+    /**
+     * 獲取特定對話的訊息
+     * @param bicycleId 自行車 ID
+     * @param senderId 發送者 ID
+     * @param receiverId 接收者 ID
+     * @returns Promise<JSONAPIResponse<IAdminMessage[]>> 對話訊息
+     */
+    async getConversation(
+        bicycleId: string,
+        senderId: string,
+        receiverId: string
+    ): Promise<JSONAPIResponse<IAdminMessage[]>> {
+        try {
+            const queryParams = new URLSearchParams({
+                bicycle_id: bicycleId,
+                sender_id: senderId,
+                receiver_id: receiverId,
+            })
+
+            const response = await apiClient.get(`${this.baseUrl}/messages/conversations?${queryParams.toString()}`)
+
+            // 返回完整的 JSON:API 回應
+            return response as JSONAPIResponse<IAdminMessage[]>
+        } catch (error) {
+            console.error('Error fetching conversation:', error)
             throw error
         }
     }
