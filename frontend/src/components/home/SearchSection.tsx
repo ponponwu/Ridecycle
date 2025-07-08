@@ -162,20 +162,22 @@ const SearchSection = () => {
                     <p className="text-center text-gray-600 mb-4">熱門搜尋：</p>
                     <div className="flex flex-wrap justify-center gap-3">
                         {[
-                            { label: '公路車', type: 'roadbike' },
-                            { label: '登山車', type: 'mountainbike' },
+                            { label: '公路車', type: 'road' },
+                            { label: '登山車', type: 'mountain' },
                             { label: 'Giant', brand: 'giant' },
                             { label: 'Merida', brand: 'merida' },
-                            { label: 'NT$ 10,000以下', priceRange: 'under-10000' },
+                            { label: 'NT$ 10,000以下', priceRange: '0-10000' },
                             { label: '台北市', location: 'taipei' },
                         ].map((tag, index) => (
                             <button
                                 key={index}
                                 onClick={() => {
-                                    if (tag.type) setFilters((prev) => ({ ...prev, type: tag.type }))
-                                    if (tag.brand) setFilters((prev) => ({ ...prev, brand: tag.brand }))
-                                    if (tag.priceRange) setFilters((prev) => ({ ...prev, priceRange: tag.priceRange }))
-                                    if (tag.location) setFilters((prev) => ({ ...prev, location: tag.location }))
+                                    const params = new URLSearchParams()
+                                    if (tag.type) params.append('type', tag.type)
+                                    if (tag.brand) params.append('brand', tag.brand)
+                                    if (tag.priceRange) params.append('price', tag.priceRange)
+                                    if (tag.location) params.append('location', tag.location)
+                                    navigate(`/search?${params.toString()}`)
                                 }}
                                 className="px-4 py-2 bg-gray-100 hover:bg-emerald-100 text-gray-700 hover:text-emerald-700 rounded-full text-sm font-medium transition-colors duration-200"
                             >

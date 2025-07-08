@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import BicycleGrid from '../bicycles/BicycleGrid'
+import BicycleScrollGallery from '../bicycles/BicycleScrollGallery'
 import { BicycleCardProps } from '../bicycles/BicycleCard'
 import { bicycleService } from '@/api'
 import { IBicycle } from '@/types/bicycle.types'
@@ -15,7 +15,7 @@ const RecentlyAddedSection = () => {
         const fetchRecentBicycles = async () => {
             try {
                 setIsLoading(true)
-                const bicycles = await bicycleService.getRecentlyAddedBicycles(6) // 改為 6 個以配合 3 列顯示
+                const bicycles = await bicycleService.getRecentlyAddedBicycles(10) // 改為 10 個以配合水平滾動顯示
 
                 // 將 IBicycle 轉換為 BicycleCardProps 格式，加入空值檢查
                 const bicycleCards: BicycleCardProps[] = bicycles
@@ -69,7 +69,14 @@ const RecentlyAddedSection = () => {
 
     return (
         <div className="container px-4 mx-auto py-8 bg-gray-50 rounded-xl">
-            <BicycleGrid bicycles={recentBicycles} title={t('recentlyAdded')} viewAllLink="/search?sort=newest" />
+            <BicycleScrollGallery
+                bicycles={recentBicycles}
+                title={t('recentlyAdded')}
+                subtitle="最新上架的自行車商品"
+                viewAllLink="/search?sort=newest"
+                showScrollHint={true}
+                enableDrag={true}
+            />
         </div>
     )
 }

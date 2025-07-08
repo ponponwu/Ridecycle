@@ -27,7 +27,7 @@ const Index = () => {
             try {
                 setIsLoading(true)
                 // Assuming getBicycles returns IBicycleListResponse which has a 'bicycles' array
-                const response = await bicycleService.getBicycles({ limit: 8 }) // Fetch initial set, e.g., 8 bikes
+                const response = await bicycleService.getBicycles({ limit: 20 }) // Fetch more bicycles for 4-column display
                 console.log('response', response)
                 setAllBicycles(response.bicycles)
                 setError(null)
@@ -113,7 +113,7 @@ const Index = () => {
                         <>
                             {bicycleCardData.length > 0 ? (
                                 <div className="space-y-8">
-                                    <BicycleGrid bicycles={bicycleCardData} />
+                                    <BicycleGrid bicycles={bicycleCardData} columns={4} />
                                     <div className="text-center">
                                         <Link to="/search">
                                             <Button

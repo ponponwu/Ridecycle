@@ -5,10 +5,16 @@ interface BicycleGridProps {
     bicycles: BicycleCardProps[]
     title?: string
     viewAllLink?: string
+    columns?: 3 | 4 // Support for 3-column (default) or 4-column layout
 }
 
-const BicycleGrid = ({ bicycles, title, viewAllLink }: BicycleGridProps) => {
+const BicycleGrid = ({ bicycles, title, viewAllLink, columns = 3 }: BicycleGridProps) => {
     const { t } = useTranslation()
+
+    // Determine grid classes based on columns prop
+    const gridClasses = columns === 4 
+        ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+        : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6"
 
     return (
         <section className="py-8">
@@ -23,7 +29,7 @@ const BicycleGrid = ({ bicycles, title, viewAllLink }: BicycleGridProps) => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div className={gridClasses}>
                 {bicycles.map((bike) => (
                     <BicycleCard key={bike.id} {...bike} />
                 ))}
