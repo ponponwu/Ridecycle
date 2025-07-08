@@ -1,17 +1,33 @@
 class User < ApplicationRecord
+  # Include application encryption helpers
+  include ApplicationEncryption
+  
   has_secure_password
   
+  # Rails 7 Active Record Encryption - Enhanced Coverage
   # 加密敏感的銀行帳戶資訊
   encrypts :bank_account_name, deterministic: false
   encrypts :bank_account_number, deterministic: false  
   encrypts :bank_code, deterministic: false
   encrypts :bank_branch, deterministic: false
   
+  # 擴展加密範圍 - Phase 2 Enhancement
+  # 加密 email 以保護用戶隱私（使用確定性加密以支援查詢）
+  # TEMPORARILY DISABLED: Email encryption causing login issues due to dynamic keys
+  # encrypts :email, deterministic: true, downcase: true
+  
+  # 加密電話號碼（如果有的話）
+  encrypts :phone_number, deterministic: false, ignore_case: true if column_names.include?('phone_number')
+  
   has_many :bicycles, dependent: :destroy
   has_many :sent_messages, class_name: 'Message', foreign_key: 'sender_id', dependent: :destroy
   has_many :received_messages, class_name: 'Message', foreign_key: 'recipient_id', dependent: :destroy
   has_many :orders, dependent: :destroy
   has_many :refresh_tokens, dependent: :destroy # For stateful refresh tokens
+  
+  # Override common includes for User model to prevent N+1 queries
+  scope :with_common_includes, -> { includes(:bicycles, :orders) }
+  scope :with_full_includes, -> { includes(:bicycles, :sent_messages, :received_messages, :orders, :refresh_tokens) }
   
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true

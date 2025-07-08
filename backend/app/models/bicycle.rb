@@ -52,6 +52,13 @@ class Bicycle < ApplicationRecord
   # @return [ActiveRecord::Associations::CollectionProxy<Message>] Messages related to this bicycle
   has_many :messages, dependent: :destroy
   
+  # Include Active Storage helpers
+  include ActiveStorageHelpers
+  
+  # Override common includes for Bicycle model to prevent N+1 queries
+  scope :with_common_includes, -> { includes(:user, :brand, :transmission, :bicycle_model, photos_attachments: :blob) }
+  scope :with_photos, -> { includes(photos_attachments: :blob) }
+  
   # @!endgroup
   
   # @!group Enums and Validations

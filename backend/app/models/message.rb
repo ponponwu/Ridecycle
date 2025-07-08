@@ -1,7 +1,16 @@
 class Message < ApplicationRecord
+  # Include application encryption helpers
+  include ApplicationEncryption
+  
+  # Encrypt message content to protect user privacy
+  encrypts :content, deterministic: false
+  
   belongs_to :sender, class_name: 'User', foreign_key: 'sender_id'
   belongs_to :recipient, class_name: 'User', foreign_key: 'recipient_id'
   belongs_to :bicycle # Assuming all messages must be related to a bicycle
+  
+  # Override common includes for Message model to prevent N+1 queries
+  scope :with_common_includes, -> { includes(:sender, :recipient, :bicycle) }
 
   validates :content, presence: true
   validates :sender_id, presence: true
