@@ -12,5 +12,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
     info_fields: 'email,name,first_name,last_name,picture'
   }
 end
-OmniAuth.config.allowed_request_methods = [:post, :get] # Allow GET for callback in some cases, though POST is preferred
-OmniAuth.config.silence_get_warning = true # If using GET for callback during development
+
+# OmniAuth 2.0 安全配置
+OmniAuth.config.allowed_request_methods = [:post] # Only allow POST for security
+OmniAuth.config.silence_get_warning = true

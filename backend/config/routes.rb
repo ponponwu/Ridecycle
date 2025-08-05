@@ -1,5 +1,9 @@
 # config/routes.rb
 Rails.application.routes.draw do
+  # OmniAuth callback routes (OmniAuth middleware handles /auth/:provider automatically)
+  match '/auth/:provider/callback', to: 'api/v1/sessions#omniauth', via: [:get, :post]
+  get '/auth/failure', to: 'api/v1/sessions#auth_failure'
+
   namespace :api do
     namespace :v1 do
       # CSRF token 路由
@@ -12,14 +16,19 @@ Rails.application.routes.draw do
       post '/logout', to: 'auth#logout'
       post '/auth/refresh', to: 'refresh#create' # Route for refreshing token
 
-      # OmniAuth callback route
-      match '/auth/:provider/callback', to: 'sessions#omniauth', via: [:get, :post]
-      get '/auth/failure', to: 'sessions#auth_failure'
+      
+      # Google JWT callback route
+      post '/auth/google/callback', to: 'sessions#google_callback'
+      
+      # Facebook access token callback route
+      post '/auth/facebook/callback', to: 'sessions#facebook_callback'
       
       # 用戶路由
       get '/users/profile', to: 'users#show'
       put '/users/profile', to: 'users#update'
       put '/users/bank_account', to: 'users#update_bank_account'
+      put '/users/change_password', to: 'users#change_password'
+      delete '/users/account', to: 'users#delete_account'
       
       # 自行車路由
       resources :bicycles do

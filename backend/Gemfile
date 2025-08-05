@@ -40,6 +40,9 @@ group :development, :test do
   gem "debug", platforms: %i[ mri mswin mswin64 mingw x64_mingw ]
   gem 'pry-byebug'
   
+  # Load environment variables from .env file
+  gem 'dotenv-rails'
+  
   # RSpec 測試框架
   gem 'rspec-rails', '~> 6.0'
   gem 'factory_bot_rails', '~> 6.2'
@@ -67,6 +70,8 @@ gem "bcrypt", "~> 3.1"
 gem "omniauth"
 gem "omniauth-google-oauth2"
 gem "omniauth-facebook"
+gem "omniauth-rails_csrf_protection"
+gem "google-id-token"
 
 # handle picture
 

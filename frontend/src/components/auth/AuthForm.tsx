@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from '@/hooks/use-toast'
 import { useTranslation } from 'react-i18next'
+import { useGoogleAuth } from '@/hooks/useGoogleAuth'
+import { useFacebookAuth } from '@/hooks/useFacebookAuth'
+import { OAuthForm } from '@/components/auth/OAuthForm'
 import { ILoginRequest, IRegisterRequest } from '@/types/auth.types'
 
 type AuthFormProps = {
@@ -14,10 +17,37 @@ const AuthForm = ({ type }: AuthFormProps) => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [name, setName] = useState('')
+    const googleFormRef = useRef<HTMLFormElement>(null)
+    const facebookFormRef = useRef<HTMLFormElement>(null)
     const navigate = useNavigate()
     const { t } = useTranslation()
 
     const { login, register, isLoading, error, clearError } = useAuth()
+    const { signInWithGoogle, signInWithRedirect, isGoogleReady, isLoading: isGoogleLoading } = useGoogleAuth()
+    const { signInWithFacebook, handleFacebookError, signInWithRedirect: facebookRedirect, error: facebookError, isLoading: isFacebookLoading } = useFacebookAuth()
+
+    // 監聽 OAuth 重定向事件
+    useEffect(() => {
+        const handleGoogleRedirect = () => {
+            if (googleFormRef.current) {
+                googleFormRef.current.submit()
+            }
+        }
+
+        const handleFacebookRedirect = () => {
+            if (facebookFormRef.current) {
+                facebookFormRef.current.submit()
+            }
+        }
+
+        window.addEventListener('googleOAuthRedirect', handleGoogleRedirect)
+        window.addEventListener('facebookOAuthRedirect', handleFacebookRedirect)
+
+        return () => {
+            window.removeEventListener('googleOAuthRedirect', handleGoogleRedirect)
+            window.removeEventListener('facebookOAuthRedirect', handleFacebookRedirect)
+        }
+    }, [])
 
     const isLogin = type === 'login'
     const title = isLogin ? t('login') : t('auth.createAccount')
@@ -70,11 +100,13 @@ const AuthForm = ({ type }: AuthFormProps) => {
     // 處理 Google 登入
     const handleGoogleSignIn = async () => {
         try {
-            // 重定向到 Google 授權頁面
-            // 這裡應該調用後端 API 來獲取授權 URL
-            window.location.href = '/api/auth/google'
-
-            // 注意：這裡不需要導航和顯示成功訊息，因為頁面會被重定向
+            if (isGoogleReady) {
+                // 使用 Google OAuth 彈窗登入
+                await signInWithGoogle()
+            } else {
+                // 備用方案：重定向到後端
+                signInWithRedirect()
+            }
         } catch (err) {
             console.error(t('auth.googleLoginError'), err)
             toast({
@@ -88,20 +120,23 @@ const AuthForm = ({ type }: AuthFormProps) => {
     // 處理 Facebook 登入
     const handleFacebookSignIn = async () => {
         try {
-            // 重定向到 Facebook 授權頁面
-            // 這裡應該調用後端 API 來獲取授權 URL
-            window.location.href = '/api/auth/facebook'
-
-            // 注意：這裡不需要導航和顯示成功訊息，因為頁面會被重定向
+            await signInWithFacebook()
         } catch (err) {
             console.error(t('auth.facebookLoginError'), err)
-            toast({
-                variant: 'destructive',
-                title: t('auth.facebookLoginFailed'),
-                description: t('auth.facebookLoginFailedMessage'),
-            })
+            // 如果原生 SDK 失敗，嘗試重定向備用方案
+            if (err instanceof Error && err.message.includes('Facebook SDK')) {
+                console.log('Facebook SDK failed, using redirect fallback')
+                facebookRedirect()
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: t('auth.facebookLoginFailed'),
+                    description: t('auth.facebookLoginFailedMessage'),
+                })
+            }
         }
     }
+
 
     return (
         <div className="bg-white p-8 rounded-lg shadow-sm max-w-md w-full mx-auto">
@@ -115,7 +150,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
                 <button
                     type="button"
                     onClick={handleGoogleSignIn}
-                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                    disabled={isGoogleLoading || isLoading}
+                    className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -135,13 +171,21 @@ const AuthForm = ({ type }: AuthFormProps) => {
                             fill="#EA4335"
                         />
                     </svg>
-                    {t('auth.signInWithGoogle')}
+                    {isGoogleLoading ? t('auth.processing') : t('auth.signInWithGoogle')}
                 </button>
+
+                {/* 隱藏的 Google OAuth POST 表單 */}
+                <OAuthForm 
+                    ref={googleFormRef}
+                    provider="google_oauth2" 
+                    style={{ display: 'none' }} 
+                />
 
                 <button
                     type="button"
                     onClick={handleFacebookSignIn}
-                    className="w-full flex items-center justify-center gap-3 bg-[#1877F2] rounded-lg px-4 py-3 text-white font-medium hover:bg-[#166FE5] transition-colors"
+                    disabled={isFacebookLoading || isLoading}
+                    className="w-full flex items-center justify-center gap-3 bg-[#1877F2] rounded-lg px-4 py-3 text-white font-medium hover:bg-[#166FE5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg
                         width="24"
@@ -152,8 +196,15 @@ const AuthForm = ({ type }: AuthFormProps) => {
                     >
                         <path d="M24 12.0733C24 5.40546 18.6274 0 12 0C5.37262 0 0 5.40546 0 12.0733C0 18.0995 4.38823 23.0943 10.125 24V15.5633H7.07694V12.0733H10.125V9.41343C10.125 6.38755 11.9165 4.71615 14.6576 4.71615C15.9705 4.71615 17.3438 4.95195 17.3438 4.95195V7.92313H15.8306C14.3399 7.92313 13.875 8.85384 13.875 9.80855V12.0733H17.2031L16.6711 15.5633H13.875V24C19.6118 23.0943 24 18.0995 24 12.0733Z" />
                     </svg>
-                    {t('auth.signInWithFacebook')}
+                    {isFacebookLoading ? t('auth.processing') : t('auth.signInWithFacebook')}
                 </button>
+
+                {/* 隱藏的 Facebook OAuth POST 表單 */}
+                <OAuthForm 
+                    ref={facebookFormRef}
+                    provider="facebook" 
+                    style={{ display: 'none' }} 
+                />
             </div>
 
             {/* Divider */}

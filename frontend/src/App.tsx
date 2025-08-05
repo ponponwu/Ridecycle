@@ -8,11 +8,13 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
 import { SearchProvider } from '@/contexts/SearchContext'
+import { GoogleOAuthProvider } from '@/components/providers/GoogleOAuthProvider'
 import NotificationContainer from '@/components/NotificationContainer'
 import PrivateRoute from '@/components/PrivateRoute'
 import { useEffect } from 'react'
 import apiClient from '@/api/client'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { logOAuthConfigStatus } from '@/utils/oauthConfig'
 
 import Index from './pages/Index'
 import Login from './pages/Login'
@@ -40,6 +42,7 @@ import MessageManagement from './components/admin/MessageManagement'
 import SystemSettings from './components/admin/SystemSettings'
 import AdminRoute from './components/AdminRoute'
 import AdminTest from './pages/AdminTest'
+import OAuthTest from './pages/OAuthTest'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -55,9 +58,10 @@ const initializeCsrfToken = async () => {
 
 // 主應用組件，包含路由和 CSRF token 初始化
 function AppContent() {
-    // 在應用載入時初始化 CSRF token
+    // 在應用載入時初始化 CSRF token 和檢查 OAuth 配置
     useEffect(() => {
         initializeCsrfToken()
+        logOAuthConfigStatus()
     }, [])
 
     return (
@@ -72,6 +76,7 @@ function AppContent() {
                 <Route path="/bicycle/:id" element={<BicycleDetail />} />
                 <Route path="/seller/:sellerId" element={<SellerProfile />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/oauth-test" element={<OAuthTest />} />
                 <Route path="/search" element={<Search />} />
 
                 {/* 需要認證的路由 */}
@@ -234,17 +239,19 @@ function App() {
     return (
         <ErrorBoundary>
             <QueryClientProvider client={queryClient}>
-                <BrowserRouter>
-                    <AuthProvider>
-                        <CartProvider>
-                            <NotificationProvider>
-                                <SearchProvider>
-                                    <AppContent />
-                                </SearchProvider>
-                            </NotificationProvider>
-                        </CartProvider>
-                    </AuthProvider>
-                </BrowserRouter>
+                <GoogleOAuthProvider>
+                    <BrowserRouter>
+                        <AuthProvider>
+                            <CartProvider>
+                                <NotificationProvider>
+                                    <SearchProvider>
+                                        <AppContent />
+                                    </SearchProvider>
+                                </NotificationProvider>
+                            </CartProvider>
+                        </AuthProvider>
+                    </BrowserRouter>
+                </GoogleOAuthProvider>
             </QueryClientProvider>
         </ErrorBoundary>
     )

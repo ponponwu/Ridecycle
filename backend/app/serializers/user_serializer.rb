@@ -56,6 +56,21 @@ class UserSerializer
     object.admin? ? 'admin' : 'user'
   end
 
+  # OAuth 用戶狀態
+  attribute :is_oauth_user do |object|
+    object.oauth_user?
+  end
+
+  # 是否需要設置密碼
+  attribute :needs_password_setup do |object|
+    object.needs_password_setup?
+  end
+
+  # OAuth 提供商
+  attribute :oauth_provider do |object|
+    object.provider
+  end
+
   # 管理員列表不需要返回完整的自行車列表關聯，避免 N+1 查詢
   # 如需要自行車資料，請使用專門的端點
   
