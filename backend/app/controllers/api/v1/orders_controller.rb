@@ -34,26 +34,28 @@ class Api::V1::OrdersController < ApplicationController
                             .includes(
                               :user, # 買家資訊
                               :payment, # OrderPayment
-                              payment: [:payment_proofs_attachments, :payment_proofs_blobs], # ActiveStorage 付款證明
+                              payment: [
+                                payment_proofs_attachments: :blob # 確保預載 blob 關聯
+                              ], # ActiveStorage 付款證明
                               bicycle: [
                                 :user,                 # 賣家資訊
                                 :brand,                # 自行車品牌
                                 :bicycle_model,        # 自行車型號
-                                :photos_attachments,   # ActiveStorage 照片
-                                :photos_blobs
+                                photos_attachments: :blob # 確保預載 blob 關聯
                               ]
                             )
     else
       # 作為買家的訂單（購買）
       orders_relation = current_user.orders.includes(
                           :payment, # OrderPayment
-                          payment: [:payment_proofs_attachments, :payment_proofs_blobs], # ActiveStorage 付款證明
+                          payment: [
+                            payment_proofs_attachments: :blob # 確保預載 blob 關聯
+                          ], # ActiveStorage 付款證明
                           bicycle: [
                             :user,                 # 賣家資訊
                             :brand,                # 自行車品牌
                             :bicycle_model,        # 自行車型號
-                            :photos_attachments,   # ActiveStorage 照片
-                            :photos_blobs
+                            photos_attachments: :blob # 確保預載 blob 關聯
                           ]
                         )
     end

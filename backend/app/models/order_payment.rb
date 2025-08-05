@@ -1,4 +1,6 @@
 class OrderPayment < ApplicationRecord
+  include StrictLoadingConcern
+  
   belongs_to :order
 
   # 付款證明檔案關聯
@@ -74,7 +76,7 @@ class OrderPayment < ApplicationRecord
   # 取得最新的付款證明
   def latest_payment_proof
     return nil unless has_payment_proof?
-    payment_proofs.order(created_at: :desc).first
+    payment_proofs.includes(:blob).order(created_at: :desc).first
   end
 
   # 取得付款證明狀態
@@ -82,6 +84,8 @@ class OrderPayment < ApplicationRecord
     proof = latest_payment_proof
     return 'none' unless proof
     
+    # 對 proof attachment 對象禁用 strict loading，安全存取 metadata
+    proof.strict_loading!(false) if proof.respond_to?(:strict_loading!)
     metadata = proof.metadata || {}
     metadata['status'] || 'pending'
   end

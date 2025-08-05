@@ -52,10 +52,8 @@ module StrictLoadingConcern
     raise e
   end
 
-  # Check if this record has strict loading enabled
-  def strict_loading?
-    strict_loading_enabled?
-  end
+  # Note: strict_loading? method is provided by Rails ActiveRecord
+  # No need to redefine it here
 
   # Load specific associations without triggering strict loading violations
   def preload_associations(*associations)
