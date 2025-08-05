@@ -13,7 +13,8 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     if Rails.env.development?
       allowed_origins += [
         'http://localhost:3000',
-        'http://localhost:8080'
+        'http://localhost:8080',
+        'https://da51271859bd.ngrok-free.app'
       ]
     end
     

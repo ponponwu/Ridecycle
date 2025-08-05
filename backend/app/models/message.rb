@@ -1,9 +1,6 @@
 class Message < ApplicationRecord
-  # Include application encryption helpers
-  include ApplicationEncryption
-  
-  # Encrypt message content to protect user privacy
-  encrypts :content, deterministic: false
+  # Note: Message content encryption removed for simplicity
+  # Can be re-enabled in the future if needed
   
   belongs_to :sender, class_name: 'User', foreign_key: 'sender_id'
   belongs_to :recipient, class_name: 'User', foreign_key: 'recipient_id'

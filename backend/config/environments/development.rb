@@ -89,4 +89,8 @@ Rails.application.configure do
 
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
+  
+  # Allow ngrok hosts for development
+  config.hosts << /.*\.ngrok-free\.app/
+  config.hosts << /.*\.ngrok\.io/  # Support both ngrok domains
 end

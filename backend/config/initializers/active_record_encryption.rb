@@ -25,10 +25,16 @@ Rails.application.configure do
     config.active_record.encryption.store_key_references = false
     config.active_record.encryption.extend_queries = true
     
-    # Use simpler keys for development
-    config.active_record.encryption.primary_key = Rails.application.credentials.active_record_encryption&.dig(:primary_key) || "dev_primary_key_#{SecureRandom.hex(16)}"
-    config.active_record.encryption.deterministic_key = Rails.application.credentials.active_record_encryption&.dig(:deterministic_key) || "dev_deterministic_key_#{SecureRandom.hex(16)}"
-    config.active_record.encryption.key_derivation_salt = Rails.application.credentials.active_record_encryption&.dig(:key_derivation_salt) || "dev_salt_#{SecureRandom.hex(8)}"
+    # Use encryption keys from credentials - ensure consistent keys across app restarts
+    encryption_keys = Rails.application.credentials.active_record_encryption
+    
+    if encryption_keys.nil? || encryption_keys.primary_key.nil?
+      raise "Active Record encryption keys not found in credentials. Please run: rails credentials:edit"
+    end
+    
+    config.active_record.encryption.primary_key = encryption_keys.primary_key
+    config.active_record.encryption.deterministic_key = encryption_keys.deterministic_key
+    config.active_record.encryption.key_derivation_salt = encryption_keys.key_derivation_salt
     
   else # test environment
     # Test encryption settings - already configured in test.rb

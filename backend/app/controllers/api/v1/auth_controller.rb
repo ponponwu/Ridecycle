@@ -5,7 +5,7 @@ module Api
       skip_before_action :authenticate_user!, only: [:login, :register, :csrf_token]
       # 只在非測試環境中跳過 CSRF 驗證
       unless Rails.env.test?
-        skip_before_action :verify_authenticity_token, only: [:login, :register, :logout]
+        skip_before_action :verify_authenticity_token, only: [:login, :register, :logout, :csrf_token]
       end
       
       def register
