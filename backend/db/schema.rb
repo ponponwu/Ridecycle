@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_09_190447) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_07_104912) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -156,6 +156,22 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_09_190447) do
     t.index ["user_id"], name: "index_csp_violation_reports_on_user_id"
   end
 
+  create_table "feedbacks", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "subject", limit: 200, null: false
+    t.text "content", null: false
+    t.integer "category", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.text "admin_response"
+    t.datetime "responded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_feedbacks_on_category"
+    t.index ["created_at"], name: "index_feedbacks_on_created_at"
+    t.index ["status"], name: "index_feedbacks_on_status"
+    t.index ["user_id"], name: "index_feedbacks_on_user_id"
+  end
+
   create_table "messages", force: :cascade do |t|
     t.integer "sender_id"
     t.integer "recipient_id"
@@ -291,6 +307,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_09_190447) do
   add_foreign_key "components", "bicycle_models", column: "bicycle_models_id"
   add_foreign_key "components", "components"
   add_foreign_key "csp_violation_reports", "users"
+  add_foreign_key "feedbacks", "users"
   add_foreign_key "messages", "bicycles"
   add_foreign_key "order_payments", "orders"
   add_foreign_key "orders", "bicycles"

@@ -60,6 +60,13 @@ Rails.application.routes.draw do
       # 目錄資料路由
       get '/catalog', to: 'catalog#index'
 
+      # 意見反饋路由
+      resources :feedbacks, only: [:index, :show, :create, :update] do
+        collection do
+          get :categories
+        end
+      end
+
       # 安全路由
       namespace :security do
         post '/csp-violations', to: 'security#csp_violations'
@@ -125,6 +132,16 @@ Rails.application.routes.draw do
           collection do
             patch :update
             get :bank_info
+          end
+        end
+        
+        # Admin feedback management
+        resources :feedbacks do
+          collection do
+            get :stats
+          end
+          member do
+            post :respond
           end
         end
       end

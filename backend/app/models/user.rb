@@ -24,6 +24,7 @@ class User < ApplicationRecord
   has_many :received_messages, class_name: 'Message', foreign_key: 'recipient_id', dependent: :destroy
   has_many :orders, dependent: :destroy
   has_many :refresh_tokens, dependent: :destroy # For stateful refresh tokens
+  has_many :feedbacks, dependent: :destroy
   
   # Override common includes for User model to prevent N+1 queries
   scope :with_common_includes, -> { includes(:bicycles, :orders) }
