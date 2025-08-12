@@ -65,19 +65,19 @@ const HeroBanner = () => {
                             <Link to="/search">
                                 <Button
                                     size="lg"
-                                    className="bg-white text-emerald-700 hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group"
+                                    className="bg-white text-emerald-700 hover:bg-gray-50 px-10 py-5 text-xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 group min-w-[200px]"
                                 >
-                                    <Search className="mr-3 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                                    <Search className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
                                     {t('browseBikes')}
-                                    <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                    <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
                             <Link to="/upload">
                                 <Button
                                     size="lg"
-                                    className="bg-white/20 border-2 border-white text-white hover:bg-white hover:text-emerald-700 px-8 py-4 text-lg font-semibold rounded-2xl backdrop-blur-sm transition-all duration-300 group shadow-lg"
+                                    className="bg-white text-emerald-700 hover:bg-gray-50 px-10 py-5 text-xl font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 group min-w-[200px]"
                                 >
-                                    <Upload className="mr-3 h-5 w-5 group-hover:-translate-y-1 transition-transform" />
+                                    <Upload className="mr-3 h-6 w-6 group-hover:-translate-y-1 transition-transform" />
                                     {t('sellYourBike')}
                                 </Button>
                             </Link>

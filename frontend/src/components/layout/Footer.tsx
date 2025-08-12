@@ -133,30 +133,30 @@ const Footer = () => {
                             {t('footer.support.title')}
                         </h3>
                         <div className="space-y-3">
-                            <a
-                                href="#"
+                            <Link
+                                to="/help"
                                 className="block text-sm text-gray-300 hover:text-emerald-300 transition-colors duration-300 hover:pl-2"
                             >
                                 {t('footer.support.helpCenter')}
-                            </a>
+                            </Link>
                             <a
                                 href="#"
                                 className="block text-sm text-gray-300 hover:text-emerald-300 transition-colors duration-300 hover:pl-2"
                             >
                                 {t('footer.support.safetyTips')}
                             </a>
-                            <a
-                                href="#"
+                            <Link
+                                to="/privacy-policy"
                                 className="block text-sm text-gray-300 hover:text-emerald-300 transition-colors duration-300 hover:pl-2"
                             >
-                                {t('footer.support.contactUs')}
-                            </a>
-                            <a
-                                href="#"
+                                隱私政策
+                            </Link>
+                            <Link
+                                to="/terms-of-service"
                                 className="block text-sm text-gray-300 hover:text-emerald-300 transition-colors duration-300 hover:pl-2"
                             >
-                                {t('footer.support.privacyPolicy')}
-                            </a>
+                                服務條款
+                            </Link>
                         </div>
                     </div>
                 </div>

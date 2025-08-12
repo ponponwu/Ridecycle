@@ -34,11 +34,15 @@ import OrderListSimple from './pages/OrderListSimple'
 import OrderDetail from './pages/OrderDetail'
 import OrderPayment from './pages/OrderPayment'
 import EditBike from './pages/EditBike'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
+import HelpCenter from './pages/HelpCenter'
 import AdminDashboard from './components/admin/AdminDashboard'
 import BicycleManagement from './components/admin/BicycleManagement'
 import BicycleDetailsView from './components/admin/bicycles/BicycleDetailsView'
 import UserManagement from './components/admin/UserManagement'
 import MessageManagement from './components/admin/MessageManagement'
+import FeedbackManagement from './components/admin/FeedbackManagement'
 import SystemSettings from './components/admin/SystemSettings'
 import AdminRoute from './components/AdminRoute'
 import AdminTest from './pages/AdminTest'
@@ -78,6 +82,13 @@ function AppContent() {
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/oauth-test" element={<OAuthTest />} />
                 <Route path="/search" element={<Search />} />
+                
+                {/* 法律頁面 */}
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                
+                {/* 幫助中心 */}
+                <Route path="/help" element={<HelpCenter />} />
 
                 {/* 需要認證的路由 */}
                 <Route
@@ -208,6 +219,14 @@ function AppContent() {
                     element={
                         <AdminRoute>
                             <MessageManagement />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/feedbacks"
+                    element={
+                        <AdminRoute>
+                            <FeedbackManagement />
                         </AdminRoute>
                     }
                 />

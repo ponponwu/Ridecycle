@@ -56,38 +56,41 @@ const SearchSection = () => {
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">{t('advancedSearchOptions')}</p>
                 </div>
 
-                {/* 搜尋表單 */}
+                {/* 主搜尋區域 */}
                 <div className="max-w-6xl mx-auto">
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-                        <form onSubmit={handleSubmit}>
-                            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                                <div className="flex-grow">
+                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-8">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* 主搜尋框 */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
                                     <input
                                         type="text"
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         placeholder="搜尋自行車型號、品牌..."
-                                        className="w-full h-12 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        className="w-full h-14 pl-12 pr-4 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 text-gray-800 placeholder-gray-500 text-lg transition-all duration-200"
                                     />
                                 </div>
                                 <Button
                                     type="submit"
                                     size="lg"
-                                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group"
+                                    className="h-14 px-8 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group whitespace-nowrap"
                                 >
                                     <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-                                    搜尋
+                                    立即搜尋
                                 </Button>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {/* 篩選器 */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">價格範圍</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">💰 價格範圍</label>
                                     <select
                                         name="priceRange"
                                         value={filters.priceRange}
                                         onChange={handleFilterChange}
-                                        className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        className="w-full h-11 px-4 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-gray-700 transition-all duration-200"
                                     >
                                         <option value="">{t('anyPrice')}</option>
                                         <option value="0-10000">NT$ 10,000 以下</option>
@@ -101,14 +104,12 @@ const SearchSection = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        {t('bicycleType')}
-                                    </label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">🚴 車輛類型</label>
                                     <select
                                         name="type"
                                         value={filters.type}
                                         onChange={handleFilterChange}
-                                        className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        className="w-full h-11 px-4 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-gray-700 transition-all duration-200"
                                     >
                                         <option value="">{t('allTypes')}</option>
                                         <option value="road">公路車</option>
@@ -118,12 +119,12 @@ const SearchSection = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">品牌</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">🏷️ 品牌</label>
                                     <select
                                         name="brand"
                                         value={filters.brand}
                                         onChange={handleFilterChange}
-                                        className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        className="w-full h-11 px-4 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-gray-700 transition-all duration-200"
                                     >
                                         <option value="">{t('allBrands')}</option>
                                         <option value="giant">Giant</option>
@@ -136,12 +137,12 @@ const SearchSection = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">地點</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">📍 地點</label>
                                     <select
                                         name="location"
                                         value={filters.location}
                                         onChange={handleFilterChange}
-                                        className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        className="w-full h-11 px-4 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-gray-700 transition-all duration-200"
                                     >
                                         <option value="">{t('allLocations')}</option>
                                         <option value="taipei">台北市</option>
@@ -158,16 +159,19 @@ const SearchSection = () => {
                 </div>
 
                 {/* 快速搜尋標籤 */}
-                <div className="max-w-4xl mx-auto mt-8">
-                    <p className="text-center text-gray-600 mb-4">熱門搜尋：</p>
+                <div className="max-w-5xl mx-auto mt-8">
+                    <div className="text-center mb-6">
+                        <p className="text-gray-600 mb-1 font-medium">🔥 熱門搜尋</p>
+                        <div className="w-16 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 mx-auto"></div>
+                    </div>
                     <div className="flex flex-wrap justify-center gap-3">
                         {[
-                            { label: '公路車', type: 'road' },
-                            { label: '登山車', type: 'mountain' },
-                            { label: 'Giant', brand: 'giant' },
-                            { label: 'Merida', brand: 'merida' },
-                            { label: 'NT$ 10,000以下', priceRange: '0-10000' },
-                            { label: '台北市', location: 'taipei' },
+                            { label: '🚴‍♀️ 公路車', type: 'road' },
+                            { label: '🏔️ 登山車', type: 'mountain' },
+                            { label: '🔥 Giant', brand: 'giant' },
+                            { label: '⭐ Merida', brand: 'merida' },
+                            { label: '💰 NT$ 10,000以下', priceRange: '0-10000' },
+                            { label: '📍 台北市', location: 'taipei' },
                         ].map((tag, index) => (
                             <button
                                 key={index}
@@ -179,7 +183,7 @@ const SearchSection = () => {
                                     if (tag.location) params.append('location', tag.location)
                                     navigate(`/search?${params.toString()}`)
                                 }}
-                                className="px-4 py-2 bg-gray-100 hover:bg-emerald-100 text-gray-700 hover:text-emerald-700 rounded-full text-sm font-medium transition-colors duration-200"
+                                className="px-5 py-3 bg-white hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 rounded-full text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg border border-gray-200 hover:border-emerald-300 transform hover:scale-105"
                             >
                                 {tag.label}
                             </button>

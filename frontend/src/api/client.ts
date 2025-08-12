@@ -10,8 +10,9 @@ import axios, {
 import applyCaseMiddleware from 'axios-case-converter'
 import { toast } from '@/hooks/use-toast'
 
-// API 基本配置 - 確保使用完整的 URL 包括協議和域名
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/'
+// API 基本配置 - 在開發環境使用相對路徑以支援 Vite 代理
+const API_BASE_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000')
+const API_URL = `${API_BASE_URL}/api/v1/`
 const API_TIMEOUT = 15000
 
 // 錯誤消息
@@ -417,13 +418,15 @@ class ApiClient {
         // 創建新的請求 promise
         this.csrfTokenPromise = new Promise<string | null>(async (resolve) => {
             try {
-                // 使用完整的 URL，確保即使前端和 API 在不同域也能正確請求
-                const response = await axios.get<{ status: string; token: string }>(`${API_URL}csrf_token`, {
+                // 創建一個臨時的 axios 實例來獲取 CSRF token，避免循環調用
+                const tempInstance = axios.create({
+                    baseURL: this.instance.defaults.baseURL,
                     withCredentials: true,
                     headers: {
                         Accept: 'application/json',
                     },
                 })
+                const response = await tempInstance.get<{ status: string; token: string }>('csrf_token')
 
                 if (response.status === 200 && response.data && response.data.token) {
                     this.csrfToken = response.data.token
@@ -452,20 +455,35 @@ class ApiClient {
                 const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined
 
                 // 處理 CSRF token 相關錯誤
+                // 只有當錯誤響應明確指示 CSRF 問題時才重試
                 if (error.response?.status === 422 && originalRequest && !originalRequest._retryAttempted) {
-                    console.log('===== 檢測到 CSRF 錯誤 (422)，嘗試獲取新 token =====')
-                    try {
-                        // 清除舊 token
-                        this.csrfToken = null
-                        // 獲取新 token
-                        const newToken = await this.fetchCsrfToken()
-                        if (newToken && originalRequest.headers) {
-                            originalRequest._retryAttempted = true
-                            originalRequest.headers['X-CSRF-Token'] = newToken
-                            return this.instance(originalRequest)
+                    const errorData = error.response.data as ErrorResponseData;
+                    const isCSRFError = 
+                        (errorData?.error && typeof errorData.error === 'string' && 
+                         errorData.error.toLowerCase().includes('authenticity')) ||
+                        (errorData?.message && typeof errorData.message === 'string' && 
+                         errorData.message.toLowerCase().includes('authenticity')) ||
+                        (Array.isArray(errorData?.errors) && 
+                         errorData.errors.some((err: string | JSONAPIError) => 
+                           typeof err === 'string' && err.toLowerCase().includes('authenticity')));
+                    
+                    if (isCSRFError) {
+                        console.log('===== 檢測到真正的 CSRF 錯誤 (422)，嘗試獲取新 token =====')
+                        try {
+                            // 清除舊 token
+                            this.csrfToken = null
+                            // 獲取新 token
+                            const newToken = await this.fetchCsrfToken()
+                            if (newToken && originalRequest.headers) {
+                                originalRequest._retryAttempted = true
+                                originalRequest.headers['X-CSRF-Token'] = newToken
+                                return this.instance(originalRequest)
+                            }
+                        } catch (retryError) {
+                            console.error('===== CSRF token 重試失敗 =====', retryError)
                         }
-                    } catch (retryError) {
-                        console.error('===== CSRF token 重試失敗 =====', retryError)
+                    } else {
+                        console.log('===== 422 錯誤但不是 CSRF 問題，跳過 token 重試 =====')
                     }
                 }
 

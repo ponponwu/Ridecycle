@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import './horizontal-scroll-container.css'
 
 interface HorizontalScrollContainerProps {
   children: React.ReactNode
@@ -159,9 +160,7 @@ const HorizontalScrollContainer = ({
         )}
         style={{
           gap: `${gap}px`,
-          scrollSnapType: 'x mandatory',
-          scrollbarWidth: showScrollbar ? 'thin' : 'none',
-          msOverflowStyle: showScrollbar ? 'auto' : 'none'
+          scrollSnapType: 'x mandatory'
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -189,25 +188,6 @@ const HorizontalScrollContainer = ({
         ))}
       </div>
 
-      {/* Custom scrollbar styles */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-          height: 4px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 4px;
-        }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
     </div>
   )
 }

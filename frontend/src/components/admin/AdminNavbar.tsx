@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Bike, Users, MessageCircle, Home, Settings } from 'lucide-react';
+import { Bike, Users, MessageCircle, Home, Settings, HelpCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const AdminNavbar: React.FC = () => {
@@ -63,6 +63,17 @@ const AdminNavbar: React.FC = () => {
           >
             <MessageCircle className="h-5 w-5 mr-3" />
             {t('admin.allMessages')}
+          </Link>
+          
+          <Link
+            to="/admin/feedbacks"
+            className={cn(
+              "flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200",
+              isActive('/admin/feedbacks') && "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+            )}
+          >
+            <HelpCircle className="h-5 w-5 mr-3" />
+            意見反饋管理
           </Link>
           
           <Link

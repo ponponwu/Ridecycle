@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import BicycleScrollGallery from '../bicycles/BicycleScrollGallery'
 import { BicycleCardProps } from '../bicycles/BicycleCard'

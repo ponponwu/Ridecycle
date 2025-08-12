@@ -43,13 +43,72 @@ export const zh = {
             googleLoginError: 'Google 登入錯誤',
             googleLoginFailed: 'Google 登入失敗',
             googleLoginFailedMessage: '無法啟動 Google 登入流程，請稍後再試',
+            googleLoginSuccessMessage: '已成功使用 Google 帳號登入！',
             facebookLoginError: 'Facebook 登入錯誤',
             facebookLoginFailed: 'Facebook 登入失敗',
             facebookLoginFailedMessage: '無法啟動 Facebook 登入流程，請稍後再試',
+            facebookLoginSuccessMessage: '已成功使用 Facebook 帳號登入！',
             // 表單佔位符
             enterName: '請輸入您的姓名',
             enterEmail: '請輸入您的電子郵件',
             enterPassword: '請輸入您的密碼',
+        },
+
+        // 法律頁面相關
+        legal: {
+            tableOfContents: '目錄',
+            searchPlaceholder: '搜尋條款內容...',
+            noSearchResults: '未找到相關內容',
+            clearSearch: '清除搜尋',
+            lastUpdated: '最後更新',
+            backToTop: '回到頂部'
+        },
+
+        // 隱私政策相關
+        privacy: {
+            sections: {
+                overview: {
+                    title: '政策概述'
+                },
+                dataCollection: {
+                    title: '資料收集'
+                },
+                dataUsage: {
+                    title: '資料使用'
+                },
+                dataSharing: {
+                    title: '資料分享'
+                },
+                dataSecurity: {
+                    title: '資料安全'
+                },
+                userRights: {
+                    title: '用戶權利'
+                },
+                cookies: {
+                    title: 'Cookies 政策'
+                },
+                dataRetention: {
+                    title: '資料保留'
+                }
+            }
+        },
+
+        // 共用翻譯
+        common: {
+            home: '首頁',
+            backToHome: '返回首頁',
+            backToTop: '回到頂部',
+            loading: '載入中...',
+            error: '發生錯誤',
+            success: '成功',
+            confirm: '確認',
+            cancel: '取消',
+            save: '儲存',
+            edit: '編輯',
+            delete: '刪除',
+            submit: '提交',
+            close: '關閉'
         },
 
         // 管理員相關
@@ -876,7 +935,6 @@ export const zh = {
             price: '價格',
             location: '位置',
             contactMethod: '聯絡方式',
-            status: '狀態',
             edit: '編輯',
             delete: '刪除',
             systemSettings: '系統設定',
@@ -992,23 +1050,6 @@ export const zh = {
         draft: '草稿',
         archived: '封存',
         pending: '待審核',
-        bicycles: '自行車',
-        user: '用戶',
-        view: '查看',
-        active: '活躍',
-        phoneVerified: '手機已驗證',
-        suspiciousUser: '可疑用戶',
-        unnamed: '未命名',
-        featureNotAvailable: '功能暫不可用',
-        userProfileViewingComingSoon: '用戶資料查看功能即將上線',
-        userMessageViewingComingSoon: '用戶訊息查看功能即將上線',
-        removeSuspicious: '移除可疑標記',
-        markSuspicious: '標記可疑',
-        unblacklist: '移出黑名單',
-        blacklist: '加入黑名單',
-        noUsers: '沒有用戶',
-        error: '錯誤',
-        notAvailable: '不適用',
     },
 }
 

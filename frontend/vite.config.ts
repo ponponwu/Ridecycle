@@ -8,16 +8,24 @@ export default defineConfig(({ mode }) => ({
     server: {
         host: '::',
         port: 8080,
+        // 代理配置 - 將 API 請求代理到後端
+        proxy: {
+            '/api': {
+                target: 'http://localhost:3000',
+                changeOrigin: true,
+                secure: false,
+            },
+        },
         // 開發環境安全標頭
         headers: {
             // Content Security Policy
             'Content-Security-Policy': `
                 default-src 'self';
-                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://apis.google.com https://accounts.google.com;
+                script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://apis.google.com https://accounts.google.com https://connect.facebook.net;
                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
                 font-src 'self' https://fonts.gstatic.com;
                 img-src 'self' data: https: blob: http://localhost:3000;
-                connect-src 'self' http://localhost:3000 https://localhost:3000 https://accounts.google.com ws://localhost:8080;
+                connect-src 'self' http://localhost:3000 https://localhost:3000 https://accounts.google.com https://*.facebook.com https://graph.facebook.com ws://localhost:8080 https://www.googleapis.com;
                 frame-src 'self' https://accounts.google.com;
                 object-src 'none';
                 base-uri 'self';
@@ -35,6 +43,7 @@ export default defineConfig(({ mode }) => ({
             // 權限政策
             'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=(), usb=()',
         },
+        allowedHosts: ['da51271859bd.ngrok-free.app'],
     },
     plugins: [react(), mode === 'development' && componentTagger()].filter(Boolean),
     resolve: {
