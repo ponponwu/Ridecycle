@@ -1,13 +1,62 @@
 #!/bin/bash -e
 
-# If running in a production-like environment and the command seems to be starting the server,
-# then prepare the database.
-# This condition checks if the first argument is 'bundle' and the second is 'exec',
-# which is common for puma/unicorn starts.
-if [ "$RAILS_ENV" = "production" ] && ([ "${1}" = "bundle" ] && [ "${2}" = "exec" ] && [ "${3}" = "puma" ] || [ "${1}" = "./bin/rails" ] && [ "${2}" = "server" ]); then
-  echo "Preparing database..."
-  ./bin/rails db:prepare
-  echo "Database preparation finished."
+# Database preparation function
+prepare_database() {
+  echo "=== Database Preparation Started ==="
+  echo "RAILS_ENV: $RAILS_ENV"
+  echo "DATABASE_URL: ${DATABASE_URL:0:20}..." # Show only first 20 chars for security
+  
+  # Wait for database to be available
+  echo "Waiting for database connection..."
+  for i in {1..30}; do
+    if ./bin/rails runner "ActiveRecord::Base.connection.execute('SELECT 1')" >/dev/null 2>&1; then
+      echo "Database connection established!"
+      break
+    else
+      echo "Database not ready, waiting... (attempt $i/30)"
+      sleep 2
+    fi
+    
+    if [ $i -eq 30 ]; then
+      echo "ERROR: Database connection failed after 30 attempts"
+      exit 1
+    fi
+  done
+  
+  # Check if database exists and has tables
+  echo "Checking database schema..."
+  table_count=$(./bin/rails runner "puts ActiveRecord::Base.connection.tables.count" 2>/dev/null || echo "0")
+  
+  if [ "$table_count" = "0" ]; then
+    echo "No tables found, running database setup..."
+    ./bin/rails db:create db:schema:load db:seed
+  else
+    echo "Database tables exist ($table_count tables), running migrations..."
+    ./bin/rails db:migrate
+  fi
+  
+  echo "=== Database Preparation Completed ==="
+}
+
+# Run database preparation for production environment and server commands
+if [ "$RAILS_ENV" = "production" ]; then
+  case "${1}" in
+    "bundle")
+      if [ "${2}" = "exec" ]; then
+        case "${3}" in
+          "puma"|"rails"|"rackup")
+            prepare_database
+            ;;
+        esac
+      fi
+      ;;
+    "./bin/rails"|"rails")
+      if [ "${2}" = "server" ] || [ "${2}" = "s" ]; then
+        prepare_database
+      fi
+      ;;
+  esac
 fi
 
+echo "Starting application with command: $@"
 exec "${@}"
