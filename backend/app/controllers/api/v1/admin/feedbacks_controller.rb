@@ -5,7 +5,10 @@
 #
 # @author RideCycle Team
 # @since 1.0.0
-class Api::V1::Admin::FeedbacksController < Api::V1::Admin::BaseController
+class Api::V1::Admin::FeedbacksController < ApplicationController
+  include JsonApiResponse
+  before_action :authenticate_user!
+  before_action :ensure_admin!
   before_action :set_feedback, only: [:show, :update, :destroy]
 
   # GET /api/v1/admin/feedbacks
