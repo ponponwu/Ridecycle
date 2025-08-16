@@ -68,3 +68,6 @@ coverage/
 *.msi
 *.msm
 *.msp
+
+# Local deployment guides (contains sensitive info)
+ZEABUR_ENV_SETUP.md

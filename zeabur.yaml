@@ -4,58 +4,39 @@
 name: ride-cycle
 
 services:
-  # 前端服務 - 對外公開
-  frontend:
-    context: ./frontend
-    dockerfile: Dockerfile.zeabur
-    environment:
-      - NODE_ENV=production
-      - VITE_API_URL=/api
-    domains:
-      - ridecycle.zeabur.app  # 替換為您的實際域名
-    ports:
-      - 80:80
-    depends_on:
-      - backend
-    restart: unless-stopped
-    
-  # 後端服務 - 僅內部訪問
-  backend:
-    context: ./backend
-    dockerfile: Dockerfile
-    environment:
-      - RAILS_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
-      - SECRET_KEY_BASE=${SECRET_KEY_BASE}
-      - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
-    # 不設定 domains 或 ports，表示僅內部訪問
-    internal: true
-    depends_on:
-      - database
-    restart: unless-stopped
-    
-  # 資料庫服務 - 僅內部訪問
-  database:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=ridecycle_production
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    internal: true
-    restart: unless-stopped
+    # 前端服務 - 對外公開
+    frontend:
+        context: ./frontend
+        dockerfile: Dockerfile.zeabur
+        environment:
+            - NODE_ENV=production
+            - VITE_API_URL=/api
+        domains:
+            - ridecycle.zeabur.app # 替換為您的實際域名
+        ports:
+            - 80:80
+        depends_on:
+            - backend
+        restart: unless-stopped
 
-# 資料卷定義
-volumes:
-  db_data:
-    driver: local
-
-# 網路配置
-networks:
-  default:
-    driver: bridge
+    # 後端服務 - 僅內部訪問
+    backend:
+        context: ./backend
+        dockerfile: Dockerfile
+        environment:
+            - RAILS_ENV=production
+            - DATABASE_URL=${DATABASE_URL}
+            - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+            - CLOUDFLARE_R2_ACCESS_KEY_ID=${CLOUDFLARE_R2_ACCESS_KEY_ID}
+            - CLOUDFLARE_R2_SECRET_ACCESS_KEY=${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+            - CLOUDFLARE_R2_BUCKET=${CLOUDFLARE_R2_BUCKET}
+            - SECRET_KEY_BASE=${SECRET_KEY_BASE}
+            - RAILS_MASTER_KEY=${RAILS_MASTER_KEY}
+            - APPLICATION_HOST=${APPLICATION_HOST}
+            - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            - FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
+            - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+        # 不設定 domains 或 ports，表示僅內部訪問
+        internal: true
+        restart: unless-stopped

@@ -40,6 +40,16 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
 
   config.active_storage.service_configurations = {
+    "cloudflare" => {
+      "service" => "S3",
+      "endpoint" => "https://#{ENV['CLOUDFLARE_ACCOUNT_ID']}.r2.cloudflarestorage.com",
+      "access_key_id" => ENV['CLOUDFLARE_R2_ACCESS_KEY_ID'],
+      "secret_access_key" => ENV['CLOUDFLARE_R2_SECRET_ACCESS_KEY'],
+      "region" => "auto",
+      "bucket" => ENV['CLOUDFLARE_R2_BUCKET'] || 'ridecycle-production',
+      "public" => true,
+      "cache_control" => "public, max-age=3600"
+    },
     "amazon" => {
       "service" => "S3",
       "access_key_id" => ENV['AWS_ACCESS_KEY_ID'],
@@ -48,7 +58,7 @@ Rails.application.configure do
       "bucket" => ENV['AWS_S3_BUCKET_NAME'] || 'ride-cycle-production'
     }
   }
-  config.active_storage.service = :amazon
+  config.active_storage.service = :cloudflare
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
