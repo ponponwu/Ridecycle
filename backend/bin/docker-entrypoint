@@ -6,30 +6,54 @@ prepare_database() {
   echo "RAILS_ENV: $RAILS_ENV"
   echo "DATABASE_URL: ${DATABASE_URL:0:20}..." # Show only first 20 chars for security
   
-  # Wait for database to be available
+  # Wait for database to be available using pg_isready if available, otherwise use psql
   echo "Waiting for database connection..."
+  
+  # Extract database connection info from DATABASE_URL
+  DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
+  DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+  
   for i in {1..30}; do
-    if ./bin/rails runner "ActiveRecord::Base.connection.execute('SELECT 1')" >/dev/null 2>&1; then
-      echo "Database connection established!"
-      break
+    # Try to connect using pg_isready first, fallback to Rails if not available
+    if command -v pg_isready >/dev/null 2>&1; then
+      if pg_isready -h "$DB_HOST" -p "$DB_PORT" >/dev/null 2>&1; then
+        echo "Database connection established via pg_isready!"
+        break
+      fi
     else
-      echo "Database not ready, waiting... (attempt $i/30)"
-      sleep 2
+      # Fallback to Rails runner but avoid loading models
+      if timeout 10 ./bin/rails runner "ActiveRecord::Base.connection.execute('SELECT 1')" >/dev/null 2>&1; then
+        echo "Database connection established via Rails!"
+        break
+      fi
     fi
+    
+    echo "Database not ready, waiting... (attempt $i/30)"
+    sleep 2
     
     if [ $i -eq 30 ]; then
       echo "ERROR: Database connection failed after 30 attempts"
+      echo "Host: $DB_HOST, Port: $DB_PORT"
       exit 1
     fi
   done
   
-  # Check if database exists and has tables
+  # Check if database exists and has tables using raw SQL to avoid model loading
   echo "Checking database schema..."
-  table_count=$(./bin/rails runner "puts ActiveRecord::Base.connection.tables.count" 2>/dev/null || echo "0")
+  table_count=$(./bin/rails runner "
+    begin
+      count = ActiveRecord::Base.connection.execute(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'\").first['count']
+      puts count
+    rescue => e
+      puts '0'
+    end
+  " 2>/dev/null || echo "0")
   
-  if [ "$table_count" = "0" ]; then
-    echo "No tables found, running database setup..."
-    ./bin/rails db:create db:schema:load db:seed
+  if [ "$table_count" = "0" ] || [ -z "$table_count" ]; then
+    echo "No tables found (count: $table_count), running database setup..."
+    ./bin/rails db:create 2>/dev/null || echo "Database already exists"
+    ./bin/rails db:schema:load
+    ./bin/rails db:seed
   else
     echo "Database tables exist ($table_count tables), running migrations..."
     ./bin/rails db:migrate
