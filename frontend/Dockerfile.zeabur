@@ -14,9 +14,9 @@ RUN npm ci
 COPY . .
 
 # Build the application for production
-# Zeabur 版本: 使用外部後端 API URL
-ARG VITE_API_URL=https://ridecycle-backend.zeabur.app/api/v1
-ENV VITE_API_URL=${VITE_API_URL}
+# Zeabur 版本: 使用外部後端基礎 URL，前端會自動加上 /api/v1
+ARG VITE_API_BASE_URL=https://ridecycle-backend.zeabur.app
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 # 其他可能的環境變數
 ARG NODE_ENV=production
@@ -35,8 +35,8 @@ RUN rm -rf ./*
 # Copy static assets from builder stage
 COPY --from=builder /app/dist .
 
-# Copy simplified Nginx configuration for external API
-# 使用簡化版本的 nginx 配置檔，適用於外部 API URL
+# Copy nginx configuration with security headers
+# 使用修復後的 nginx 配置檔，包含安全標頭
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 80 for Nginx

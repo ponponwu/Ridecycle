@@ -139,8 +139,8 @@ const CSPConfigChecker: React.FC = () => {
                                     <div className="text-yellow-800 text-xs">
                                         <strong>💡 提示:</strong>
                                         <ul className="mt-1 space-y-1 list-disc list-inside">
-                                            <li>此配置會根據 VITE_API_URL 環境變數自動調整</li>
-                                            <li>在 Railway 等平台部署時，設定正確的 VITE_API_URL</li>
+                                            <li>此配置會根據 VITE_API_BASE_URL 環境變數自動調整</li>
+                                            <li>在 Zeabur 等平台部署時，設定正確的 VITE_API_BASE_URL</li>
                                             <li>img-src 和 connect-src 會自動包含 API 基礎域名</li>
                                         </ul>
                                     </div>

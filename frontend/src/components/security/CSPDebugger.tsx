@@ -36,7 +36,8 @@ const CSPDebugger: React.FC = () => {
         const headerCSP = null // 瀏覽器安全限制，無法直接讀取
 
         // 獲取 API URL 和基礎 URL
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1/'
+        const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+        const apiUrl = `${apiBaseUrl}/api/v1/`
         const baseUrl = extractBaseUrl(apiUrl)
 
         // 獲取 CSP 違規記錄（如果有的話）
