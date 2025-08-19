@@ -1,5 +1,9 @@
 # config/routes.rb
 Rails.application.routes.draw do
+  # Health check and root route for backend API
+  root 'api/v1/health#index'
+  get '/health', to: 'api/v1/health#index'
+  
   # OmniAuth callback routes (OmniAuth middleware handles /auth/:provider automatically)
   match '/auth/:provider/callback', to: 'api/v1/sessions#omniauth', via: [:get, :post]
   get '/auth/failure', to: 'api/v1/sessions#auth_failure'

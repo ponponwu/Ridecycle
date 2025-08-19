@@ -14,8 +14,8 @@ RUN npm ci
 COPY . .
 
 # Build the application for production
-# Zeabur 版本: API URL 使用相對路徑，由 nginx 代理處理
-ARG VITE_API_URL=/api
+# Zeabur 版本: 使用外部後端 API URL
+ARG VITE_API_URL=https://ridecycle-backend.zeabur.app/api/v1
 ENV VITE_API_URL=${VITE_API_URL}
 
 # 其他可能的環境變數
