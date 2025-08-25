@@ -42,12 +42,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Expose port 80 for Nginx
 EXPOSE 80
 
-# Add health check for Zeabur monitoring
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
-
-# Add curl for health check
-RUN apk add --no-cache curl
+# Health check removed - was causing issues with Zeabur platform
 
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
